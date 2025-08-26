@@ -1,0 +1,73 @@
+{
+  "name": "@maci-protocol/circuits",
+  "version": "3.0.0",
+  "private": false,
+  "description": "zk-SNARK circuits for MACI",
+  "main": "build/ts/index.js",
+  "files": [
+    "build",
+    "circom",
+    "circomkit.json",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build-test-circuits-c": "ts-node ./ts/compile.ts --cWitness",
+    "build-test-circuits-wasm": "ts-node ./ts/compile.ts",
+    "generate-zkeys": "ts-node ./ts/generateZkeys.ts",
+    "info": "NODE_OPTIONS=--max-old-space-size=4096 ts-node ./ts/info.ts",
+    "watch": "tsc --watch",
+    "build": "tsc -p tsconfig.build.json",
+    "circom:build": "NODE_OPTIONS=--max-old-space-size=4096 circomkit compile",
+    "circom:setup": "NODE_OPTIONS=--max-old-space-size=4096 circomkit setup",
+    "types": "tsc -p tsconfig.json --noEmit",
+    "mocha-test": "NODE_OPTIONS=--max-old-space-size=4096 ts-mocha --exit -g '^(?!.*\\[fuzz\\]).*$'",
+    "test": "pnpm run mocha-test ts/__tests__/*.test.ts",
+    "test:fuzz": "NODE_OPTIONS=--max-old-space-size=4096 ts-mocha --exit -g '\\[fuzz\\]' ./ts/__tests__/*.test.ts",
+    "test:poseidonHasher": "pnpm run mocha-test ts/__tests__/PoseidonHasher.test.ts",
+    "test:messageHasher": "pnpm run mocha-test ts/__tests__/MessageHasher.test.ts",
+    "test:slAndBallotTransformer": "pnpm run mocha-test ts/__tests__/StateLeafAndBallotTransformer.test.ts",
+    "test:slAndBallotTransformerFull": "pnpm run mocha-test ts/__tests__/StateLeafAndBallotTransformerFull.test.ts",
+    "test:messageToCommand": "pnpm run mocha-test ts/__tests__/MessageToCommand.test.ts",
+    "test:messageValidator": "pnpm run mocha-test ts/__tests__/MessageValidator.test.ts",
+    "test:messageValidatorFull": "pnpm run mocha-test ts/__tests__/MessageValidatorFull.test.ts",
+    "test:verifySignature": "pnpm run mocha-test ts/__tests__/VerifySignature.test.ts",
+    "test:privateToPublicKey": "pnpm run mocha-test ts/__tests__/PrivateToPublicKey.test.ts",
+    "test:calculateTotal": "pnpm run mocha-test ts/__tests__/CalculateTotal.test.ts",
+    "test:messageProcessor": "pnpm run mocha-test ts/__tests__/MessageProcessor.test.ts",
+    "test:voteTally": "pnpm run mocha-test ts/__tests__/VoteTally.test.ts",
+    "test:ceremonyParams": "pnpm run mocha-test ts/__tests__/CeremonyParams.test.ts",
+    "test:incrementalQuinaryTree": "pnpm run mocha-test ts/__tests__/IncrementalQuinaryTree.test.ts",
+    "test:pollJoining": "pnpm run mocha-test ts/__tests__/PollJoining.test.ts",
+    "test:pollJoined": "pnpm run mocha-test ts/__tests__/PollJoined.test.ts"
+  },
+  "dependencies": {
+    "@zk-kit/circuits": "^0.4.0",
+    "circomkit": "^0.3.4",
+    "circomlib": "^2.0.5",
+    "@maci-protocol/core": "^3.0.0",
+    "@maci-protocol/crypto": "^3.0.0",
+    "@maci-protocol/domainobjs": "^3.0.0",
+    "@maci-protocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.11",
+    "@types/chai-as-promised": "^8.0.2",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.2.0",
+    "@types/snarkjs": "^0.7.9",
+    "@zk-kit/baby-jubjub": "^1.0.3",
+    "chai": "^4.3.10",
+    "chai-as-promised": "^8.0.1",
+    "fast-check": "^4.2.0",
+    "glob": "^11.0.3",
+    "mocha": "^11.7.1",
+    "ts-mocha": "^11.1.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.9.2"
+  }
+}

@@ -4,6 +4,7 @@ import Landing from './pages/Landing'
 import Polls from './pages/Polls'
 import Auth from './pages/Auth'
 import Comments from './pages/Comments'
+import PollDetail from './pages/PollDetail'
 
 function App() {
   const { t } = useTranslation()
@@ -13,6 +14,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/polls" element={<Polls />} />
+        <Route path="/polls/:id" element={<PollDetail />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/comments" element={<Comments />} />
       </Routes>

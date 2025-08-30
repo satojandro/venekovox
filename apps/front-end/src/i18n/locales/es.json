@@ -1,0 +1,38 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "success": "¡Éxito!",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "submit": "Enviar"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "polls": "Encuestas",
+    "auth": "Autenticación",
+    "comments": "Comentarios"
+  },
+  "landing": {
+    "title": "Construir desde el exilio. Hablar con dignidad. Gobernar con verdad.",
+    "subtitle": "VenekoVox es un protocolo cívico nativo de privacidad que empodera a las comunidades latinoamericanas con encuestas seguras y anónimas.",
+    "cta": "Iniciar Ritual de Confianza"
+  },
+  "auth": {
+    "title": "Ritual de Confianza",
+    "subtitle": "Verifica tu identidad sin revelarla",
+    "scanQR": "Escanea el código QR con tu billetera",
+    "verifying": "Verificando tu identidad...",
+    "success": "¡Identidad verificada exitosamente!",
+    "error": "La verificación falló. Por favor, inténtalo de nuevo."
+  },
+  "polls": {
+    "title": "Encuestas Activas",
+    "create": "Crear Encuesta",
+    "vote": "Votar",
+    "results": "Ver Resultados",
+    "noPolls": "No hay encuestas activas en este momento"
+  }
+}

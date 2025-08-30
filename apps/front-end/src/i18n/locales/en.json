@@ -1,0 +1,38 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success!",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit"
+  },
+  "navigation": {
+    "home": "Home",
+    "polls": "Polls",
+    "auth": "Authentication",
+    "comments": "Comments"
+  },
+  "landing": {
+    "title": "Build from Exile. Speak with Dignity. Govern with Truth.",
+    "subtitle": "VenekoVox is a privacy-first, civic-native protocol empowering Latin American communities with secure, anonymous polling.",
+    "cta": "Start Trust Ritual"
+  },
+  "auth": {
+    "title": "Trust Ritual",
+    "subtitle": "Verify your identity without revealing it",
+    "scanQR": "Scan QR code with your wallet",
+    "verifying": "Verifying your identity...",
+    "success": "Identity verified successfully!",
+    "error": "Verification failed. Please try again."
+  },
+  "polls": {
+    "title": "Active Polls",
+    "create": "Create Poll",
+    "vote": "Vote",
+    "results": "View Results",
+    "noPolls": "No active polls at the moment"
+  }
+}

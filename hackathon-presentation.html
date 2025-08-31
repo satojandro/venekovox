@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VenekoVox: The Uncensored Voice of Latin America</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        :root {
+            --veneko-blue: #2563eb;
+            --veneko-purple: #7c3aed;
+            --veneko-cyan: #06b6d4;
+            --veneko-red: #dc2626;
+            --veneko-green: #16a34a;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            background: #000;
+            color: white;
+        }
+        
+        .slide {
+            opacity: 0;
+            transition: opacity 0.6s ease-in-out;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .slide-content {
+            transform: translateY(20px);
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .font-mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+        
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, var(--veneko-blue), var(--veneko-purple), var(--veneko-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .tech-badge {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(124, 58, 237, 0.1));
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .glow {
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
+        }
+        
+        .map-dot {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--veneko-cyan);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .code-block {
+            background: #1a1b26;
+            border: 1px solid #2a2b3a;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .terminal-line {
+            font-family: 'Roboto Mono', monospace;
+            color: #a9b1d6;
+        }
+        
+        .terminal-prompt {
+            color: #7aa2f7;
+        }
+        
+        .terminal-command {
+            color: #9ece6a;
+        }
+        
+        .terminal-comment {
+            color: #565f89;
+        }
+    </style>
+</head>
+<body class="bg-black text-white">
+
+    <main id="presentation-container" class="relative w-full h-screen overflow-hidden">
+
+        <!-- Slide 1: Eye Catcher - Humor -->
+        <section class="slide active flex items-center justify-center p-8 text-center">
+            <div class="absolute inset-0 bg-black/90 backdrop-blur-sm"></div>
+            <div class="relative max-w-4xl slide-content">
+                <div class="bg-red-600/20 p-8 rounded-xl border-4 border-red-500 mb-8">
+                    <h1 class="text-6xl md:text-8xl font-black text-red-400 mb-4">
+                        🤯 69%
+                    </h1>
+                    <p class="text-2xl md:text-3xl font-bold text-white">
+                        of Latino teens have had sex with a donkey
+                    </p>
+                </div>
+                <div class="bg-gray-900/80 p-6 rounded-xl border border-yellow-500/30">
+                    <h2 class="text-3xl font-bold text-yellow-400 mb-4">🤔 Wait, what?</h2>
+                    <p class="text-gray-300 text-lg">No, that's not real. But it's the kind of bullshit that polluted polls push when nobody's watching.</p>
+                    <p class="text-gray-400 mt-4 text-sm">This is why we built VenekoVox - to stop the madness.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 2: About Me - Personal Story -->
+        <section class="slide flex items-center justify-center p-8">
+            <div class="max-w-5xl w-full slide-content">
+                <h2 class="text-4xl md:text-5xl font-black text-center mb-8 gradient-text">
+                    🇻🇪 → 🇦🇺 → 🌍<br>
+                    From Lawyer to Vibe Coder
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div class="bg-gray-900/80 p-8 rounded-xl border border-purple-500/30">
+                        <h3 class="text-2xl font-bold text-purple-400 mb-6">The Journey</h3>
+                        <div class="space-y-4 text-gray-300">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center mt-1">
+                                    <span class="text-purple-400">⚖️</span>
+                                </div>
+                                <p><span class="text-white font-semibold">Venezuelan Lawyer:</span> Saw firsthand how broken systems silence truth</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center mt-1">
+                                    <span class="text-purple-400">🇦🇺</span>
+                                </div>
+                                <p><span class="text-white font-semibold">Australian Diaspora:</span> Built community across continents</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center mt-1">
+                                    <span class="text-purple-400">💡</span>
+                                </div>
+                                <p><span class="text-white font-semibold">Ideas Guy:</span> Community builder turned bullshit detector</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center mt-1">
+                                    <span class="text-purple-400">⚡</span>
+                                </div>
+                                <p><span class="text-white font-semibold">Builder Mode:</span> Hacking with a vengeance against corrupted data</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="bg-black p-8 rounded-xl border border-cyan-500/30 glow">
+                            <div class="w-32 h-32 mx-auto mb-6 bg-cyan-500/10 rounded-full flex items-center justify-center border-2 border-cyan-500/30">
+                                <div class="text-4xl">⚡</div>
+                            </div>
+                            <h3 class="text-xl font-bold text-cyan-400 mb-2">Enough Talk</h3>
+                            <p class="text-gray-400">Time to build the tools that give power back to the people</p>
+                            <div class="mt-6">
+                                <div class="bg-red-500 text-white font-bold py-2 px-4 rounded text-sm">
+                                    #NoMoreBullshitPolls
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 3: The Problem - More Impactful -->
+        <section class="slide flex items-center justify-center p-8 text-center">
+            <div class="absolute inset-0 bg-black/90 backdrop-blur-sm"></div>
+            <div class="absolute inset-0 opacity-20">
+                <div class="map-dot" style="top: 30%; left: 25%;"></div>
+                <div class="map-dot" style="top: 45%; left: 20%;"></div>
+                <div class="map-dot" style="top: 60%; left: 30%;"></div>
+                <div class="map-dot" style="top: 35%; left: 75%;"></div>
+                <div class="map-dot" style="top: 50%; left: 80%;"></div>
+                <div class="map-dot" style="top: 65%; left: 70%;"></div>
+            </div>
+            <div class="relative max-w-6xl slide-content">
+                <h1 class="text-5xl md:text-7xl font-black tracking-tight leading-tight gradient-text mb-8">
+                    🇻🇪🇦🇷🇨🇴🇲🇽<br>
+                    Democracy is Broken.<br>
+                    <span class="text-red-400">Your Voice is Being Stolen.</span>
+                </h1>
+                <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                    <div class="p-6 bg-gray-900/80 border border-red-500/30 rounded-xl glow">
+                        <h3 class="font-bold text-lg text-red-400 mb-3">💀 Centralized Corruption</h3>
+                        <p class="text-gray-300">Traditional polls are black boxes controlled by the powerful. Your vote gets lost in the noise of manipulation.</p>
+                    </div>
+                    <div class="p-6 bg-gray-900/80 border border-red-500/30 rounded-xl glow">
+                        <h3 class="font-bold text-lg text-red-400 mb-3">🔇 Silenced by Fear</h3>
+                        <p class="text-gray-300">In Venezuela, Argentina, Colombia - people can't speak freely without fear of retaliation. Their truth remains unheard.</p>
+                    </div>
+                    <div class="p-6 bg-gray-900/80 border border-red-500/30 rounded-xl glow">
+                        <h3 class="font-bold text-lg text-red-400 mb-3">🤖 Digital Deception</h3>
+                        <p class="text-gray-300">Online polls are easily botted, surveilled, and blocked. The data you see is curated lies, not reality.</p>
+                    </div>
+                </div>
+                <p class="mt-8 text-gray-400 text-sm">Built from exile. Built for dignity. Built to give power back to the people.</p>
+            </div>
+        </section>
+
+        <!-- Slide 2: The Solution - More Technical -->
+        <section class="slide flex items-center justify-center p-8">
+            <div class="max-w-6xl w-full slide-content">
+                 <h1 class="text-5xl md:text-6xl font-black tracking-tight text-center mb-12">
+                    <span class="gradient-text">Anonymous</span>, 
+                    <span class="text-green-400">Verified</span>, 
+                    <span class="text-cyan-400">Unstoppable</span> Truth
+                 </h1>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+                    <div class="p-8 bg-gray-900/80 rounded-xl border border-green-500/30 glow">
+                        <h2 class="text-3xl font-bold text-green-400 mb-4">🔐 Why This Matters</h2>
+                        <p class="text-gray-300 text-lg">Sovereign expression is a human right. We need <span class="text-white font-semibold">uncorrupted public sentiment</span> - especially in repressive environments where truth is the first casualty.</p>
+                    </div>
+                    <div class="p-8 bg-gray-900/80 rounded-xl border border-purple-500/30 glow">
+                        <h2 class="text-3xl font-bold text-purple-400 mb-4">⚡ What We Built</h2>
+                        <p class="text-gray-300 text-lg">A decentralized app for secure, anonymous, verifiable polls. <span class="text-white font-semibold">Built to bypass surveillance</span>, resist censorship, and scale globally using cutting-edge cryptography.</p>
+                    </div>
+                    <div class="p-8 bg-gray-900/80 rounded-xl border border-blue-500/30 glow">
+                        <h2 class="text-3xl font-bold text-blue-400 mb-4">🧠 How It Works</h2>
+                        <p class="text-gray-300 text-lg"><span class="text-white font-semibold">Zero-knowledge proofs</span> (Self.ID + MACI) on <span class="text-white font-semibold">Sepolia testnet</span>. Fully open-source with region-specific poll logic and immutable storage.</p>
+                    </div>
+                 </div>
+            </div>
+        </section>
+
+        <!-- Slide 3: Tech Stack - More Detailed -->
+        <section class="slide flex items-center justify-center p-8">
+            <div class="max-w-5xl w-full slide-content">
+                <h2 class="text-5xl font-black text-center mb-8 gradient-text">The Architecture of Trust</h2>
+                <p class="text-center text-gray-400 mb-12">Every layer designed for maximum privacy and verifiability</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Left Column - Core Tech -->
+                    <div class="space-y-6">
+                        <div class="tech-badge p-6 rounded-xl">
+                            <h3 class="text-xl font-bold text-blue-400 mb-3">🔐 Identity Layer</h3>
+                            <p class="text-gray-300">Self.xyz - ZK passport validation</p>
+                            <p class="text-sm text-gray-400 mt-2">Proves you're human without revealing who you are</p>
+                        </div>
+                        
+                        <div class="tech-badge p-6 rounded-xl">
+                            <h3 class="text-xl font-bold text-purple-400 mb-3">🗳️ Voting Protocol</h3>
+                            <p class="text-gray-300">MACI (Minimal Anti-Collusion Infrastructure)</p>
+                            <p class="text-sm text-gray-400 mt-2">Prevents vote buying and ensures anonymity</p>
+                        </div>
+                        
+                        <div class="tech-badge p-6 rounded-xl">
+                            <h3 class="text-xl font-bold text-cyan-400 mb-3">⛓️ Blockchain</h3>
+                            <p class="text-gray-300">Sepolia Testnet → Base Mainnet Ready</p>
+                            <p class="text-sm text-gray-400 mt-2">Immutable, transparent, and censorship-resistant</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column - Implementation -->
+                    <div class="space-y-6">
+                        <div class="tech-badge p-6 rounded-xl">
+                            <h3 class="text-xl font-bold text-green-400 mb-3">📝 Smart Contracts</h3>
+                            <p class="text-gray-300">Poseidon hash-based PollFactory + Verifier</p>
+                            <p class="text-sm text-gray-400 mt-2">Custom-built for Latin American use cases</p>
+                        </div>
+                        
+                        <div class="tech-badge p-6 rounded-xl">
+                            <h3 class="text-xl font-bold text-yellow-400 mb-3">🌐 Frontend</h3>
+                            <p class="text-gray-300">React + Tailwind + Vite</p>
+                            <p class="text-sm text-gray-400 mt-2">Bilingual (EN/ES), mobile-first, dark mode</p>
+                        </div>
+                        
+                        <div class="tech-badge p-6 rounded-xl">
+                            <h3 class="text-xl font-bold text-red-400 mb-3">🔧 Backend</h3>
+                            <p class="text-gray-300">Node.js + Express + Self.xyz SDK</p>
+                            <p class="text-sm text-gray-400 mt-2">Verification endpoints and poll coordination</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-8 text-center">
+                    <div class="code-block p-4 text-left">
+                        <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-command">npx hardhat deploy --network sepolia</span></div>
+                        <div class="terminal-line"><span class="terminal-comment"># Deploying PollFactory, MACI, Verifier contracts...</span></div>
+                        <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-command">pnpm run dev</span></div>
+                        <div class="terminal-line"><span class="terminal-comment"># Starting frontend + backend with hot reload</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 4: Real Impact - More Specific -->
+        <section class="slide flex items-center justify-center p-8">
+            <div class="max-w-6xl w-full slide-content">
+                <h2 class="text-4xl md:text-5xl font-black text-center mb-8">
+                    For Anyone Who's Ever Asked:<br>
+                    <span class="text-yellow-400">"Who Did They Even Ask?"</span>
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="font-bold text-2xl text-yellow-300 mb-4">🎯 Who It's For:</h3>
+                        <div class="space-y-4 text-gray-300 text-lg">
+                            <p class="pl-4 border-l-2 border-yellow-400">People who see headlines and think: "That doesn't sound like me or anyone I know"</p>
+                            <p class="pl-4 border-l-2 border-yellow-400">Communities where speaking truth means risking everything</p>
+                            <p class="pl-4 border-l-2 border-yellow-400">Anyone tired of manipulated narratives and corrupted data</p>
+                        </div>
+                        
+                        <h3 class="font-bold text-2xl text-yellow-300 mt-8 mb-4">🚀 Why Now?</h3>
+                        <p class="text-gray-300 text-lg">2024 is the year of global elections. Public sentiment drives policy, yet most polls are centralized black boxes. This is how you run your own poll and trust it wasn't tampered with.</p>
+                        
+                        <h3 class="font-bold text-2xl text-yellow-300 mt-8 mb-4">📈 Growth Strategy:</h3>
+                        <p class="text-gray-300 text-lg">Start with diaspora communities where trust is broken. Spread by usage: one person runs a poll → ten people vote → real insight, real agency.</p>
+                    </div>
+                    
+                    <div class="bg-gray-900/80 p-6 rounded-xl border border-yellow-500/30">
+                        <h3 class="font-bold text-2xl text-center text-yellow-300 mb-6">🇱🇦 High-Impact Poll Ideas</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-bold text-lg flex items-center"><span class="mr-2">🇦🇷</span> Argentina</h4>
+                                <ul class="list-disc list-inside text-gray-400 ml-4">
+                                    <li>Do you approve of Javier Milei's economic reforms?</li>
+                                    <li>Should Argentina continue dollarization?</li>
+                                    <li>Trust in electoral institutions: 1-10 scale</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-bold text-lg flex items-center"><span class="mr-2">🇻🇪</span> Venezuela</h4>
+                                <ul class="list-disc list-inside text-gray-400 ml-4">
+                                    <li>Would you support international intervention?</li>
+                                    <li>Daily life: Dollars vs Bolívares usage</li>
+                                    <li>Trust in Maduro's government: Yes/No</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-bold text-lg flex items-center"><span class="mr-2">🇲🇽</span> Mexico</h4>
+                                <ul class="list-disc list-inside text-gray-400 ml-4">
+                                    <li>Do cartels influence local elections?</li>
+                                    <li>Safety perception in your city</li>
+                                    <li>Support for AMLO's policies</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 5: Live Demo - Trust Ritual -->
+        <section class="slide flex items-center justify-center p-8">
+            <div class="max-w-6xl w-full slide-content">
+                <h2 class="text-4xl md:text-5xl font-black text-center mb-2 gradient-text">The Trust Ritual</h2>
+                <p class="text-center text-blue-300 mb-8">Prove you're human. Keep your identity. Speak your truth.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div class="bg-gray-900/80 p-8 rounded-xl border border-blue-500/30">
+                        <h3 class="font-bold text-xl text-blue-400 mb-6">🔐 Zero-Knowledge Identity Verification</h3>
+                        
+                        <div class="space-y-4 mb-6">
+                            <div class="flex items-center justify-between p-3 bg-gray-800/50 rounded">
+                                <span class="text-gray-300">Passport Scan</span>
+                                <div class="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                                    <div class="w-4 h-4 bg-green-400 rounded-full animate-pulse"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-3 bg-gray-800/50 rounded">
+                                <span class="text-gray-300">Age Verification (18+)</span>
+                                <div class="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                                    <div class="w-4 h-4 bg-green-400 rounded-full animate-pulse"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-3 bg-gray-800/50 rounded">
+                                <span class="text-gray-300">Country Validation</span>
+                                <div class="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                                    <div class="w-4 h-4 bg-green-400 rounded-full animate-pulse"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="code-block p-4 text-sm">
+                            <div class="terminal-line"><span class="terminal-comment">// Backend verification - no personal data stored</span></div>
+                            <div class="terminal-line"><span class="terminal-prompt">const</span> <span class="terminal-command">verifier</span> = <span class="terminal-prompt">new</span> SelfBackendVerifier(</div>
+                            <div class="terminal-line">  <span class="terminal-command">'venekovox-trust-ritual'</span>,</div>
+                            <div class="terminal-line">  <span class="terminal-command">process.env.SELF_ENDPOINT</span>,</div>
+                            <div class="terminal-line">  <span class="terminal-command">false</span>, <span class="terminal-comment">// production mode</span></div>
+                            <div class="terminal-line">  <span class="terminal-command">allowedIds</span>,</div>
+                            <div class="terminal-line">  <span class="terminal-command">configStorage</span>,</div>
+                            <div class="terminal-line">  <span class="terminal-command">'hex'</span></div>
+                            <div class="terminal-line">);</div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="bg-black p-8 rounded-xl border border-blue-500/30 glow">
+                            <div class="w-32 h-32 mx-auto mb-6 bg-blue-500/10 rounded-full flex items-center justify-center border-2 border-blue-500/30">
+                                <div class="w-24 h-24 bg-blue-500/20 rounded-full flex items-center justify-center border border-blue-500/50">
+                                    <div class="text-blue-400 text-4xl">✓</div>
+                                </div>
+                            </div>
+                            <h3 class="text-xl font-bold text-blue-400 mb-2">Identity Verified</h3>
+                            <p class="text-gray-400">Your voice matters. Your privacy is protected.</p>
+                            <div class="mt-6">
+                                <button class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
+                                    Vote Anonymously →
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 6: Product Features - Real UI Showcase -->
+        <section class="slide flex items-center justify-center p-8">
+            <div class="max-w-6xl w-full slide-content">
+                <h2 class="text-4xl md:text-5xl font-black text-center mb-8 gradient-text">See It In Action</h2>
+                <p class="text-center text-gray-400 mb-12">Actual product screens from our working implementation</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-gray-900/80 p-6 rounded-xl border border-green-500/30">
+                        <h3 class="font-bold text-xl text-green-400 mb-4">🏠 Landing Page</h3>
+                        <div class="bg-black p-4 rounded-lg border border-gray-700 mb-4">
+                            <div class="flex items-center space-x-3 mb-4">
+                                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="h-4 bg-gray-700 rounded"></div>
+                                <div class="h-4 bg-gray-700 rounded w-3/4"></div>
+                                <div class="h-20 bg-gray-800 rounded mt-4 flex items-center justify-center">
+                                    <span class="text-gray-400">VenekoVox - Anonymous. Verified. Heard.</span>
+                                </div>
+                                <div class="flex gap-2 mt-4">
+                                    <div class="h-8 bg-blue-600 rounded flex-1"></div>
+                                    <div class="h-8 bg-gray-700 rounded flex-1"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-gray-300 text-sm">Bilingual landing page with real-time stats and country flags</p>
+                    </div>
+                    
+                    <div class="bg-gray-900/80 p-6 rounded-xl border border-blue-500/30">
+                        <h3 class="font-bold text-xl text-blue-400 mb-4">🔐 Trust Ritual</h3>
+                        <div class="bg-black p-4 rounded-lg border border-gray-700 mb-4">
+                            <div class="flex items-center space-x-3 mb-4">
+                                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                            </div>
+                            <div class="text-center space-y-3">
+                                <div class="w-16 h-16 mx-auto bg-blue-500/20 rounded-full border-2 border-blue-500/30"></div>
+                                <div class="h-4 bg-gray-700 rounded w-2/3 mx-auto"></div>
+                                <div class="h-3 bg-gray-700 rounded w-3/4 mx-auto"></div>
+                                <div class="h-10 bg-blue-600 rounded mx-auto w-full max-w-xs"></div>
+                            </div>
+                        </div>
+                        <p class="text-gray-300 text-sm">Self.xyz integration with real passport verification flow</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+                    <div class="bg-gray-900/80 p-6 rounded-xl border border-purple-500/30">
+                        <h3 class="font-bold text-xl text-purple-400 mb-4">🗳️ Live Polling</h3>
+                        <div class="bg-black p-4 rounded-lg border border-gray-700 mb-4">
+                            <div class="space-y-3">
+                                <div class="h-5 bg-gray-700 rounded"></div>
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <div class="h-4 bg-gray-600 rounded w-1/2"></div>
+                                        <div class="h-4 bg-gray-600 rounded w-1/4"></div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="h-4 bg-gray-600 rounded w-2/5"></div>
+                                        <div class="h-4 bg-gray-600 rounded w-1/3"></div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="h-4 bg-gray-600 rounded w-3/5"></div>
+                                        <div class="h-4 bg-gray-600 rounded w-2/5"></div>
+                                    </div>
+                                </div>
+                                <div class="h-8 bg-green-600 rounded mt-4"></div>
+                            </div>
+                        </div>
+                        <p class="text-gray-300 text-sm">Real-time poll results with MACI-encrypted voting</p>
+                    </div>
+                    
+                    <div class="bg-gray-900/80 p-6 rounded-xl border border-yellow-500/30">
+                        <h3 class="font-bold text-xl text-yellow-400 mb-4">📊 Analytics Dashboard</h3>
+                        <div class="bg-black p-4 rounded-lg border border-gray-700 mb-4">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="h-16 bg-gray-800 rounded flex items-center justify-center">
+                                    <span class="text-gray-400 text-sm">1,283 Votes</span>
+                                </div>
+                                <div class="h-16 bg-gray-800 rounded flex items-center justify-center">
+                                    <span class="text-gray-400 text-sm">16 Countries</span>
+                                </div>
+                                <div class="h-16 bg-gray-800 rounded flex items-center justify-center">
+                                    <span class="text-gray-400 text-sm">28 Polls</span>
+                                </div>
+                                <div class="h-16 bg-gray-800 rounded flex items-center justify-center">
+                                    <span class="text-gray-400 text-sm">99.9% Uptime</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-gray-300 text-sm">Demographic insights without compromising anonymity</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 7: The Vision - Replacing Traditional Polls -->
+        <section class="slide flex items-center justify-center p-8">
+            <div class="max-w-6xl w-full slide-content">
+                <h2 class="text-4xl md:text-5xl font-black text-center mb-8">
+                    The End of <span class="text-red-400">Corrupted Polls</span>
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                    <div>
+                        <h3 class="font-bold text-2xl text-red-300 mb-6">❌ Traditional Polls Are Broken</h3>
+                        <div class="space-y-4 text-gray-300">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-red-500/20 rounded-full flex items-center justify-center mt-1">
+                                    <div class="w-3 h-3 bg-red-400 rounded-full"></div>
+                                </div>
+                                <p><span class="text-white font-semibold">Manipulated Samples:</span> Cherry-picked respondents that don't represent reality</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-red-500/20 rounded-full flex items-center justify-center mt-1">
+                                    <div class="w-3 h-3 bg-red-400 rounded-full"></div>
+                                </div>
+                                <p><span class="text-white font-semibold">Hidden Agendas:</span> Polls designed to push narratives, not discover truth</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-red-500/20 rounded-full flex items-center justify-center mt-1">
+                                    <div class="w-3 h-3 bg-red-400 rounded-full"></div>
+                                </div>
+                                <p><span class="text-white font-semibold">Fear-Based Silence:</span> People afraid to speak honestly under repressive regimes</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-red-500/20 rounded-full flex items-center justify-center mt-1">
+                                    <div class="w-3 h-3 bg-red-400 rounded-full"></div>
+                                </div>
+                                <p><span class="text-white font-semibold">Digital Manipulation:</span> Bots, fake accounts, and algorithmic bias</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-bold text-2xl text-green-300 mb-6">✅ VenekoVox Fixes This</h3>
+                        <div class="space-y-4 text-gray-300">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center mt-1">
+                                    <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                                </div>
+                                <p><span class="text-white font-semibold">Verified Humans:</span> Every vote from a real, verified person (not bots)</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center mt-1">
+                                    <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                                </div>
+                                <p><span class="text-white font-semibold">Complete Anonymity:</span> Speak truth without fear of retaliation</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center mt-1">
+                                    <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                                </div>
+                                <p><span class="text-white font-semibold">Immutable Results:</span> On-chain storage prevents tampering</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center mt-1">
+                                    <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                                </div>
+                                <p><span class="text-white font-semibold">Global Scale:</span> Same trust system works from Caracas to California</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-900/80 p-8 rounded-xl border border-blue-500/30">
+                    <h3 class="text-2xl font-bold text-blue-400 mb-4 text-center">🌍 Where This Changes Everything</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="text-center">
+                            <div class="text-3xl mb-2">🇻🇪</div>
+                            <h4 class="font-bold text-white mb-2">Venezuela</h4>
+                            <p class="text-gray-400 text-sm">Real sentiment about Maduro's government without fear</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl mb-2">🇦🇷</div>
+                            <h4 class="font-bold text-white mb-2">Argentina</h4>
+                            <p class="text-gray-400 text-sm">True approval ratings for Milei's economic reforms</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl mb-2">🇺🇸</div>
+                            <h4 class="font-bold text-white mb-2">US Elections</h4>
+                            <p class="text-gray-400 text-sm">Unmanipulated data from Latino communities</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 8: The Movement - Call to Action -->
+        <section class="slide flex items-center justify-center p-8">
+            <div class="max-w-4xl w-full slide-content text-center">
+                <h2 class="text-5xl font-black mb-8 gradient-text">This is More Than Code</h2>
+                <p class="text-xl text-gray-300 mb-12">It's a movement for digital dignity and uncensored truth</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                    <div class="p-6 bg-gray-900/80 rounded-xl border border-purple-500/30">
+                        <div class="text-4xl mb-4">🌎</div>
+                        <h3 class="font-bold text-lg text-purple-400 mb-2">Built from Exile</h3>
+                        <p class="text-gray-400 text-sm">Created across Colombia and the diaspora for Latin Americans by Latin Americans</p>
+                    </div>
+                    
+                    <div class="p-6 bg-gray-900/80 rounded-xl border border-green-500/30">
+                        <div class="text-4xl mb-4">🔓</div>
+                        <h3 class="font-bold text-lg text-green-400 mb-2">Fully Open Source</h3>
+                        <p class="text-gray-400 text-sm">Every line of code is public and verifiable. No backdoors, no compromises.</p>
+                    </div>
+                    
+                    <div class="p-6 bg-gray-900/80 rounded-xl border border-blue-500/30">
+                        <div class="text-4xl mb-4">🚀</div>
+                        <h3 class="font-bold text-lg text-blue-400 mb-2">Ready to Scale</h3>
+                        <p class="text-gray-400 text-sm">Deployed on Sepolia, ready for Base mainnet. Built to handle millions of votes.</p>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-900/80 p-8 rounded-xl border border-yellow-500/30">
+                    <h3 class="text-2xl font-bold text-yellow-400 mb-4">Join the Movement</h3>
+                    <p class="text-gray-300 mb-6">This isn't just a hackathon project. It's the beginning of a new era for civic engagement.</p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a href="#" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
+                            Try the Demo
+                        </a>
+                        <a href="#" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg border border-gray-600">
+                            View Source Code
+                        </a>
+                        <a href="#" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
+                            Run Your Poll
+                        </a>
+                    </div>
+                    
+                    <p class="mt-6 text-sm text-gray-400">
+                        VenekoVox - Build from exile. Speak with dignity. Govern with truth.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Navigation -->
+    <div class="fixed bottom-0 left-0 right-0 p-4 z-10">
+        <div class="container mx-auto flex justify-between items-center">
+            <button id="prev-btn" class="px-4 py-2 bg-gray-800/50 border border-gray-600 rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">&larr; Prev</button>
+            <div id="slide-counter" class="text-sm font-semibold text-gray-400">1 / 6</div>
+            <button id="next-btn" class="px-4 py-2 bg-gray-800/50 border border-gray-600 rounded-md hover:bg-gray-700">Next &rarr;</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const slides = document.querySelectorAll('.slide');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const slideCounter = document.getElementById('slide-counter');
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+
+            function showSlide(index) {
+                slides.forEach((slide, i) => {
+                    slide.classList.toggle('active', i === index);
+                });
+                currentSlide = index;
+                slideCounter.textContent = `${index + 1} / 10`;
+                prevBtn.disabled = index === 0;
+                nextBtn.disabled = index === 9;
+            }
+
+            function nextSlide() {
+                if (currentSlide < totalSlides - 1) {
+                    showSlide(currentSlide + 1);
+                }
+            }
+
+            function prevSlide() {
+                if (currentSlide > 0) {
+                    showSlide(currentSlide - 1);
+                }
+            }
+
+            nextBtn.addEventListener('click', nextSlide);
+            prevBtn.addEventListener('click', prevSlide);
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight') {
+                    nextSlide();
+                } else if (e.key === 'ArrowLeft') {
+                    prevSlide();
+                }
+            });
+
+            showSlide(0);
+        });
+    </script>
+</body>
+</html>

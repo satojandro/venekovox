@@ -1,4 +1,152 @@
-# VenekoVox - Privacy-First Civic Polling Platform
+# VenekoVox - MACI ZK Voting Demo
+
+This README documents how to run the VenekoVox demo stack: deploy smart contracts, run the backend, interact with the frontend, and demo a full privacy-preserving voting system using Self passport ZK proofs.
+
+---
+
+## 🚀 1. Deploy the Contracts
+
+### ✅ Prerequisites
+- Node.js 20.x (required)
+- `pnpm` v10+
+- Sepolia ETH in your deployer wallet
+- `.env` in `packages/contracts/` with:
+  ```env
+  PRIVATE_KEY=<deployer-private-key>
+  SEPOLIA_RPC=https://sepolia.infura.io/v3/<YOUR_KEY>
+  ETHERSCAN_API_KEY=<your-etherscan-api-key>
+  ```
+
+### 🛠️ Deploy
+```bash
+cd packages/contracts
+pnpm deploy:sepolia
+```
+- Will deploy MACI core contracts + Poll infrastructure
+- Output saved in `deployed-contracts.json`
+
+---
+
+## 🗳️ 2. Create a Poll
+
+### ✏️ Command Template
+Run from `packages/contracts`:
+```bash
+pnpm deploy-poll:sepolia
+```
+This will deploy:
+- Poll
+- MessageProcessor
+- Tally contracts
+
+Uses preconfigured settings from `.env` and `deploy-config.json`.
+
+---
+
+## 🔐 3. Run the Backend (Verifier)
+
+### ✅ Prerequisites
+- RSA keypair generated
+- `.env` in `apps/coordinator` with:
+  ```env
+  COORDINATOR_PRIVATE_KEY_PATH=./private.key
+  COORDINATOR_MACI_PRIVATE_KEY=<MACI-private-key>
+  COORDINATOR_RPC_URL=https://sepolia.infura.io/v3/<YOUR_KEY>
+  VITE_SELF_SCOPE=venekovox-trust-ritual
+  SELF_ENDPOINT=https://api.self.xyz
+  ```
+
+### 🏃 Start
+```bash
+cd apps/coordinator
+pnpm dev
+```
+
+---
+
+## 🌐 4. Run the Frontend
+
+### 🏗️ Setup
+```bash
+cd apps/frontend
+pnpm dev
+```
+
+### ⚙️ Configuration
+Set `.env` for frontend:
+```env
+VITE_SELF_SCOPE=venekovox-trust-ritual
+VITE_BACKEND_URL=http://localhost:3000
+VITE_CHAIN_ID=11155111
+VITE_RPC_URL=https://sepolia.infura.io/v3/<YOUR_KEY>
+VITE_MACI_ADDRESS=<deployed MACI address>
+```
+
+---
+
+## 🎥 5. Demo Flow (for Judges)
+
+1. **Connect Wallet** on frontend (MetaMask)
+2. **Verify ID** using Self.xyz → uploads passport or ID → returns ZK proof
+3. **Polls Page** shows active polls
+4. **Vote** using privacy-preserving zk proofs
+5. **Transaction appears** on Sepolia explorer
+
+---
+
+## 📦 6. Custom Polls (Manual CLI)
+
+From `packages/contracts`:
+```bash
+pnpm tsx ./tasks/createPoll.ts \
+  --state-index 0 \
+  --coordinator-pk <MACI-priv-key> \
+  --poll-owner-key <wallet-private-key> \
+  --maci <MACI address> \
+  --poll-factory <PollFactory address> \
+  --message-processor-factory <MPFactory address> \
+  --tally-factory <TallyFactory address> \
+  --vk-registry <VKRegistry address> \
+  --int-voice-cred-proxy <VoiceCreditProxy address> \
+  --duration 1200 \
+  --signup-duration 300 \
+  --voting-duration 900 \
+  --batch-size 2 \
+  --max-msgs 2 \
+  --msg-batch-depth 2 \
+  --tree-depths '{"intStateTreeDepth":10,"messageTreeSubDepth":2,"messageTreeDepth":3,"voteOptionTreeDepth":3}' \
+  --rpc https://sepolia.gateway.tenderly.co \
+  --quiet
+```
+
+---
+
+## 🌍 7. Real-World Identity (Passport)
+To use production Self.xyz and real ID:
+```env
+NODE_ENV=production
+SELF_ENDPOINT=https://api.self.xyz
+```
+- Verifier is already configured to check real proofs
+
+---
+
+## 🧠 8. What Makes VenekoVox Unique
+- Region-specific poll topics (customizable in poll metadata)
+- Passport-based identity: only real people vote
+- zk-based privacy and resistance to sybil attacks
+
+---
+
+## ✅ 9. Post Hackathon TODO
+- Subgraph deployment for analytics
+- Improved frontend UX (poll creation, tracking)
+- Passport tiering / voting eligibility based on location
+- Token-based incentives for voters / creators
+
+---
+
+## VenekoVox - Privacy-First Civic Polling Platform
 
 [![CI][cli-actions-badge]][cli-actions-link]
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/privacy-scaling-explorations/maci/blob/main/LICENSE)
@@ -10,145 +158,6 @@ https://maci.pse.dev/**
 
 We welcome contributions to this project. Please join our
 [Discord server](https://discord.com/invite/sF5CT5rzrR) (in the `#🗳️-maci` channel) to discuss.
-
-## VenekoVox Frontend Setup
-
-### Prerequisites
-
-- Node.js 18+
-- pnpm
-- Self.xyz API credentials (contact Self.xyz for access)
-
-### Installation
-
-1. Install frontend dependencies:
-```bash
-cd apps/front-end
-pnpm install
-```
-
-2. Install backend dependencies:
-```bash
-cd ../backend
-npm install
-cd ..
-```
-
-3. Configure environment variables:
-
-   **Frontend** (`.env.local` in `apps/front-end/`):
-   ```env
-   VITE_SELF_SCOPE=venekovox-trust-ritual
-   VITE_SELF_ENDPOINT=http://localhost:3001/verify
-   ```
-
-   **Backend** (`.env` in `apps/backend/`):
-   ```env
-   VITE_SELF_SCOPE=venekovox-trust-ritual
-   SELF_ENDPOINT=https://api.self.xyz
-   PORT=3001
-   ```
-
-4. Start both services:
-
-   **Terminal 1 - Backend:**
-   ```bash
-   cd apps/backend
-   npm run dev
-   ```
-
-   **Terminal 2 - Frontend:**
-   ```bash
-   cd apps/front-end
-   pnpm dev
-   ```
-
-### Trust Ritual Flow
-
-The Trust Ritual implements Self.xyz identity verification:
-
-1. **QR Code Generation**: Users scan a QR code with the Self mobile app
-2. **Identity Verification**: Self app scans passport/ID and generates zk-proof
-3. **Anonymous Storage**: Only hashed country, age, gender are stored locally
-4. **Voting Eligibility**: Verified users can participate in anonymous polls
-
-### Testing the Integration
-
-#### Enable Mock Passports for Testing
-
-1. **Download Self App**: Get the Self mobile app on iOS/Android
-2. **Enable Debug Mode**: Tap the Self card **5 times with 2 fingers** to unlock debug menu
-3. **Use Playground**: Visit https://playground.staging.self.xyz for testing
-
-#### Test Steps
-
-1. **Start Backend**: `cd apps/backend && npm run dev`
-2. **Start Frontend**: `cd apps/front-end && pnpm dev`
-3. **Navigate**: Go to `http://localhost:5173/trust-ritual`
-4. **Scan QR**: Use Self app in debug mode to scan the QR code
-5. **Verify**: Check backend logs and frontend success state
-
-#### Mock vs Production
-
-- ✅ **Development**: `mockPassport: true` (accepts test documents)
-- ✅ **Production**: `mockPassport: false` (requires real documents)
-- ✅ **Testing**: Use playground to simulate different demographics
-
-### Key Features
-
-- **Zero-Knowledge Proofs**: Identity verified without revealing personal data
-- **Anonymous Voting**: MACI ensures vote privacy and prevents collusion
-- **Multi-language Support**: English and Spanish interfaces
-- **Responsive Design**: Works on desktop and mobile devices
-
-### Backend Verification Setup
-
-For production, implement the backend verification endpoint:
-
-```javascript
-// pages/api/verify.js (Next.js) or your backend route
-import { SelfBackendVerifier, UserIdType } from '@selfxyz/core';
-
-export default async function handler(req, res) {
-  const allowedIds = new Map();
-  allowedIds.set(1, true); // Passport
-
-  const configStorage = new (class {
-    async getConfig() {
-      return { olderThan: 18, excludedCountries: [], ofac: false };
-    }
-    async getActionId(u, d) { return 'default'; }
-  })();
-
-  const verifier = new SelfBackendVerifier(
-    'venekovox-trust-ritual', // Must match frontend scope
-    process.env.SELF_ENDPOINT, // Your frontend endpoint URL
-    false, // Production mode
-    allowedIds,
-    configStorage,
-    UserIdType.HEX // Matches frontend userIdType
-  );
-
-  if (req.method === 'POST') {
-    const { attestationId, proof, pubSignals, userContextData } = req.body;
-    const result = await verifier.verify(attestationId, proof, pubSignals, userContextData);
-
-    return res.status(200).json({
-      status: result.isValidDetails.isValid ? 'success' : 'error',
-      verifyOutput: result.discloseOutput
-    });
-  }
-
-  res.status(405).end();
-}
-```
-
-### API Integration
-
-The frontend integrates with:
-- **Self.xyz**: Identity verification and zk-proof generation
-- **MACI Protocol**: Anonymous voting infrastructure
-- **IPFS/Filecoin**: Decentralized storage for poll data
 
 ## Packages
 
@@ -228,7 +237,7 @@ CI pipeline ensures that we have automated tests that constantly validate. For m
 [contracts-actions-badge]: https://github.com/privacy-scaling-explorations/maci/actions/workflows/contracts-build.yml/badge.svg
 [contracts-actions-link]: https://github.com/privacy-scaling-explorations/maci/actions?query=workflow%3Acontracts
 [core-package]: ./packages/core
-[core-npm-badge]: https://img.shields.io/npm/v/@maci-protocol/core.svg
+[core-npm-badge]: https://img.shields.ionpm/v/@maci-protocol/core.svg
 [core-npm-link]: https://www.npmjs.com/package/@maci-protocol/core
 [core-actions-badge]: https://github.com/privacy-scaling-explorations/maci/actions/workflows/core-build.yml/badge.svg
 [core-actions-link]: https://github.com/privacy-scaling-explorations/maci/actions?query=workflow%3Acore

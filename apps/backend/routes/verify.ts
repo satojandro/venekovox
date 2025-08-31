@@ -1,5 +1,6 @@
 import express from 'express';
-import { SelfBackendVerifier, UserIdType } from '@selfxyz/core';
+import { SelfBackendVerifier } from '@selfxyz/core';
+import { UserIdType } from '@selfxyz/common';
 
 const router = express.Router();
 
@@ -41,7 +42,7 @@ const verifier = new SelfBackendVerifier(
   !isProduction,                                           // Mock mode for development, production for mainnet
   allowedIds,                                              // Allowed document types
   configStorage,                                           // Verification configuration
-  UserIdType.HEX                                           // User ID type (matches frontend)
+  'hex'                                                    // User ID type (matches frontend)
 );
 
 // POST /verify - Verify Self.xyz zero-knowledge proof

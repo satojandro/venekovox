@@ -120,6 +120,7 @@ import {
   type TDeployedProxyFactories,
 } from "./types";
 
+
 /**
  * Creates contract factory from abi and bytecode
  *
@@ -130,6 +131,13 @@ import {
  */
 export const createContractFactory = async (abi: TAbi, bytecode: string, signer?: Signer): Promise<ContractFactory> => {
   const hre = await import("hardhat");
+  
+  // 🚨 Hotfix: Disable ENS name resolution entirely
+  hre.ethers.provider.resolveName = (name: string) => {
+    console.warn(`resolveName called with ${name}. Returning raw string.`);
+    return Promise.resolve(name);
+  };
+  
   const deployment = Deployment.getInstance({ hre });
   deployment.setHre(hre);
   const deployer = signer || (await deployment.getDeployer());
@@ -152,6 +160,13 @@ export const deployContract = async <T extends BaseContract>(
 ): Promise<T> => {
   logMagenta({ text: `Deploying ${contractName}`, quiet });
   const hre = await import("hardhat");
+  
+  // 🚨 Hotfix: Disable ENS name resolution entirely
+  hre.ethers.provider.resolveName = (name: string) => {
+    console.warn(`resolveName called with ${name}. Returning raw string.`);
+    return Promise.resolve(name);
+  };
+  
   const deployment = Deployment.getInstance({ hre });
   deployment.setHre(hre);
 
@@ -845,6 +860,13 @@ export const deployContractWithLinkedLibraries = async <T extends BaseContract>(
   ...args: unknown[]
 ): Promise<T> => {
   const hre = await import("hardhat");
+  
+  // 🚨 Hotfix: Disable ENS name resolution entirely
+  hre.ethers.provider.resolveName = (name: string) => {
+    console.warn(`resolveName called with ${name}. Returning raw string.`);
+    return Promise.resolve(name);
+  };
+  
   const deployment = Deployment.getInstance({ hre });
   deployment.setHre(hre);
 

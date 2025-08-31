@@ -225,6 +225,12 @@ export class Deployment {
   async getDeployer(): Promise<Signer> {
     this.checkHre();
 
+    // 🚨 Hotfix: Disable ENS name resolution entirely
+    this.hre!.ethers.provider.resolveName = async (name: string) => {
+      console.warn(`resolveName called with ${name}. Returning raw string.`);
+      return name;
+    };
+
     const [deployer] = await this.hre!.ethers.getSigners();
 
     return deployer as unknown as Signer;

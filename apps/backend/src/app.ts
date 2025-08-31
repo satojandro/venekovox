@@ -12,7 +12,7 @@ app.use(helmet());
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
     ? ['https://venekovox.com', 'https://www.venekovox.com']
-    : ['http://localhost:5173', 'http://localhost:3000'],
+    : ['http://localhost:5173', 'http://localhost:3002'],
   credentials: true
 }));
 

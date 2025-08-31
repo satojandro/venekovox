@@ -1,4 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { SelfQRcodeWrapper, SelfAppBuilder, type SelfApp } from '@selfxyz/qrcode';
+import { getUniversalLink } from '@selfxyz/core';
+import { ethers } from 'ethers';
 import { Shield, Globe, CheckCircle, ArrowRight, Loader2, ScanLine } from 'lucide-react';
 
 // --- LANGUAGE CONTENT ---
@@ -49,16 +53,97 @@ const content = {
 
 // --- MAIN COMPONENT ---
 export default function TrustRitualPage() {
-  const [language, setLanguage] = useState('es');
-  const [status, setStatus] = useState('unverified'); // 'unverified', 'verifying', 'verified'
+  const [language, setLanguage] = useState<'en' | 'es'>('es');
+  const [status, setStatus] = useState<'unverified' | 'verifying' | 'verified'>('unverified');
+  const [selfApp, setSelfApp] = useState<SelfApp | null>(null);
+  const [universalLink, setUniversalLink] = useState('');
+  const navigate = useNavigate();
   const currentContent = content[language];
+
+  useEffect(() => {
+    // Initialize Self app configuration
+    const initSelfApp = async () => {
+      try {
+        const userId = ethers.ZeroAddress; // Use zero address for demo
+
+        const app = new SelfAppBuilder({
+          version: 2,
+          appName: "VenekoVox",
+          scope: process.env.VITE_SELF_SCOPE || "venekovox-trust-ritual",
+          endpoint: process.env.VITE_SELF_ENDPOINT || "https://api.self.xyz",
+          logoBase64: "https://i.postimg.cc/mrmVf9hm/self.png", // Default Self logo
+          userId: userId,
+          endpointType: "staging_https",
+          userIdType: "hex",
+          userDefinedData: "VenekoVox Trust Ritual",
+          disclosures: {
+            // Verification requirements
+            minimumAge: 18,
+            ofac: false,
+            excludedCountries: [],
+
+            // Disclosure requests (what we want to know anonymously)
+            nationality: true,
+            gender: true,
+            // date_of_birth: false, // We don't need DOB, just age verification
+          }
+        }).build();
+
+        setSelfApp(app);
+        setUniversalLink(getUniversalLink(app));
+      } catch (error) {
+        console.error('Failed to initialize Self app:', error);
+      }
+    };
+
+    initSelfApp();
+  }, []);
 
   const handleVerification = () => {
     setStatus('verifying');
-    // Simulate API call to Self.ID
-    setTimeout(() => {
+  };
+
+  const handleVerificationSuccess = async () => {
+    try {
+      // For now, simulate successful verification
+      // In production, the SelfQRcodeWrapper would handle the backend communication
+      // and the verification data would be processed automatically
+
+      // Store verification flag
+      localStorage.setItem('venekovox_verified', 'true');
+
+      // TODO: In production, implement proper backend integration
+      // The SelfQRcodeWrapper handles the verification flow internally
+      // and calls onSuccess when complete
+
       setStatus('verified');
-    }, 2500);
+    } catch (error) {
+      console.error('Error storing verification data:', error);
+      setStatus('unverified');
+    }
+  };
+
+  const handleVerificationError = (error: { error_code?: string, reason?: string }) => {
+    console.error('Verification failed:', error);
+    setStatus('unverified');
+  };
+
+  const handleExplorePolls = () => {
+    navigate('/polls');
+  };
+
+  const openSelfApp = () => {
+    if (universalLink) {
+      window.open(universalLink, '_blank');
+    }
+  };
+
+  const hashData = async (data: string) => {
+    const encoder = new TextEncoder();
+    const dataBuffer = encoder.encode(data);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   };
 
   return (
@@ -121,8 +206,28 @@ export default function TrustRitualPage() {
 
             {status === 'verifying' && (
               <div className="flex flex-col items-center justify-center h-80">
-                <Loader2 className="w-12 h-12 text-blue-400 animate-spin mb-4" />
-                <p className="text-lg text-gray-300">{currentContent.status.verifying}</p>
+                {selfApp ? (
+                  <>
+                    <SelfQRcodeWrapper
+                      selfApp={selfApp}
+                      onSuccess={handleVerificationSuccess}
+                      onError={handleVerificationError}
+                    />
+                    <p className="text-lg text-gray-300 mt-4">{currentContent.status.verifying}</p>
+                    <p className="text-sm text-gray-400 mt-2">Scan with Self app or use the button below</p>
+                    <button
+                      onClick={openSelfApp}
+                      className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition duration-300"
+                    >
+                      Open Self App
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Loader2 className="w-12 h-12 text-blue-400 animate-spin mb-4" />
+                    <p className="text-lg text-gray-300">Loading verification...</p>
+                  </>
+                )}
               </div>
             )}
 
@@ -131,10 +236,13 @@ export default function TrustRitualPage() {
                 <CheckCircle className="w-20 h-20 text-green-400 mb-4" />
                 <h2 className="text-2xl font-bold text-white mb-2">{currentContent.status.verifiedTitle}</h2>
                 <p className="text-gray-300 mb-8">{currentContent.status.verifiedMessage}</p>
-                <a href="#" className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-6 rounded-lg transition duration-300 flex items-center justify-center space-x-2">
+                <button
+                  onClick={handleExplorePolls}
+                  className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-6 rounded-lg transition duration-300 flex items-center justify-center space-x-2"
+                >
                   <span>{currentContent.status.explorePolls}</span>
                   <ArrowRight className="w-5 h-5"/>
-                </a>
+                </button>
               </div>
             )}
 

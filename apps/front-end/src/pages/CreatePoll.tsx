@@ -227,7 +227,7 @@ export default function CreatePollPage() {
                         <input type="checkbox" className="sr-only" checked={showDemographics} readOnly/>
                         <div className="block w-10 h-6 rounded-full transition" style={{backgroundColor: showDemographics ? '#2563eb' : '#4b5563'}}></div>
                         <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${showDemographics ? 'translate-x-4' : ''}`}></div>
-                    </label>
+                    </div>
                     <span className="text-sm text-gray-300 select-none">{currentContent.form.showDemographics}</span>
                 </label>
             </div>

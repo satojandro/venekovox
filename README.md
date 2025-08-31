@@ -1,15 +1,154 @@
-# Minimal Anti-Collusion Infrastructure
+# VenekoVox - Privacy-First Civic Polling Platform
 
 [![CI][cli-actions-badge]][cli-actions-link]
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/privacy-scaling-explorations/maci/blob/main/LICENSE)
 
-Minimal Anti-Collusion Infrastructure (MACI) is an on-chain voting protocol which protects privacy and minimizes the risk of collusion and bribery.
+VenekoVox is a privacy-first civic polling platform built on Minimal Anti-Collusion Infrastructure (MACI) that enables anonymous voting while preventing collusion and bribery.
 
 **MACI blog, resources, and documentation for developers and integrators can be found here:
 https://maci.pse.dev/**
 
 We welcome contributions to this project. Please join our
 [Discord server](https://discord.com/invite/sF5CT5rzrR) (in the `#🗳️-maci` channel) to discuss.
+
+## VenekoVox Frontend Setup
+
+### Prerequisites
+
+- Node.js 18+
+- pnpm
+- Self.xyz API credentials (contact Self.xyz for access)
+
+### Installation
+
+1. Install frontend dependencies:
+```bash
+cd apps/front-end
+pnpm install
+```
+
+2. Install backend dependencies:
+```bash
+cd ../backend
+npm install
+cd ..
+```
+
+3. Configure environment variables:
+
+   **Frontend** (`.env.local` in `apps/front-end/`):
+   ```env
+   VITE_SELF_SCOPE=venekovox-trust-ritual
+   VITE_SELF_ENDPOINT=http://localhost:3001/verify
+   ```
+
+   **Backend** (`.env` in `apps/backend/`):
+   ```env
+   VITE_SELF_SCOPE=venekovox-trust-ritual
+   SELF_ENDPOINT=https://api.self.xyz
+   PORT=3001
+   ```
+
+4. Start both services:
+
+   **Terminal 1 - Backend:**
+   ```bash
+   cd apps/backend
+   npm run dev
+   ```
+
+   **Terminal 2 - Frontend:**
+   ```bash
+   cd apps/front-end
+   pnpm dev
+   ```
+
+### Trust Ritual Flow
+
+The Trust Ritual implements Self.xyz identity verification:
+
+1. **QR Code Generation**: Users scan a QR code with the Self mobile app
+2. **Identity Verification**: Self app scans passport/ID and generates zk-proof
+3. **Anonymous Storage**: Only hashed country, age, gender are stored locally
+4. **Voting Eligibility**: Verified users can participate in anonymous polls
+
+### Testing the Integration
+
+#### Enable Mock Passports for Testing
+
+1. **Download Self App**: Get the Self mobile app on iOS/Android
+2. **Enable Debug Mode**: Tap the Self card **5 times with 2 fingers** to unlock debug menu
+3. **Use Playground**: Visit https://playground.staging.self.xyz for testing
+
+#### Test Steps
+
+1. **Start Backend**: `cd apps/backend && npm run dev`
+2. **Start Frontend**: `cd apps/front-end && pnpm dev`
+3. **Navigate**: Go to `http://localhost:5173/trust-ritual`
+4. **Scan QR**: Use Self app in debug mode to scan the QR code
+5. **Verify**: Check backend logs and frontend success state
+
+#### Mock vs Production
+
+- ✅ **Development**: `mockPassport: true` (accepts test documents)
+- ✅ **Production**: `mockPassport: false` (requires real documents)
+- ✅ **Testing**: Use playground to simulate different demographics
+
+### Key Features
+
+- **Zero-Knowledge Proofs**: Identity verified without revealing personal data
+- **Anonymous Voting**: MACI ensures vote privacy and prevents collusion
+- **Multi-language Support**: English and Spanish interfaces
+- **Responsive Design**: Works on desktop and mobile devices
+
+### Backend Verification Setup
+
+For production, implement the backend verification endpoint:
+
+```javascript
+// pages/api/verify.js (Next.js) or your backend route
+import { SelfBackendVerifier, UserIdType } from '@selfxyz/core';
+
+export default async function handler(req, res) {
+  const allowedIds = new Map();
+  allowedIds.set(1, true); // Passport
+
+  const configStorage = new (class {
+    async getConfig() {
+      return { olderThan: 18, excludedCountries: [], ofac: false };
+    }
+    async getActionId(u, d) { return 'default'; }
+  })();
+
+  const verifier = new SelfBackendVerifier(
+    'venekovox-trust-ritual', // Must match frontend scope
+    process.env.SELF_ENDPOINT, // Your frontend endpoint URL
+    false, // Production mode
+    allowedIds,
+    configStorage,
+    UserIdType.HEX // Matches frontend userIdType
+  );
+
+  if (req.method === 'POST') {
+    const { attestationId, proof, pubSignals, userContextData } = req.body;
+    const result = await verifier.verify(attestationId, proof, pubSignals, userContextData);
+
+    return res.status(200).json({
+      status: result.isValidDetails.isValid ? 'success' : 'error',
+      verifyOutput: result.discloseOutput
+    });
+  }
+
+  res.status(405).end();
+}
+```
+
+### API Integration
+
+The frontend integrates with:
+- **Self.xyz**: Identity verification and zk-proof generation
+- **MACI Protocol**: Anonymous voting infrastructure
+- **IPFS/Filecoin**: Decentralized storage for poll data
 
 ## Packages
 

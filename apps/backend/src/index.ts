@@ -1,7 +1,7 @@
-import 'dotenv/config';
-import app from './app';
+import "dotenv/config";
+import app from "./app";
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3100;
 
 app.listen(PORT, () => {
   console.log(`🚀 VenekoVox Backend Server running on port ${PORT}`);

@@ -160,3 +160,6 @@ proofs
 inputs.json 
 
 .specstory/
+
+# Build outputs
+**/dist/

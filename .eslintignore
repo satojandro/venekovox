@@ -6,3 +6,5 @@ typechain-types
 .eslintrc.js
 commitlint.config.js
 apps/subgraph/generated
+apps/backend/**
+apps/front-end/**

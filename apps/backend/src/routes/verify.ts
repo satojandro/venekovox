@@ -1,103 +1,102 @@
-import express, { Request, Response } from 'express';
-// import { SelfBackendVerifier } from '@selfxyz/core'; // Will be uncommented when SDK is properly configured
+import express, { Request, Response } from "express";
+import { SelfBackendVerifier, DefaultConfigStore, AllIds } from "@selfxyz/core";
 
-const router = express.Router();
+const router: import("express").Router = express.Router();
 
-// Initialize Self.xyz verifier
-// const verifier = new SelfBackendVerifier({
-//   // Configuration will be loaded from environment variables
-//   // Add your Self.xyz configuration here
-// });
+// --- Self.xyz backend verifier (Self Pass, open-source SDK) ---
+const SCOPE = process.env.SELF_SCOPE || "venekovox-trust-ritual";
+const ENDPOINT = process.env.SELF_ENDPOINT || "http://localhost:3100/verify";
+// true = accept mock passports (testnet/staging), false = real documents (mainnet)
+const MOCK_PASSPORT = process.env.MOCK_PASSPORT === "true";
 
-// Mock passport mode for development
-const isDevelopment = process.env.NODE_ENV !== 'production';
-const mockPassportEnabled = process.env.MOCK_PASSPORT === 'true' || isDevelopment;
+const allowedIds = new Map<1 | 2, boolean>([
+  [1, true], // electronic passport
+  [2, true], // EU ID card
+]);
 
-// POST /verify - Verify Self.xyz ZK-proof
-router.post('/', async (req, res) => {
+const selfBackendVerifier = new SelfBackendVerifier(
+  SCOPE,
+  ENDPOINT,
+  MOCK_PASSPORT,
+  allowedIds,
+  new DefaultConfigStore({
+    minimumAge: 18,
+    excludedCountries: [],
+    ofac: false,
+  }),
+  "uuid",
+);
+
+// POST /verify - Verify a Self.xyz ZK-proof produced by the mobile app
+router.post("/", async (req: Request, res: Response) => {
   try {
-    console.log('🔍 Verifying Self.xyz proof...');
+    const { attestationId, proof, publicSignals, userContextData } = req.body ?? {};
 
-    const { proof, publicSignals } = req.body;
-
-    if (!proof || !publicSignals) {
+    if (!attestationId || !proof || !publicSignals || !userContextData) {
       return res.status(400).json({
-        error: 'Missing required fields',
-        message: 'Both proof and publicSignals are required',
-        received: { proof: !!proof, publicSignals: !!publicSignals }
+        status: "error",
+        result: false,
+        message: "attestationId, proof, publicSignals and userContextData are required",
       });
     }
 
-    // In development with mock passports, accept test proofs
-    if (mockPassportEnabled && isDevelopment) {
-      console.log('🧪 Mock passport mode enabled - accepting test proof');
+    const result = await selfBackendVerifier.verify(attestationId, proof, publicSignals, userContextData);
 
-      // Simulate verification delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    if (result.isValidDetails.isValid) {
+      // Store only non-identifying disclosures; never persist name/ID number.
+      const { nullifier } = result.discloseOutput;
+      console.log(`✅ Verified. nullifier=${nullifier.slice(0, 12)}… nationality=${result.discloseOutput.nationality}`);
 
-      // Mock successful verification response
-      const mockResult = {
-        status: 'verified',
+      return res.json({
+        status: "verified",
         verifiedAt: new Date().toISOString(),
-        userId: 'mock-user-' + Date.now(),
-        country: 'US', // Mock country
-        age: 25,       // Mock age
-        gender: 'M',   // Mock gender
-        mockMode: true,
-        message: 'Mock verification successful - use playground for real testing'
-      };
-
-      console.log('✅ Mock verification result:', mockResult);
-      return res.json(mockResult);
+        // nullifier lets us dedupe re-verifications without knowing who the user is
+        nullifier,
+        userData: {
+          nationality: result.discloseOutput.nationality,
+          gender: result.discloseOutput.gender,
+        },
+        discloseOutput: result.discloseOutput,
+      });
     }
 
-    // Production verification with real Self.xyz
-    console.log('🔐 Production verification not yet configured');
-    console.log('📝 Received proof data:', { proofLength: proof.length, signalsCount: publicSignals.length });
-
-    // TODO: Uncomment when Self.xyz SDK is properly configured
-    // const verificationResult = await verifier.verify({
-    //   proof,
-    //   publicSignals,
-    //   // Add additional verification parameters as needed
-    // });
-
-    // For now, return mock result in all cases
-    const result = {
-      status: 'verified',
-      verifiedAt: new Date().toISOString(),
-      userId: 'temp-user-' + Date.now(),
-      country: 'US',
-      age: 25,
-      gender: 'M',
-      mockMode: true,
-      message: 'Temporary mock verification - configure Self.xyz SDK for production'
-    };
-
-    console.log('✅ Temporary verification result:', result);
-    res.json(result);
-
-  } catch (error) {
-    console.error('❌ Verification error:', error);
-    res.status(500).json({
-      error: 'Verification Error',
-      message: error instanceof Error ? error.message : 'Unknown error occurred',
-      status: 'error'
+    return res.status(400).json({
+      status: "error",
+      result: false,
+      reason: "Verification failed",
+      error_code: "VERIFICATION_FAILED",
+      details: result.isValidDetails,
+    });
+  } catch (error: unknown) {
+    // ConfigMismatchError carries structured issues from the SDK
+    const err = error as { name?: string; issues?: unknown; message?: string };
+    if (err?.name === "ConfigMismatchError") {
+      return res.status(400).json({
+        status: "error",
+        result: false,
+        error_code: "CONFIG_MISMATCH",
+        issues: err.issues,
+      });
+    }
+    console.error("❌ Verification error:", error);
+    return res.status(500).json({
+      status: "error",
+      result: false,
+      error_code: "UNKNOWN_ERROR",
+      reason: err?.message || "Unknown error occurred",
     });
   }
 });
 
-// GET /verify - Health check for verification endpoint
-router.get('/', (req, res) => {
+// GET /verify - Health check for the verification endpoint
+router.get("/", (_req: Request, res: Response) => {
   res.json({
-    status: 'operational',
-    service: 'Self.xyz Verification',
-    mockMode: mockPassportEnabled && isDevelopment,
-    environment: process.env.NODE_ENV || 'development',
+    status: "operational",
+    service: "Self.xyz Verification",
+    scope: SCOPE,
+    mockPassport: MOCK_PASSPORT,
+    environment: process.env.NODE_ENV || "development",
     timestamp: new Date().toISOString(),
-    instructions: mockPassportEnabled && isDevelopment
-      ? 'Mock passport mode enabled. Use Self Playground for testing.'
-      : 'Production mode. Requires valid Self.xyz proofs.'
   });
 });
 

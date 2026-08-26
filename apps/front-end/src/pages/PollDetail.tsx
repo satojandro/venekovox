@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Shield, Globe, CheckCircle, BarChart2, Users, ArrowRight } from 'lucide-react';
+import { useState } from "react";
+import { Shield, Globe, CheckCircle, BarChart2, Users, ArrowRight } from "lucide-react";
+import { useMaci } from "../hooks/useMaci";
 
 // --- MOCK DATA ---
 const mockPollDetail = {
@@ -7,7 +8,7 @@ const mockPollDetail = {
   title: { en: "Do you support dollarization in Venezuela?", es: "¿Apoya la dolarización en Venezuela?" },
   description: {
     en: "This poll seeks to understand public sentiment on transitioning from the Bolívar to the U.S. Dollar as the official currency, a measure proposed to stabilize the economy.",
-    es: "Esta encuesta busca entender el sentimiento público sobre la transición del Bolívar al Dólar Estadounidense como moneda oficial, una medida propuesta para estabilizar la economía."
+    es: "Esta encuesta busca entender el sentimiento público sobre la transición del Bolívar al Dólar Estadounidense como moneda oficial, una medida propuesta para estabilizar la economía.",
   },
   country: "Venezuela",
   flag: "🇻🇪",
@@ -19,9 +20,33 @@ const mockPollDetail = {
 };
 
 const mockRelatedPolls = [
-    { id: 2, title: { en: "Unified opposition candidate for the next election?", es: "¿Candidato de oposición unificado para la próxima elección?" }, country: "Venezuela", flag: "🇻🇪" },
-    { id: 7, title: { en: "Should gas subsidies be restructured?", es: "¿Deberían reestructurarse los subsidios a la gasolina?" }, country: "Venezuela", flag: "🇻🇪" },
-    { id: 8, title: { en: "Public trust in the national electoral council (CNE).", es: "Confianza pública en el Consejo Nacional Electoral (CNE)." }, country: "Venezuela", flag: "🇻🇪" },
+  {
+    id: 2,
+    title: {
+      en: "Unified opposition candidate for the next election?",
+      es: "¿Candidato de oposición unificado para la próxima elección?",
+    },
+    country: "Venezuela",
+    flag: "🇻🇪",
+  },
+  {
+    id: 7,
+    title: {
+      en: "Should gas subsidies be restructured?",
+      es: "¿Deberían reestructurarse los subsidios a la gasolina?",
+    },
+    country: "Venezuela",
+    flag: "🇻🇪",
+  },
+  {
+    id: 8,
+    title: {
+      en: "Public trust in the national electoral council (CNE).",
+      es: "Confianza pública en el Consejo Nacional Electoral (CNE).",
+    },
+    country: "Venezuela",
+    flag: "🇻🇪",
+  },
 ];
 
 // --- LANGUAGE CONTENT ---
@@ -55,7 +80,8 @@ const content = {
     resultsTitle: "Resultados en Vivo",
     totalVotes: "Votos Totales",
     privacyTitle: "Anónimo y Seguro",
-    privacyDescription: "Los votos se verifican mediante pruebas zk y se almacenan on-chain. Tu identidad nunca se revela.",
+    privacyDescription:
+      "Los votos se verifican mediante pruebas zk y se almacenan on-chain. Tu identidad nunca se revela.",
     poweredBy: "Impulsado por",
     relatedPollsTitle: "Encuestas Relacionadas en Venezuela",
     tags: "Etiquetas",
@@ -82,8 +108,11 @@ const ResultBar = ({ label, percentage, colorClass }) => (
 
 // --- MAIN COMPONENT ---
 export default function PollDetailPage() {
-  const [language, setLanguage] = useState('es');
-  const [userVote, setUserVote] = useState(null); // null, 'yes', 'no', 'abstain'
+  const [language, setLanguage] = useState("es");
+  const [userVote, setUserVote] = useState<string | null>(null); // null, 'yes', 'no', 'abstain'
+  const [txHash, setTxHash] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const maci = useMaci();
   const currentContent = content[language];
 
   const total = mockPollDetail.results.yes + mockPollDetail.results.no + mockPollDetail.results.abstain;
@@ -93,9 +122,27 @@ export default function PollDetailPage() {
     abstain: (mockPollDetail.results.abstain / total) * 100,
   };
 
-  const handleVote = (vote) => {
-    if (mockPollDetail.status === 'Open') {
+  // vote options mapped to MACI vote option indices
+  const VOTE_OPTIONS: Record<string, number> = { yes: 0, no: 1, abstain: 2 };
+
+  const handleVote = async (vote: string) => {
+    setError(null);
+    try {
+      if (!maci.account) {
+        await maci.connect();
+      }
+      if (!maci.stateIndex) {
+        await maci.signup();
+      }
+      if (!maci.pollStateIndex && !maci.isEligibleToVote) {
+        await maci.joinPollFlow();
+      }
+      const result = await maci.vote(VOTE_OPTIONS[vote]);
+      setTxHash(result.hash);
       setUserVote(vote);
+    } catch (err) {
+      console.error("Vote failed:", err);
+      setError(err instanceof Error ? err.message : "Vote failed");
     }
   };
 
@@ -110,13 +157,13 @@ export default function PollDetailPage() {
               <span className="text-2xl font-bold tracking-wider text-white">{currentContent.brand}</span>
             </div>
             <div className="flex items-center space-x-4">
-               <button
-                onClick={() => setLanguage(l => l === 'en' ? 'es' : 'en')}
+              <button
+                onClick={() => setLanguage((l) => (l === "en" ? "es" : "en"))}
                 className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors p-2 rounded-md"
                 aria-label="Toggle language"
               >
                 <Globe className="w-5 h-5" />
-                <span className="font-semibold text-sm">{language === 'en' ? 'ES' : 'EN'}</span>
+                <span className="font-semibold text-sm">{language === "en" ? "ES" : "EN"}</span>
               </button>
             </div>
           </div>
@@ -129,10 +176,14 @@ export default function PollDetailPage() {
           <section className="mb-8">
             <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-3">{mockPollDetail.title[language]}</h1>
             <div className="flex flex-wrap items-center gap-2 text-sm mb-4">
-              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${mockPollDetail.status === 'Open' ? 'bg-green-500/20 text-green-300' : 'bg-gray-600/30 text-gray-400'}`}>
-                {mockPollDetail.status === 'Open' ? currentContent.status.open : currentContent.status.closed}
+              <span
+                className={`text-xs font-semibold px-2.5 py-1 rounded-full ${mockPollDetail.status === "Open" ? "bg-green-500/20 text-green-300" : "bg-gray-600/30 text-gray-400"}`}
+              >
+                {mockPollDetail.status === "Open" ? currentContent.status.open : currentContent.status.closed}
               </span>
-              <span className="bg-gray-700/50 px-3 py-1 rounded-full">{mockPollDetail.flag} {mockPollDetail.country}</span>
+              <span className="bg-gray-700/50 px-3 py-1 rounded-full">
+                {mockPollDetail.flag} {mockPollDetail.country}
+              </span>
               <span className="bg-gray-700/50 px-3 py-1 rounded-full">{mockPollDetail.topic[language]}</span>
             </div>
             {mockPollDetail.userIsEligible && (
@@ -157,19 +208,68 @@ export default function PollDetailPage() {
                   userVote ? (
                     <div className="bg-blue-900/40 border border-blue-500/50 text-center p-6 rounded-lg">
                       <p className="font-semibold text-blue-200 mb-3">{currentContent.voteConfirmation}</p>
-                      <p className="text-lg text-white mb-4">
-                         {currentContent.voteOptions[userVote]}
-                      </p>
+                      <p className="text-lg text-white mb-4">{currentContent.voteOptions[userVote]}</p>
                       <button onClick={() => setUserVote(null)} className="text-sm text-blue-300 hover:underline">
                         {currentContent.updateVote}
                       </button>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <button onClick={() => handleVote('yes')} className="w-full py-3 px-4 rounded-lg font-semibold bg-green-600 hover:bg-green-500 transition-transform transform hover:scale-105">{currentContent.voteOptions.yes}</button>
-                      <button onClick={() => handleVote('no')} className="w-full py-3 px-4 rounded-lg font-semibold bg-red-600 hover:bg-red-500 transition-transform transform hover:scale-105">{currentContent.voteOptions.no}</button>
-                      <button onClick={() => handleVote('abstain')} className="w-full py-3 px-4 rounded-lg font-semibold bg-gray-600 hover:bg-gray-500 transition-transform transform hover:scale-105">{currentContent.voteOptions.abstain}</button>
-                    </div>
+                    <>
+                      <div className="mb-3 text-center text-sm text-gray-300">
+                        {maci.account ? (
+                          <span>
+                            Wallet:{" "}
+                            <span className="text-blue-300 font-mono">
+                              {maci.account.slice(0, 6)}…{maci.account.slice(-4)}
+                            </span>
+                            {maci.status === "joining" && (
+                              <span className="ml-2 text-yellow-300">Joining poll (zk-proof in browser)…</span>
+                            )}
+                            {maci.status === "signing-up" && (
+                              <span className="ml-2 text-yellow-300">Signing up to MACI…</span>
+                            )}
+                            {maci.status === "voting" && (
+                              <span className="ml-2 text-yellow-300">Publishing encrypted vote…</span>
+                            )}
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => maci.connect().catch((e) => setError(e.message))}
+                            className="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                          >
+                            Connect Wallet
+                          </button>
+                        )}
+                      </div>
+                      {error && (
+                        <div className="mb-3 bg-red-900/40 border border-red-500/50 text-red-200 p-3 rounded-lg text-sm">
+                          {error}
+                        </div>
+                      )}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <button
+                          disabled={!!txHash || maci.status === "voting" || maci.status === "joining"}
+                          onClick={() => handleVote("yes")}
+                          className="w-full py-3 px-4 rounded-lg font-semibold bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-105"
+                        >
+                          {currentContent.voteOptions.yes}
+                        </button>
+                        <button
+                          disabled={!!txHash || maci.status === "voting" || maci.status === "joining"}
+                          onClick={() => handleVote("no")}
+                          className="w-full py-3 px-4 rounded-lg font-semibold bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-105"
+                        >
+                          {currentContent.voteOptions.no}
+                        </button>
+                        <button
+                          disabled={!!txHash || maci.status === "voting" || maci.status === "joining"}
+                          onClick={() => handleVote("abstain")}
+                          className="w-full py-3 px-4 rounded-lg font-semibold bg-gray-600 hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-105"
+                        >
+                          {currentContent.voteOptions.abstain}
+                        </button>
+                      </div>
+                    </>
                   )
                 ) : (
                   <div className="bg-yellow-900/30 border border-yellow-500/40 text-center p-4 rounded-lg text-yellow-200 text-sm">
@@ -182,11 +282,25 @@ export default function PollDetailPage() {
             <div className="lg:col-span-2">
               {/* 4. Live Results Visuals */}
               <aside className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 sticky top-24">
-                <h2 className="text-lg font-bold text-white mb-4 flex items-center"><BarChart2 className="w-5 h-5 mr-2"/> {currentContent.resultsTitle}</h2>
+                <h2 className="text-lg font-bold text-white mb-4 flex items-center">
+                  <BarChart2 className="w-5 h-5 mr-2" /> {currentContent.resultsTitle}
+                </h2>
                 <div className="space-y-4 mb-5">
-                  <ResultBar label={currentContent.voteOptions.yes} percentage={percentages.yes} colorClass="bg-green-500" />
-                  <ResultBar label={currentContent.voteOptions.no} percentage={percentages.no} colorClass="bg-red-500" />
-                  <ResultBar label={currentContent.voteOptions.abstain} percentage={percentages.abstain} colorClass="bg-gray-500" />
+                  <ResultBar
+                    label={currentContent.voteOptions.yes}
+                    percentage={percentages.yes}
+                    colorClass="bg-green-500"
+                  />
+                  <ResultBar
+                    label={currentContent.voteOptions.no}
+                    percentage={percentages.no}
+                    colorClass="bg-red-500"
+                  />
+                  <ResultBar
+                    label={currentContent.voteOptions.abstain}
+                    percentage={percentages.abstain}
+                    colorClass="bg-gray-500"
+                  />
                 </div>
                 <div className="flex justify-between items-center text-sm border-t border-gray-700 pt-3">
                   <span className="text-gray-400">{currentContent.totalVotes}</span>
@@ -198,34 +312,41 @@ export default function PollDetailPage() {
 
           {/* 5. Privacy + Trust Info */}
           <section className="my-12 bg-gray-800/30 p-6 rounded-lg border border-gray-700/50 flex flex-col sm:flex-row items-center gap-6">
-              <Shield className="w-10 h-10 text-blue-400 flex-shrink-0" />
-              <div>
-                <h3 className="font-bold text-white">{currentContent.privacyTitle}</h3>
-                <p className="text-sm text-gray-300 mb-2">{currentContent.privacyDescription}</p>
-                <div className="text-xs text-gray-400 flex items-center gap-2">{currentContent.poweredBy}:
-                  <span className="font-mono bg-gray-700 px-2 py-0.5 rounded">MACI</span>
-                  <span className="font-mono bg-gray-700 px-2 py-0.5 rounded">Semaphore</span>
-                  <span className="font-mono bg-gray-700 px-2 py-0.5 rounded">Self.xyz</span>
-                </div>
+            <Shield className="w-10 h-10 text-blue-400 flex-shrink-0" />
+            <div>
+              <h3 className="font-bold text-white">{currentContent.privacyTitle}</h3>
+              <p className="text-sm text-gray-300 mb-2">{currentContent.privacyDescription}</p>
+              <div className="text-xs text-gray-400 flex items-center gap-2">
+                {currentContent.poweredBy}:<span className="font-mono bg-gray-700 px-2 py-0.5 rounded">MACI</span>
+                <span className="font-mono bg-gray-700 px-2 py-0.5 rounded">Semaphore</span>
+                <span className="font-mono bg-gray-700 px-2 py-0.5 rounded">Self.xyz</span>
               </div>
+            </div>
           </section>
 
           {/* 6. Related Polls */}
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">{currentContent.relatedPollsTitle}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {mockRelatedPolls.map(poll => (
-                <a href="#" key={poll.id} className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:border-blue-500 transition group">
-                   <p className="font-semibold text-white group-hover:text-blue-300 transition">{poll.title[language]}</p>
-                   <div className="flex justify-between items-center mt-3">
-                      <span className="text-sm text-gray-400">{poll.flag} {poll.country}</span>
-                      <ArrowRight className="w-4 h-4 text-gray-500 group-hover:translate-x-1 transition-transform" />
-                   </div>
+              {mockRelatedPolls.map((poll) => (
+                <a
+                  href="#"
+                  key={poll.id}
+                  className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:border-blue-500 transition group"
+                >
+                  <p className="font-semibold text-white group-hover:text-blue-300 transition">
+                    {poll.title[language]}
+                  </p>
+                  <div className="flex justify-between items-center mt-3">
+                    <span className="text-sm text-gray-400">
+                      {poll.flag} {poll.country}
+                    </span>
+                    <ArrowRight className="w-4 h-4 text-gray-500 group-hover:translate-x-1 transition-transform" />
+                  </div>
                 </a>
               ))}
             </div>
           </section>
-
         </div>
       </main>
     </div>

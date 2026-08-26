@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -9,12 +9,19 @@ export default defineConfig({
     host: true,
   },
   build: {
-    outDir: 'dist',
+    outDir: "dist",
     sourcemap: true,
   },
   resolve: {
     alias: {
-      '@': '/src',
+      "@": "/src",
     },
   },
-})
+  // MACI workspace packages are CommonJS; ensure proper pre-bundling
+  optimizeDeps: {
+    include: ["@maci-protocol/sdk", "@maci-protocol/domainobjs"],
+    esbuildOptions: {
+      resolveExtensions: [".mjs", ".js", ".ts", ".jsx", ".tsx", ".json"],
+    },
+  },
+});

@@ -14,6 +14,8 @@
   "dependencies": {
     "@headlessui/react": "^1.7.0",
     "@heroicons/react": "^2.0.0",
+    "@maci-protocol/domainobjs": "workspace:*",
+    "@maci-protocol/sdk": "workspace:*",
     "@selfxyz/core": "^1.0.8",
     "@selfxyz/qrcode": "^1.0.25",
     "axios": "^1.3.0",

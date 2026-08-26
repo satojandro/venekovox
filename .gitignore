@@ -163,3 +163,4 @@ inputs.json
 
 # Build outputs
 **/dist/
+.deployer-key

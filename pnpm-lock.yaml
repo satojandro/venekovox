@@ -292,6 +292,12 @@ importers:
       '@heroicons/react':
         specifier: ^2.0.0
         version: 2.2.0(react@18.3.1)
+      '@maci-protocol/domainobjs':
+        specifier: workspace:*
+        version: link:../../packages/domainobjs
+      '@maci-protocol/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
       '@selfxyz/core':
         specifier: ^1.0.8
         version: 1.0.8
@@ -12118,8 +12124,8 @@ packages:
     peerDependencies:
       ethers: ^6.7.1
 
-  zksync-telemetry@git+ssh://git@github.com/matter-labs/zksync-telemetry-js.git#2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11:
-    resolution: {commit: 2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11, repo: git@github.com:matter-labs/zksync-telemetry-js.git, type: git}
+  zksync-telemetry@https://codeload.github.com/matter-labs/zksync-telemetry-js/tar.gz/2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11:
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/matter-labs/zksync-telemetry-js/tar.gz/2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11}
     version: 1.0.0
 
   zod@3.25.76:
@@ -14656,7 +14662,7 @@ snapshots:
 
   '@matterlabs/hardhat-zksync-telemetry@1.1.1(debug@4.4.1)(hardhat@2.26.3(ts-node@10.9.2(@types/node@24.3.0)(typescript@5.9.2))(typescript@5.9.2))':
     dependencies:
-      '@matterlabs/zksync-telemetry-js': zksync-telemetry@git+ssh://git@github.com/matter-labs/zksync-telemetry-js.git#2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11(debug@4.4.1)
+      '@matterlabs/zksync-telemetry-js': zksync-telemetry@https://codeload.github.com/matter-labs/zksync-telemetry-js/tar.gz/2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11(debug@4.4.1)
       hardhat: 2.26.3(ts-node@10.9.2(@types/node@24.3.0)(typescript@5.9.2))(typescript@5.9.2)
     transitivePeerDependencies:
       - debug
@@ -26985,7 +26991,7 @@ snapshots:
     dependencies:
       ethers: 6.15.0
 
-  zksync-telemetry@git+ssh://git@github.com/matter-labs/zksync-telemetry-js.git#2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11(debug@4.4.1):
+  zksync-telemetry@https://codeload.github.com/matter-labs/zksync-telemetry-js/tar.gz/2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11(debug@4.4.1):
     dependencies:
       '@sentry/node': 8.55.0
       env-paths: 2.2.1

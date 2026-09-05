@@ -1,6 +1,6 @@
 # Architecture and trust boundaries
 
-Read [current state](current-state.md) for what is implemented. Dashed edges below are missing/proposed connections. Solid edges describe existing code paths, not a claim of full live verification.
+Read [current state](current-state.md) for what is implemented. For the reasoning behind the core design (why the vote flow is atomic, why two keys, what the trust model implies), read [design rationale](design-rationale.md). Dashed edges below are missing/proposed connections. Solid edges describe existing code paths, not a claim of full live verification.
 
 ## Current system
 

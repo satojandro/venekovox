@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:vote-flow": "node --test tests/voteFlow.test.mjs"
+    "test:vote-flow": "node --test tests/voteFlow.test.mjs",
+    "test:receipts": "node --test tests/receipts.test.mjs",
+    "test:unit": "node --test tests/voteFlow.test.mjs tests/receipts.test.mjs"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.0",

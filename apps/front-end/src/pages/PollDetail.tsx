@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Shield, Globe, CheckCircle, BarChart2, ArrowRight } from "lucide-react";
 import { useMaci } from "../hooks/useMaci";
 
@@ -109,11 +109,14 @@ const ResultBar = ({ label, percentage, colorClass }) => (
 export default function PollDetailPage() {
   const [language, setLanguage] = useState("es");
   const [userVote, setUserVote] = useState<string | null>(null); // null, 'yes', 'no', 'abstain'
-  const [txHash, setTxHash] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const submitting = useRef(false);
   const maci = useMaci();
   const currentContent = content[language];
+
+  // A receipt only counts as "submission confirmed" for the wallet that owns it.
+  // A restored receipt from a previous session displays without local vote state.
+  const confirmedReceipt = maci.receipt && maci.account && maci.receiptAccount === maci.account ? maci.receipt : null;
 
   const total = mockPollDetail.results.yes + mockPollDetail.results.no + mockPollDetail.results.abstain;
   const percentages = {
@@ -126,19 +129,29 @@ export default function PollDetailPage() {
   const VOTE_OPTIONS: Record<string, number> = { yes: 0, no: 1, abstain: 2 };
 
   const handleVote = async (vote: string) => {
-    if (submitting.current || txHash) return;
+    if (submitting.current || confirmedReceipt) return;
     submitting.current = true;
     setError(null);
     try {
       const result = await maci.vote(VOTE_OPTIONS[vote]);
-      setTxHash(result.hash);
-      setUserVote(vote);
+      // Display the confirmation only if the wallet that completed the submission
+      // is still the live one. A mid-flight switch (A -> B) must never render A's
+      // submission under B; the hook files the receipt under A's context regardless.
+      if (maci.account && result.account.toLowerCase() === maci.account.toLowerCase()) {
+        setUserVote(vote);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Vote failed");
     } finally {
       submitting.current = false;
     }
   };
+
+  // A wallet/account change invalidates local submission display; the hook
+  // re-hydrates participation and any receipt belonging to the new context.
+  useEffect(() => {
+    setUserVote(null);
+  }, [maci.account]);
 
   return (
     <div className="bg-gray-900 text-gray-200 min-h-screen font-sans">
@@ -199,11 +212,11 @@ export default function PollDetailPage() {
               {/* 3. Voting Interface */}
               <section className="mb-8">
                 {mockPollDetail.userIsEligible ? (
-                  userVote ? (
+                  confirmedReceipt ? (
                     <div className="bg-blue-900/40 border border-blue-500/50 text-center p-6 rounded-lg">
                       <p className="font-semibold text-blue-200 mb-3">{currentContent.voteConfirmation}</p>
-                      <p className="text-lg text-white mb-4">{currentContent.voteOptions[userVote]}</p>
-                      <p className="text-xs text-blue-200 break-all">Tx: {txHash}</p>
+                      {userVote && <p className="text-lg text-white mb-4">{currentContent.voteOptions[userVote]}</p>}
+                      <p className="text-xs text-blue-200 break-all">Tx: {confirmedReceipt.txHash}</p>
                     </div>
                   ) : (
                     <>
@@ -241,21 +254,21 @@ export default function PollDetailPage() {
                       )}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <button
-                          disabled={!!txHash || maci.isBusy}
+                          disabled={!!confirmedReceipt || maci.isBusy}
                           onClick={() => handleVote("yes")}
                           className="w-full py-3 px-4 rounded-lg font-semibold bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-105"
                         >
                           {currentContent.voteOptions.yes}
                         </button>
                         <button
-                          disabled={!!txHash || maci.isBusy}
+                          disabled={!!confirmedReceipt || maci.isBusy}
                           onClick={() => handleVote("no")}
                           className="w-full py-3 px-4 rounded-lg font-semibold bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-105"
                         >
                           {currentContent.voteOptions.no}
                         </button>
                         <button
-                          disabled={!!txHash || maci.isBusy}
+                          disabled={!!confirmedReceipt || maci.isBusy}
                           onClick={() => handleVote("abstain")}
                           className="w-full py-3 px-4 rounded-lg font-semibold bg-gray-600 hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-105"
                         >

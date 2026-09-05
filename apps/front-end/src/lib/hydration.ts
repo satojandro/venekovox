@@ -1,8 +1,10 @@
 // Wallet hydration orchestration, separate from React.
 //
-// Every state write goes through `canApply()` at the moment of application.
+// Every state write goes through `canApply()` AND a captured operation id.
+// Increment the operation id when a submission starts so a delayed RPC from
+// an older hydration cannot overwrite a newer receipt (G03).
 // The sequence peeks first, then writes: a duplicate or stale run must not
-// clear the displayed account/receipt and then return empty (G03).
+// clear the displayed account/receipt and then return empty.
 //
 // The hydrated-context marker is set only after participation lookup AND the
 // receipt check attempt finish. Recheck of pending/unavailable receipts is a
@@ -49,6 +51,10 @@ export interface PollConfig {
 
 export interface HydrationIO {
   canApply: () => boolean;
+  /** Monotonic id. Increment when a submission starts so older hydrations cannot apply later. */
+  getOperationId: () => number;
+  /** In-memory receipt for the live session, if any. Used so storage cannot clobber a newer submit. */
+  liveReceipt: () => VoteReceipt | null;
   contextKey: (chainId: bigint, account: string) => string;
   isHydratedFor: (key: string) => boolean;
   isInFlightFor: (key: string) => boolean;
@@ -85,8 +91,15 @@ export function hydrationContextKey(chainId: bigint, account: string): string {
 }
 
 export async function runHydration(io: HydrationIO): Promise<void> {
+  const operationId = io.getOperationId();
+  const current = () => io.canApply() && io.getOperationId() === operationId;
   const write = (next: HydrationWrite) => {
-    if (io.canApply()) io.apply(next);
+    if (!current()) return;
+    if (next.type === "receipt") {
+      const live = io.liveReceipt();
+      if (live && live.txHash.toLowerCase() !== next.receipt.txHash.toLowerCase()) return;
+    }
+    io.apply(next);
   };
 
   let peek: WalletPeek;
@@ -96,10 +109,10 @@ export async function runHydration(io: HydrationIO): Promise<void> {
     write({ type: "probe-error" });
     return;
   }
-  if (!io.canApply()) return;
+  if (!current()) return;
 
   if (peek.kind === "no-provider" || peek.kind === "not-connected") {
-    if (io.canApply()) {
+    if (current()) {
       io.clearHydrated();
       io.apply({ type: "disconnected" });
     }
@@ -147,12 +160,12 @@ export async function runHydration(io: HydrationIO): Promise<void> {
     }
     if ("missing" in keyState) {
       write({ type: "key-missing", account });
-      if (io.canApply()) io.markHydrated(key);
+      if (current()) io.markHydrated(key);
       return;
     }
     if ("invalid" in keyState) {
       write({ type: "key-invalid", account });
-      if (io.canApply()) io.markHydrated(key);
+      if (current()) io.markHydrated(key);
       return;
     }
 
@@ -165,7 +178,7 @@ export async function runHydration(io: HydrationIO): Promise<void> {
         pollId: config.pollId,
       });
       registered = data.registered;
-      if (!io.canApply()) return;
+      if (!current()) return;
       write({
         type: "ready",
         account,
@@ -206,7 +219,7 @@ export async function runHydration(io: HydrationIO): Promise<void> {
       // Same: participation stands; leave any displayed receipt untouched.
     }
 
-    if (io.canApply()) io.markHydrated(key);
+    if (current()) io.markHydrated(key);
   } finally {
     io.endFlight(key);
   }

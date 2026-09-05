@@ -43,6 +43,8 @@ function session(overrides = {}) {
     status: "idle",
     hydratedFor: null,
     inFlightFor: null,
+    operationId: 0,
+    liveReceipt: null,
   };
   const peekGate = deferred();
   const lookupGate = deferred();
@@ -55,6 +57,8 @@ function session(overrides = {}) {
     return {
       canApply: () =>
         snapshot === state.generation && !state.busy && !BLOCKED.includes(state.status),
+      getOperationId: () => state.operationId,
+      liveReceipt: () => state.liveReceipt,
       contextKey: hydrationContextKey,
       isHydratedFor: (key) => state.hydratedFor === key,
       isInFlightFor: (key) => state.inFlightFor === key,
@@ -99,6 +103,7 @@ function session(overrides = {}) {
     io,
     bump() {
       state.generation += 1;
+      state.operationId += 1;
       state.hydratedFor = null;
       state.inFlightFor = null;
     },
@@ -261,5 +266,34 @@ test("hydrate started while busy writes nothing; a later run after release hydra
   assert.equal(
     s.writes.some((w) => w.type === "ready"),
     true,
+  );
+});
+
+test("a delayed hydration must not overwrite a newer submission receipt", async () => {
+  const oldReceipt = { txHash: "0x" + "aa".repeat(32), submittedAt: 1 };
+  const newReceipt = { txHash: "0x" + "bb".repeat(32), submittedAt: 2 };
+  const s = session();
+  s.setStoredReceipt(oldReceipt);
+  const run = runHydration({
+    ...s.io(),
+    checkReceipt: async () => {
+      await s.receiptGate.promise;
+      return { status: "reverted", pollMatch: false, accountMatch: true };
+    },
+  });
+  s.peekGate.resolve();
+  s.lookupGate.resolve();
+  await s.waitFor(() => s.writes.some((w) => w.type === "ready"));
+  // Submission starts and completes while the old receipt RPC is in flight.
+  s.state.operationId += 1;
+  s.state.busy = false;
+  s.state.status = "voted";
+  s.state.liveReceipt = newReceipt;
+  s.receiptGate.resolve();
+  await run;
+  assert.equal(
+    s.writes.some((w) => w.type === "receipt"),
+    false,
+    "stale reverted receipt must not replace the new submission",
   );
 });

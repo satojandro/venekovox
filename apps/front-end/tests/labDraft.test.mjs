@@ -101,6 +101,21 @@ test("different transaction_id starts a fresh draft without inherited metadata",
   assert.equal(next.intent, undefined);
 });
 
+test("a caller-supplied submittedAt on a new transaction_id is honored — page must not pass a foreign clock", () => {
+  const storage = fakeStorage();
+  const first = upsertLabDraft({ transactionId: "tx-old", chainId: "11155111" }, storage);
+  const stamped = upsertLabDraft(
+    {
+      transactionId: "tx-new",
+      chainId: "11155111",
+      submittedAt: first.submittedAt,
+    },
+    storage,
+  );
+  // Helper cannot know the clock is foreign; W1Experiment gates on submittedTxId.
+  assert.equal(stamped.submittedAt, first.submittedAt);
+});
+
 test("throwing storage surfaces after identifiers exist in memory (persist regression)", () => {
   const storage = {
     getItem: () => null,

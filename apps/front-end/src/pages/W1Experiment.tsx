@@ -97,6 +97,8 @@ export default function W1Experiment() {
   const [report, setReport] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [submittedAt, setSubmittedAt] = useState<number | null>(null);
+  /** Which transactionId `submittedAt` belongs to — never reuse across different ids. */
+  const [submittedTxId, setSubmittedTxId] = useState<string | null>(null);
   /** Operator token for lab sponsored send — memory only; never a VITE_ env. */
   const [operatorToken, setOperatorToken] = useState("");
   const approved = useMemo(() => architectureMayBeApproved(notes), [notes]);
@@ -134,6 +136,7 @@ export default function W1Experiment() {
     if (draft.pollAddress) setPollAddress(draft.pollAddress);
     if (draft.transactionHash) setTxHash(draft.transactionHash);
     setSubmittedAt(draft.submittedAt);
+    setSubmittedTxId(draft.transactionId);
     setReport(
       JSON.stringify(
         {
@@ -165,12 +168,17 @@ export default function W1Experiment() {
       if (vendor.userOperationHash) update.userOperationHash = vendor.userOperationHash;
       if (vendor.transactionHash) update.transactionHash = vendor.transactionHash;
       if (intent) update.intent = intent;
-      if (submittedAt) update.submittedAt = submittedAt;
+      // Only pass a timestamp that belongs to this transaction. Same-id updates let
+      // upsertLabDraft preserve storage's submittedAt; a different id must not inherit it.
+      if (submittedAt && submittedTxId === vendor.transactionId) {
+        update.submittedAt = submittedAt;
+      }
       const draft = upsertLabDraft(update);
       setSubmittedAt(draft.submittedAt);
+      setSubmittedTxId(draft.transactionId);
       return draft;
     },
-    [participant, pollAddress, submittedAt],
+    [participant, pollAddress, submittedAt, submittedTxId],
   );
 
   function validateOptionalAddresses(): string | null {
@@ -277,7 +285,27 @@ export default function W1Experiment() {
         return;
       }
       const vendor = asVendorView(body.vendor);
-      if (vendor) persistVendor(vendor);
+      let draft = null;
+      let persistWarning: string | null = null;
+      if (vendor) {
+        try {
+          draft = persistVendor(vendor);
+        } catch (persistErr) {
+          persistWarning =
+            persistErr instanceof Error
+              ? persistErr.message
+              : "Draft storage failed. Status lookup and verification still ran.";
+          // Do not keep a previous transaction's clock for a different id.
+          if (submittedTxId !== vendor.transactionId) {
+            setSubmittedAt(null);
+            setSubmittedTxId(vendor.transactionId);
+          }
+        }
+      }
+
+      const displaySubmittedAt =
+        draft?.submittedAt ??
+        (vendor && submittedTxId === vendor.transactionId ? submittedAt : null);
 
       if (participant && pollAddress && vendor) {
         const wallet = window.ethereum;
@@ -330,7 +358,9 @@ export default function W1Experiment() {
             {
               observedChainId,
               configuredChainId: CHAIN_ID.toString(),
-              submittedAt,
+              submittedAt: displaySubmittedAt,
+              draft,
+              persistWarning,
               vendor,
               verdict,
               note: "Publication confirmation stays unverified until operation-linked inner evidence exists.",
@@ -344,7 +374,9 @@ export default function W1Experiment() {
           JSON.stringify(
             {
               configuredChainId: CHAIN_ID.toString(),
-              submittedAt,
+              submittedAt: displaySubmittedAt,
+              draft,
+              persistWarning,
               vendorLookup: body.vendorLookup,
               vendor,
               raw: body,
@@ -463,6 +495,9 @@ export default function W1Experiment() {
             persistErr instanceof Error
               ? persistErr.message
               : "Draft storage failed. Copy the transaction_id below — the send already happened.";
+          // Broadcast succeeded — keep a clock in memory for this id even if storage failed.
+          setSubmittedAt(Date.now());
+          setSubmittedTxId(vendor.transactionId);
         }
 
         setReport(
@@ -613,8 +648,10 @@ export default function W1Experiment() {
             Look up vendor status
           </button>
         </form>
-        {submittedAt ? (
-          <p className="text-xs text-gray-500">Original submission time (preserved across refresh): {new Date(submittedAt).toISOString()}</p>
+        {submittedAt && submittedTxId && submittedTxId === transactionId.trim() ? (
+          <p className="text-xs text-gray-500">
+            Original submission time for {submittedTxId} (preserved across refresh): {new Date(submittedAt).toISOString()}
+          </p>
         ) : null}
       </section>
 

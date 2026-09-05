@@ -25,16 +25,16 @@ No implementation owner is assigned indefinitely by this document. W1 is an expe
 Dated record for this change:
 
 ```text
-Task ID / owner / date: W1 security review-fix / Hermes / 2026-09-05
-Base commit and working branch: 80791eb1 → w1-privy-experiment
-Goal and acceptance gate: Close unauth lab-send, persist-hide-id, chainId 400, draft-hash erase; keep architecture unapproved
-Changed paths and decisions: labSendPolicy + route auth/allowlist; W1Experiment operator token + persist-after-display; upsertLabDraft same-tx preserve / new-tx fresh; backend + labDraft tests; env/docs
-Commands run and exact results: frontend unit **105 passed**; backend policy/route **15 passed**. Full frontend/backend builds blocked (no workspace node_modules / pnpm).
+Task ID / owner / date: W1 recovery polish / Hermes / 2026-09-05
+Base commit and working branch: e6d693ea → w1-privy-experiment
+Goal and acceptance gate: Reconcile survives storage failure; do not inherit submittedAt across transaction ids
+Changed paths and decisions: W1Experiment persist catch on reconcile; submittedTxId gates clock reuse
+Commands run and exact results: frontend unit **106 passed**; backend **15 passed**. Full frontend/backend builds blocked (no workspace node_modules).
 Live evidence (public links only): none — E1–E6 still unverified
-Known failures / unverified claims: Sepolia sponsorship entitlement, TEE, live Privy send, MACI E5, full tsc/vite build
-Dirty or uncommitted work: security review-fix changes local until committed
-Next concrete action: commit/push when asked; Alejandro configure W1_LAB_* then E1–E2
-External setup required and who controls it: Privy Dashboard + W1_LAB_OPERATOR_TOKEN / probe / wallet — Alejandro
+Known failures / unverified claims: full tsc/vite build, live Privy/browser
+Dirty or uncommitted work: recovery polish until committed
+Next concrete action: commit/push when asked; then live lab (E1–E2)
+External setup required and who controls it: Privy Dashboard + W1_LAB_* — Alejandro
 ```
 
 Use this small record in a PR description or a dated handoff entry:

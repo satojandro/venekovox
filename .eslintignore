@@ -7,4 +7,5 @@ typechain-types
 commitlint.config.js
 apps/subgraph/generated
 apps/backend/**
-apps/front-end/**
+# apps/front-end is linted via its own apps/front-end/.eslintrc.cjs (standalone,
+# avoids the root typed-config chain; root tsconfig does not include app sources)

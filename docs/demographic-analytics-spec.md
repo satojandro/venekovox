@@ -103,20 +103,37 @@ Do not encode unchecked demographic claims as extra ballot choices, rely on self
 
 This is a conceptual target, not an implemented topology. The proof/trust mechanism for the central connection remains undecided.
 
-```mermaid
-flowchart TD
-  U[Participant] --> S[Self verification]
-  S --> E[Eligibility authorization]
-  S --> A[Consented attribute credential]
-  E --> M[MACI participation and commands]
-  A --> C[Controlled or proven cohort computation]
-  M --> T[Final valid ballot state]
-  T --> C
-  C --> R[Privacy release policy]
-  R --> P[Public approved aggregates]
-  R --> Q[Premium approved aggregates]
-  P --> G[Graph and public UI]
-  Q --> API[Authenticated analytics API]
+```
+  DEMOGRAPHIC ANALYTICS — TARGET BOUNDARIES (conceptual, not implemented)
+
+   Participant
+        │
+        ▼
+   Self verification
+        │
+        ├───────────────────────────────┐
+        ▼                               ▼
+   Eligibility authorization      Consented attribute credential
+        │                               │
+        ▼                               │
+   MACI participation                   │
+   and commands                         │
+        │                               │
+        ▼                               ▼
+   Final valid ballot state ─────> Controlled or proven
+                                   cohort computation
+                                        │
+                                        ▼
+                                   Privacy release policy
+                                        │
+                        ┌───────────────┴───────────────┐
+                        ▼                               ▼
+                 Public approved                 Premium approved
+                 aggregates                      aggregates
+                        │                               │
+                        ▼                               ▼
+                 Graph and public UI            Authenticated
+                                                analytics API
 ```
 
 Do not place individual demographic records, private credentials, identity nullifiers or attribute-choice rows into ENS records, public metadata, logs or a public subgraph. Keep wallet execution, eligibility and analytics behind separate interfaces even if an early prototype shares infrastructure.

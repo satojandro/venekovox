@@ -35,7 +35,8 @@ Read in this order.
 ## Maintenance rule
 
 [journey-map.md](journey-map.md) describes the code **as it is**, never as it will be.
-Future designs go in [build.md](build.md) Part A and migrate into the map only when the
+The target product journey lives in [journey.md](journey.md#target-journey--proposed);
+future technical contracts go in [build.md](build.md) Part A and migrate into the map only when the
 code ships with a real file:line citation.
 
 ## Terms that must not be conflated

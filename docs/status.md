@@ -7,6 +7,29 @@ This is a snapshot, not live deployment monitoring.
 For the **call-by-call map** of what each technology does, read
 [journey-map.md](journey-map.md). This file records status and evidence only.
 
+## Branch and deployment status
+
+Snapshot recorded during documentation repair on 2026-09-05. Refresh these rows
+from git before starting work; a branch name is not a permanent release identifier.
+
+| Surface                         | Reviewed baseline                                                        | Meaning / next gate                                                                                                                                                                                                              |
+| ------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main code and consolidated docs | `d75b47230c46a78be26942749f9884d2ba8a4167`; P1 code baseline `05d8f2a35` | As-built map covers this code, not unmerged W1 work                                                                                                                                                                              |
+| W1 experiment / S2.2            | `w1-privy-experiment` at `e6d693ead4d195eeefa48ba621768a84ccd5e54e`      | Source reviewed separately; 105 frontend and 15 mocked backend tests reproduced. Reconciliation storage handling and new-transaction timestamps remained review findings at this SHA. Check later commits before assigning fixes |
+| Live deployment                 | No complete release manifest or end-to-end acceptance recorded here      | Historical addresses/configuration do not establish a live working product; verify poll dates, policy, assets and selected release                                                                                               |
+| Graph deployment                | Source mappings exist; live endpoint/query evidence not attached         | Record deployment/version, endpoint, query, indexed block and errors before labeling metrics live                                                                                                                                |
+
+W1 is active, not paused for documentation. Its architecture remains provisional:
+a lab scaffold and passing doubles do not prove sponsored signup/join/publish.
+When merging W1, translate updates to the consolidated documents; do not restore
+removed `current-state.md`, `agent-handoff.md`, `hydration-receipts.md` or `runbook.md`.
+Use S2.2 as the canonical task ID, W1 as its legacy alias, and preserve the W1
+experiment E1–E6 identifiers with their prefix to avoid confusion with legacy ENS E1.
+
+The existing evidence ledger below contains historical reports. Its earlier test
+counts/build results belong to their listed commits and environments, not this
+new documentation-only patch. No new live evidence is claimed by this repair.
+
 ## Status vocabulary
 
 | Term                | Meaning                                                       |

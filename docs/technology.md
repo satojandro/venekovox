@@ -23,16 +23,16 @@ See [status.md](status.md) for exact implementation and evidence boundaries, and
 
 ## 2. Technology → stage → prize → evidence
 
-| Technology                        | Stage of the journey    | Product role                                      | Prize relationship                                                   | Evidence today                              |
-| --------------------------------- | ----------------------- | ------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------- |
-| MACI                              | 3 vote, 4 count         | Encrypted commands and verifiable aggregate tally | Core/upstream foundation; attribute reused code                      | 52 unit tests; **no live tally**            |
-| Self Pass                         | 2 prove eligibility     | Eligibility proof                                 | Core product foundation; no award assumed                            | Verifier only; **no contract bridge** (G01) |
-| The Graph                         | 5 inspect               | Public poll/result read model                     | Standardization/composition and AI continuity opportunities          | **Live** — turnout + message counts indexed |
-| Messari schema                    | 5 inspect               | Reusable governance data conventions              | Evidence for Graph standardization, not a separate integration award | Not started                                 |
-| ENSv2                             | 1 understand, 5 inspect | Persistent names and profile navigation           | ENS continuity opportunity                                           | **No code in repo**                         |
-| Privy / smart account / paymaster | 2–3 onboard, vote       | Low-friction onboarding and sponsored execution   | Product requirement; provider/award not assumed                      | 2 vendor reports; gates open                |
-| MCP / agent layer                 | 5 inspect               | Natural-language access to public results         | Graph AI continuity                                                  | Not started                                 |
-| x402 + Bazantic                   | 5 (agent creation)      | Controlled agent access/creation                  | Bazantic continuity opportunity                                      | Not started                                 |
+| Technology                        | Stage of the journey    | Product role                                      | Prize relationship                                                   | Evidence today                                         |
+| --------------------------------- | ----------------------- | ------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------ |
+| MACI                              | 3 vote, 4 count         | Encrypted commands and verifiable aggregate tally | Core/upstream foundation; attribute reused code                      | 52 unit tests; **no live tally**                       |
+| Self Pass                         | 2 prove eligibility     | Eligibility proof                                 | Core product foundation; no award assumed                            | Verifier only; **no contract bridge** (G01)            |
+| The Graph                         | 5 inspect               | Public poll/result read model                     | Standardization/composition and AI continuity opportunities          | Mappings exist; live deployment/query evidence pending |
+| Messari schema                    | 5 inspect               | Reusable governance data conventions              | Evidence for Graph standardization, not a separate integration award | Not started                                            |
+| ENSv2                             | 1 understand, 5 inspect | Persistent names and profile navigation           | ENS continuity opportunity                                           | **No code in repo**                                    |
+| Privy / smart account / paymaster | 2–3 onboard, vote       | Low-friction onboarding and sponsored execution   | Product requirement; provider/award not assumed                      | Separate W1 experiment branch; gates open              |
+| MCP / agent layer                 | 5 inspect               | Natural-language access to public results         | Graph AI continuity                                                  | Not started                                            |
+| x402 + Bazantic                   | 5 (agent creation)      | Controlled agent access/creation                  | Bazantic continuity opportunity                                      | Not started                                            |
 
 ### The honest one-liner per technology
 
@@ -56,18 +56,20 @@ pre-existing work. Prepare a public repository and the requested 2–4 minute
 demonstration. Do not claim that all $15,000 is available to this project, that merely
 adding an MCP client qualifies, or that multiple awards may be stacked without checking.
 
-**What the Graph already answers today** (live, indexed):
+**What the source model supports** (live verification pending):
 
 ```
-  Q: how many people joined poll X?   A: Poll.registrationCount   ✓ live
-  Q: how many encrypted messages?     A: Poll.numMessages         ✓ live
-  Q: when does the poll close?        A: Poll.startDate/endDate   ✓ live
-  Q: what were the results?           A: ✗ IMPOSSIBLE today (G06)
+  Q: how many registrations for poll X?   A: Poll.registrationCount   ✓ source
+  Q: how many encrypted messages?     A: Poll.numMessages         ✓ source
+  Q: when does the poll close?        A: Poll.startDate/endDate   ✓ source
+  Q: what were the results?           A: ✗ NOT IMPLEMENTED (G06)
 ```
 
-**The pitch:** turnout without attribution — auditable, non-attributable. That is
-exactly the dimension the Messari governance schema does not cover, and the gap our
-schema extension fills.
+**The proposed pitch:** auditable participation counts, encrypted ballot choices,
+and explicit privacy/finality semantics. Registrations are public-key-linked;
+they are not proof of anonymous or unique-human participation. The schema
+extension remains proposed. Live claims require a deployment version, endpoint,
+indexed block and saved query response in [status.md](status.md).
 
 Our evidence still to produce: schema diff and semantic compatibility note; deployed
 endpoint; useful query and UI output; agent answer grounded in that output; clear

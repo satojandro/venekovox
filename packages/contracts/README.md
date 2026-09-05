@@ -14,7 +14,7 @@ For more information please refer to the [documentation for Contracts](https://m
 
 ## VenekoVox deployment guidance
 
-Use the [project runbook](../../docs/runbook.md) and [current-state record](../../docs/current-state.md) to select and verify a deployment. Local generated deployment output is not an independently verified registry.
+Use the [project runbook](../../docs/build.md) and [status record](../../docs/status.md) to select and verify a deployment. Local generated deployment output is not an independently verified registry.
 
 The [2025 deployment JSON](deployed/sepolia-deployment.json) is archival and contains malformed address strings. Do not copy it into live configuration. The previously repeated “latest deployment” address table has been removed to prevent accidental use.
 

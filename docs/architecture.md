@@ -1,133 +1,87 @@
-# VenekoVox architecture
+# Architecture and trust boundaries
 
-_Why the system looks the way it does — components, data flow, and the reasoning
-behind each decision. Written to be read; if something here is unclear, that's a
-bug in the doc._
+Read [current state](current-state.md) for what is implemented. Dashed edges below are missing/proposed connections. Solid edges describe existing code paths, not a claim of full live verification.
 
-## 1. The problem shape
+## Current system
 
-Public on-chain voting has two failure modes that push in opposite directions:
-
-- **Open voting is buyable.** If ballots are attributable, a briber can verify
-  compliance. On-chain attribution makes vote-buying _auditable_ — by the buyer.
-- **Hidden voting is unauditable.** If nobody can see anything, the operator can
-  invent results.
-
-MACI's answer: **attribute nothing to anyone, but prove the aggregate.** Votes are
-encrypted to a coordinator, spent with nullifiers (one ballot per identity), and the
-final tally ships with a zk-proof of correct computation. Bribery becomes
-_verification-blind_ — a briber cannot check how their victim voted — while anyone
-can still verify that the published tally is the honest decryption of the real ballots.
-
-VenekoVox adds the missing layer on the identity side: **proof of unique humanness**
-via Self.xyz passport zk-proofs, so "one person, one voice" doesn't depend on wallet
-counting (wallets are free; humans aren't).
-
-## 2. Components
-
-```
-┌──────────────────────── Browser (apps/front-end) ────────────────────────┐
-│  React + Vite dApp                                                       │
-│   useMaci.ts   — wallet, hydration, submission state machine             │
-│   voteFlow.ts  — atomic signup→join→publish operation (pure TS, tested)  │
-│   receipts.ts  — context-scoped submission receipts (localStorage)       │
-│   Self QR      — passport verification entry (@selfxyz/qrcode)           │
-│   snarkjs WASM — PollJoining zk-proof generated in-browser (~3MB assets) │
-└───────────────┬──────────────────────────────────┬──────────────────────┘
-                │ tx (injected wallet signs)       │ POST /verify
-┌───────────────▼───────────────┐   ┌──────────────▼─────────────────────┐
-│ Sepolia (packages/contracts)  │   │ apps/backend — Self.xyz verifier   │
-│  MACI core · Poll · Tally     │   │ @selfxyz/core, scope-bound proofs  │
-│  events: DeployPoll, SignUp,  │   └────────────────────────────────────┘
-│  PollJoined, PublishMessage,  │
-│  MergeState, ChainHashUpdated │
-└───────────────┬───────────────┘
-                │ indexed by
-┌───────────────▼───────────────┐
-│ apps/subgraph (The Graph)     │  → results/trends for humans AND agents (M3)
-└───────────────────────────────┘
+```mermaid
+flowchart TD
+  U[Participant] --> F[React application]
+  F --> S[Self mobile proof]
+  S --> B[Backend verifier]
+  B --> L[Browser verification flag]
+  L -. missing authorization .-> P[MACI policy]
+  F --> W[Injected wallet]
+  W --> P
+  P --> M[MACI signup and poll membership]
+  M --> V[Encrypted publish]
+  V --> G[Native Graph event mappings]
+  F --> K[Browser MACI key and receipt cache]
 ```
 
-## 3. The vote journey (as implemented after P1)
+The Self path and the voting path exist, but a browser flag does not securely connect them. The UI also uses mock poll data. A deployed FreeForAll policy does not enforce verified-human eligibility.
 
+## Target product architecture
+
+```mermaid
+flowchart TD
+  UI[Participant application] --> A[Wallet adapter]
+  A --> SA[Participating account]
+  A --> SP[Sponsorship service]
+  UI --> ID[Self eligibility proof]
+  ID --> AUTH[Eligibility authorization]
+  AUTH --> POLICY[Contract policy]
+  SA --> POLICY
+  POLICY --> MACI[MACI poll]
+  MACI --> T[Coordinator and verified tally]
+  T --> IDX[Graph public read model]
+  IDX --> UI
+  ENS[ENS public profile] --> UI
+  IDX --> AG[Read agent]
+  AG --> CA[Controlled creation API]
+  CA --> MACI
 ```
-click "vote"
-  → createVoteFlow() takes a synchronous lock (double-clicks cannot double-spend)
-  → capture context {chainId, MACI, pollId, account}  ← every receipt uses THIS
-  → getSignedupUserData()      ── already registered? skip signup
-  → signup()                   ── one-time MACI registration (wallet signs)
-  → getJoinedUserData()        ── already joined? skip join (refresh-safe)
-  → joinPoll()                 ── zk proof in-browser (PollJoining circuit)
-  → publish()                  ── encrypted vote message (nonce 1, no updates yet)
-  → save receipt under captured context, THEN report success to the UI
+
+This diagram is a target. It does not select a Self bridge design, wallet vendor, or tally-indexing strategy. [Integration spec](integration-spec.md) defines those choices and acceptance gates.
+
+## Responsibilities
+
+Self establishes configured document-derived eligibility. A policy enforces the accepted credential, participating account and uniqueness rules. MACI handles cryptographic registration, membership, encrypted commands and proof-verified tallying. ENS provides public naming and discovery. Wallet infrastructure signs/submits transactions and may sponsor execution. The Graph indexes public state for UI and agents. Messari supplies reusable data-model conventions; it does not verify or privatize votes.
+
+The authoritative sources differ: contract policy for on-chain eligibility; chain logs/state for membership and submission; verified tally state for results; an integrity-bound descriptor for question/options; indexer for a derived read model. Browser storage is a convenience cache.
+
+## Keys, identifiers and visibility
+
+| Item                           | Responsibility / visibility                              | Consequence                                                                  |
+| ------------------------------ | -------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Wallet owner key               | Signs for EOA or controls smart account                  | Must not be handled by agents; owner address may differ from contract caller |
+| Participating account address  | Contract `msg.sender`; public chain context              | Bind policy and receipt namespace to this address                            |
+| MACI private key               | Signs voting commands; currently browser localStorage    | Independent recovery problem; XSS/browser loss are material risks            |
+| MACI public key and membership | Public protocol metadata                                 | A separate key alone does not erase signup transaction linkage               |
+| Self nullifier                 | Scoped uniqueness signal under configured Self semantics | Verify scope and replay behavior; never assume it is a universal identity    |
+| ENS name/profile               | Public, persistent pseudonym                             | Linking it to an account can increase cross-poll correlation                 |
+| Encrypted command              | Public ciphertext/transaction metadata                   | Not an individual public plaintext ballot                                    |
+| Coordinator key                | Enables command decryption/processing                    | Coordinator privacy and availability assumptions must be disclosed           |
+| Tally/proof                    | Aggregate correctness evidence                           | Does not prove representative sampling or coordinator availability           |
+
+Standard MACI relies on a coordinator who can decrypt messages. It aims at anti-collusion properties under its protocol assumptions; it is not a guarantee of anonymity against the coordinator, the app operator or correlated metadata. Consult [MACI introduction](https://maci.pse.dev/docs/introduction). Do not describe ballots as “hidden forever” or “unattributable by anyone”.
+
+Self currently discloses nationality/gender to the verifier and returns disclosure data. The privacy design must account for this actual behavior. Minimize it in P2 rather than claiming that nothing reaches the backend.
+
+## Lifecycle and failure boundaries
+
+```mermaid
+stateDiagram-v2
+  [*] --> Scheduled
+  Scheduled --> Open: chain start time
+  Open --> Closed: chain end time
+  Closed --> Processing: coordinator starts
+  Processing --> Verified: tally proof accepted
+  Verified --> Published: aggregates available and indexed
+  Processing --> Delayed: failure or unavailable coordinator
+  Delayed --> Processing: recover and retry
 ```
 
-Reasoning, per step:
+Submission is an independent per-account state machine: unknown/checking → eligible/member → submitting → pending → confirmed or failed. “Confirmed submission” does not mean “counted”. A closed poll may have no final results yet. Merging the state tree is not tally completion. Indexing can lag even after on-chain verification.
 
-- **One async operation, not three UI steps.** The original 2025 flow passed state
-  through React renders; the first click published with a stale index. The flow now
-  passes the fresh `pollStateIndex` directly into `publish`. React state is
-  display-only.
-- **Chain-first recovery.** Signup/join are _looked up_ before they are _executed_,
-  so a refresh or a rejected tx never re-submits a transaction — membership is a
-  fact on-chain, not app state.
-- **`lookup-failed` ≠ "not registered".** A failed RPC is not knowing. UI copy and
-  state machine keep these apart (trust requirement, not polish).
-- **Receipts record submission, not counting.** Key =
-  `chainId:MACI:pollId:wallet`, contents = tx hash + timestamp. Counting is the
-  tally's business (P4). Corrupt/missing storage reads as "unable to confirm".
-- **Wallet-switch safety.** Context is captured at submission start; a mid-flight
-  account switch files the receipt under the _original_ wallet and the page will
-  not display it under the new one.
-
-## 4. Key management
-
-Every voter holds two independent keys:
-
-| Key                       | Where it lives                                   | What it does                   |
-| ------------------------- | ------------------------------------------------ | ------------------------------ |
-| Wallet key (secp256k1)    | MetaMask / injected wallet                       | signs transactions, pays gas   |
-| MACI keypair (babyjubjub) | generated in-browser, serialized in localStorage | joins the poll, encrypts votes |
-
-Why separate: the MACI key is the _voting identity inside the anonymity system_.
-Linking it to the wallet key would make signups attributable (wallet → MACI key →
-ballots). MACI v3 has no signature-derived keypair derivation, so the keypair is
-created client-side and persisted. Known limitation (tracked): the key is
-browser-scoped, not account-scoped — switching wallets reuses the same voting key
-until key migration ships.
-
-## 5. Trust assumptions (stated plainly)
-
-- **The coordinator sees ciphertexts and produces the tally.** MACI prevents the
-  coordinator from _attributing_ votes and from _faking_ the tally (zk proof), but
-  standard MACI does not hide the tally inputs from the coordinator. We do not
-  claim "nobody can decrypt ballots."
-- **Self.xyz proves passport ownership**, not citizenship policy, at the UI layer.
-  Binding verified proofs to MACI participation (uniqueness via nullifiers, policy
-  via the eligibility contract) is P2 — until then the on-chain gate is
-  `FreeForAllPolicy` and the demo must be presented as such.
-- **The Graph indexer is infrastructure, not the source of truth.** Contracts are;
-  the subgraph makes them queryable. Results UI must distinguish pending tally,
-  verified tally, and unavailable (never render pending as zero).
-
-## 6. Deployment ground truth (Sepolia)
-
-|                          | MACI              | Poll-0            | Notes                                                                     |
-| ------------------------ | ----------------- | ----------------- | ------------------------------------------------------------------------- |
-| Aug 2025 (original)      | `0x88823dAd…CA3c` | `0x8Efd5e3A…`     | historical; committed record has corrupted entries                        |
-| **Aug 2026 (canonical)** | `0x44F31f38…Fe3a` | `0x29D39dD4…22CB` | deployed 2026-08-25, block 11567347; **Poll-0 dates 0/0 → never votable** |
-
-Lesson encoded in `.env.example` and the contracts README: poll start/end dates are
-constructor parameters — a poll without explicit dates accepts nothing. M1 ships a
-fresh poll with explicit windows.
-
-## 7. What comes next (data & indexing)
-
-- **P3** — poll page reads real config + chain state (options, timing, eligibility),
-  distinct open/closed/awaiting-tally/verified-result states.
-- **P4** — coordinator runs processing + tally; results enter the subgraph and UI
-  with provenance (poll → tally contract → proof-verified aggregate).
-- **Schema v2 (M3)** — extend the Messari governance standard with a
-  `BallotPrivacy` dimension (PUBLIC / PSEUDONYMOUS / ANONYMOUS): nullable voter and
-  choice under anonymity, `TallyResult` as the proof-gated aggregate. One query
-  spans public Governor proposals and anonymous MACI polls.
+Use contract timestamps for schedule decisions, record indexing block/finality for results, and expose unresolved states honestly. See [runbook](runbook.md) for operator checkpoints and [integration spec](integration-spec.md) for data contracts.

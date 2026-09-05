@@ -15,7 +15,7 @@ The full build includes multiple projects and may require additional circuit/too
 
 Copy `apps/front-end/.env.example` to `apps/front-end/.env.local` and replace the historical poll configuration with verified values before a live demo. All `VITE_*` values are browser-visible. Keep private backend/deployer values outside version control.
 
-Frontend public configuration: `VITE_SELF_SCOPE`, `VITE_SELF_ENDPOINT`, `VITE_MACI_ADDRESS`, `VITE_CHAIN_ID`, `VITE_POLL_ID`, `VITE_MACI_START_BLOCK`. Backend verification reads `SELF_SCOPE`, `SELF_ENDPOINT`, `MOCK_PASSPORT`, and the server port configuration. Frontend/backend scope, callback endpoint and mock environment must agree. No Privy/paymaster env contract has been implemented yet.
+Frontend public configuration: `VITE_SELF_SCOPE`, `VITE_SELF_ENDPOINT`, `VITE_MACI_ADDRESS`, `VITE_CHAIN_ID`, `VITE_POLL_ID`, `VITE_MACI_START_BLOCK`, `VITE_WALLET_SOURCE` (must stay `injected` until W1 E1–E6 pass). Backend verification reads `SELF_SCOPE`, `SELF_ENDPOINT`, `MOCK_PASSPORT`, and the server port configuration. Optional W1 status proxy reads `PRIVY_APP_ID` / `PRIVY_APP_SECRET` on the server only — never `VITE_` those. Frontend/backend scope, callback endpoint and mock environment must agree.
 
 ## 2. Start and check services
 
@@ -29,7 +29,7 @@ pnpm --dir apps/backend dev
 pnpm --dir apps/front-end dev
 ```
 
-The backend defaults to port 3100 and exposes `/health` and `/verify`. Check the actual frontend origin printed by Vite; the backend CORS list currently does not include default port 3000 (G10). Align the configuration/code before expecting browser verification to work.
+The backend defaults to port 3100 and exposes `/health`, `/verify`, and `/w1/transactions/:id` (503 until Privy server credentials exist). The W1 lab UI is `/w1` and is not the voting product. Check the actual frontend origin printed by Vite; the backend CORS list currently does not include default port 3000 (G10). Align the configuration/code before expecting browser verification to work.
 
 Self Pass's mobile proof callback needs a publicly reachable verifier for the staging flow; localhost on the developer machine is not reachable from a phone. Configure a public HTTPS tunnel or deployment, then align the exact request/verifier endpoint. Use Self's supported mock-passport environment for staging, visibly labeled. It still exercises the mobile proof flow; a stubbed browser callback is not equivalent. A real-document verification remains an M1 gate.
 
@@ -88,7 +88,7 @@ Current focused regression suite:
 pnpm --dir apps/front-end test:unit
 ```
 
-This runs `voteFlow`, `receipts`, `receiptStatus` and `hydration` tests. On Node 20 it uses installed TypeScript; newer Node can use native stripping. Record the exact pass/fail counts from the command; do not copy a previous snapshot. Supported-toolchain checks for an implementation change include:
+This runs `voteFlow`, `receipts`, `receiptStatus`, `hydration`, and W1 sponsored-verifier/adapter tests. On Node 20 it uses installed TypeScript; newer Node can use native stripping. Record the exact pass/fail counts from the command; do not copy a previous snapshot. These tests do not prove Privy sponsorship, Sepolia entitlement, or a live MACI sponsored vote. Supported-toolchain checks for an implementation change include:
 
 ```sh
 pnpm --dir apps/front-end build
@@ -96,5 +96,16 @@ pnpm types
 ```
 
 Use the existing repository lint/format checks on changed files. These unit tests do not exercise React component mount, actual Self proofs, browser proving, live chain receipt provenance or tally/indexer correctness.
+
+## 8. W1 sponsored-execution experiment
+
+Do not wire Privy into voting until [w1-experiment.md](w1-experiment.md) E1–E6 have evidence. Deploy `CallerProbe` with Alejandro’s key (never paste it into chat):
+
+```sh
+pnpm --dir packages/contracts exec hardhat compile
+pnpm --dir packages/contracts exec hardhat deploy-caller-probe --network sepolia
+```
+
+Put the probe address in `VITE_W1_PROBE_ADDRESS`. Put `PRIVY_APP_ID` / `PRIVY_APP_SECRET` on the backend only. Lab UI: `/w1`. Record observations in [w1-evidence.md](w1-evidence.md).
 
 Record live smoke evidence under the [judge checklist](judges.md): exact release commit, environment, public tx/query links, expected versus actual outcomes and limitations. Do not capture passport details, raw proof payloads, secrets or ballot-key material in recordings.

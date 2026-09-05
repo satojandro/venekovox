@@ -7,6 +7,8 @@ import Comments from './pages/Comments'
 import PollDetail from './pages/PollDetail'
 import CreatePoll from './pages/CreatePoll'
 
+import W1Experiment from './pages/W1Experiment'
+
 function App() {
   const { t } = useTranslation()
 
@@ -19,6 +21,7 @@ function App() {
         <Route path="/create-poll" element={<CreatePoll />} />
         <Route path="/trust-ritual" element={<Auth />} />
         <Route path="/comments" element={<Comments />} />
+        <Route path="/w1" element={<W1Experiment />} />
       </Routes>
     </div>
   )

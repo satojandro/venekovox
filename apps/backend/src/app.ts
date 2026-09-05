@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import verifyRoute from "./routes/verify";
+import sponsoredStatusRoute from "./routes/sponsoredStatus";
 
 const app: import("express").Express = express();
 
@@ -41,6 +42,8 @@ app.get("/", (req, res) => {
     version: "1.0.0",
     endpoints: {
       "POST /verify": "Verify Self.xyz ZK-proof",
+      "GET /w1/transactions/:transactionId": "W1 Privy status reconciliation (server credentials; does not confirm a vote)",
+      "POST /w1/webhooks/privy": "W1 optional Privy webhook receiver",
       "GET /health": "Service health check",
       "GET /": "This API information",
     },
@@ -50,13 +53,14 @@ app.get("/", (req, res) => {
 
 // Routes
 app.use("/verify", verifyRoute);
+app.use("/w1", sponsoredStatusRoute);
 
 // 404 handler
 app.use("*", (req, res) => {
   res.status(404).json({
     error: "Not Found",
     message: `Route ${req.originalUrl} not found`,
-    availableRoutes: ["POST /verify", "GET /health", "GET /"],
+    availableRoutes: ["POST /verify", "GET /w1/transactions/:transactionId", "POST /w1/webhooks/privy", "GET /health", "GET /"],
   });
 });
 

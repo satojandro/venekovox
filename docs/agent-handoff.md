@@ -12,7 +12,7 @@
 
 The human polling journey is the product; agents are downstream. Self Pass verifies eligibility; ENS names people publicly; MACI handles encrypted voting; the Graph reads public protocol data; Messari standardizes its shape. None substitutes for another's authorization or privacy responsibilities.
 
-Smart wallets are planned, with Privy a candidate. Before final P2 deployment, confirm the account that contracts actually see. Wallet recovery and MACI-key recovery are separate. Receipt cache recovery is not transaction verification. Standard MACI coordinator trust must remain visible in privacy claims.
+Smart wallets are planned; Privy is the first W1 experiment (D06 provisional), not an approved stack. Before final P2 deployment, confirm the account contracts actually see **and** the outer transaction shape. Do not assume EIP-7702 leaves the P1 verifier unchanged. Wallet recovery and MACI-key recovery are separate. Receipt cache recovery is not transaction verification. Standard MACI coordinator trust must remain visible in privacy claims.
 
 Demographic analytics is long-term product scope ([spec](demographic-analytics-spec.md)), not a this-week requirement. Never relabel a profile-distribution chart as a demographic ballot result, and never count MACI encrypted-message entities as unique voters. DA0-design work never displaces the M1 journey's acceptance gates.
 
@@ -20,7 +20,22 @@ Do not resurrect Enterprise flowId/API-key homework. Do not deploy a new FreeFor
 
 ## Task ownership and interruption record
 
-No implementation owner is assigned indefinitely by this document. The smart-wallet implementation was paused for this documentation review. At pickup, record a fresh owner and branch; do not assume a prior model is still running.
+No implementation owner is assigned indefinitely by this document. W1 is an experiment gate ([w1-experiment.md](w1-experiment.md)), not a paused production adapter. At pickup, record a fresh owner and branch; do not assume a prior model is still running.
+
+Dated record for this change:
+
+```text
+Task ID / owner / date: W1 / session 2026-09-05
+Base commit and working branch: 05d8f2a3 → w1-privy-experiment
+Goal and acceptance gate: Experiment scaffold + sponsored verifier; E1–E6 evidence required before architecture approval
+Changed paths and decisions: CallerProbe, sponsored verifier/records, wallet seam, backend status proxy, D05/D06, G12
+Commands run and exact results: frontend unit tests **95 passed, 0 failed** (`pnpm --dir apps/front-end test:unit`). CallerProbe Hardhat test not run (no contracts artifacts in this worktree). `/w1` lab page not browser-verified this session.
+Live evidence (public links only): none — E1–E6 unverified
+Known failures / unverified claims: Sepolia sponsorship entitlement, TEE, Privy SDK path, ethers↔sponsorship bridge, MACI sponsored journey
+Dirty or uncommitted work: this branch until committed
+Next concrete action: Alejandro runs E1 (dashboard) then deploy-caller-probe on Sepolia
+External setup required and who controls it: Privy Dashboard + funded deploy key — Alejandro
+```
 
 Use this small record in a PR description or a dated handoff entry:
 

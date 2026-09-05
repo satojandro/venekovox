@@ -42,7 +42,7 @@ flowchart TD
   CA --> MACI
 ```
 
-This diagram is a target. It does not select a Self bridge design, wallet vendor, or tally-indexing strategy. [Integration spec](integration-spec.md) defines those choices and acceptance gates.
+This diagram is a target. It does not select a Self bridge design, wallet vendor, or tally-indexing strategy. [Integration spec](integration-spec.md) defines those choices and acceptance gates. W1 ([experiment](w1-experiment.md)) must prove caller vs outer transaction before the wallet adapter is treated as selected.
 
 ## Responsibilities
 

@@ -6,6 +6,8 @@ import * as domainobjs from "@maci-protocol/domainobjs";
 import { createVoteFlow, type SubmitResult, type VoteProgress, type VoteStatus } from "./voteFlow";
 import { createReceiptStore, applySubmittedReceipt, type VoteReceipt } from "../lib/receipts";
 import { checkReceiptStatus, isRecheckable, type ReceiptCheckStatus, type ReceiptProvider } from "../lib/receiptStatus";
+import { selectWalletKind } from "../lib/wallet/adapter";
+import { getInjectedWallet, peekWallet } from "../lib/wallet/injected";
 import {
   createFlightAnchor,
   hydrationContextKey,
@@ -14,13 +16,14 @@ import {
   type FlightAnchor,
   type HydrationWrite,
   type KeyState,
-  type WalletPeek,
 } from "../lib/hydration";
 
 const { Keypair, PrivateKey } = domainobjs as typeof import("@maci-protocol/domainobjs");
 const KEYPAIR_STORAGE_KEY = "venekovox_maci_keypair";
 
 function getConfig() {
+  // D06 is provisional: Privy is the first experiment, not a wired adapter.
+  selectWalletKind(import.meta.env.VITE_WALLET_SOURCE as string | undefined);
   const maciAddress = import.meta.env.VITE_MACI_ADDRESS as string;
   const chainId = BigInt(import.meta.env.VITE_CHAIN_ID ?? "11155111");
   const pollId = BigInt(import.meta.env.VITE_POLL_ID ?? "0");
@@ -67,51 +70,12 @@ type WalletProvider = Eip1193Provider & {
   on?: (event: string, listener: () => void) => void;
   removeListener?: (event: string, listener: () => void) => void;
 };
-declare global {
-  interface Window {
-    ethereum?: WalletProvider;
-  }
-}
 
-/**
- * Read-only wallet probe: inspects an ALREADY-connected wallet without prompting
- * (eth_accounts never pops a modal). The result distinguishes the cases that
- * matter for honest hydration: no wallet installed, wallet present but nothing
- * connected, a probe error, or a usable connected account. All null-cases used
- * to collapse into "disconnected" (G03).
- */
-export type { WalletPeek };
-
-async function peekWallet(): Promise<WalletPeek> {
-  const wallet = window.ethereum;
-  if (!wallet) return { kind: "no-provider" };
-  try {
-    const accounts: string[] = await wallet.request({ method: "eth_accounts" });
-    if (!accounts || accounts.length === 0) return { kind: "not-connected" };
-    const chainId = BigInt(await wallet.request({ method: "eth_chainId" }));
-    return { kind: "found", account: accounts[0], chainId };
-  } catch {
-    return { kind: "error" };
-  }
-}
+export type { WalletPeek } from "../lib/wallet/adapter";
 
 async function getWallet() {
   const { chainId } = getConfig();
-  const wallet = window.ethereum;
-  if (!wallet) throw new Error("No wallet found. Please install MetaMask or Rainbow.");
-  const assertChain = async () => {
-    const currentChain = await wallet.request({ method: "eth_chainId" });
-    if (BigInt(currentChain) !== chainId) {
-      throw new Error(`Switch your wallet to the poll's network (chain ${chainId}) and try again.`);
-    }
-  };
-  await assertChain();
-  const provider = new BrowserProvider(wallet);
-  await provider.send("eth_requestAccounts", []);
-  await assertChain();
-  const signer = await provider.getSigner();
-  const account = await signer.getAddress();
-  return { wallet, signer, account, assertChain };
+  return getInjectedWallet(chainId);
 }
 
 function asReceiptProvider(wallet: WalletProvider): ReceiptProvider {

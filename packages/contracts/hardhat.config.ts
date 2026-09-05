@@ -13,6 +13,7 @@ import type { HardhatUserConfig } from "hardhat/config";
 import "./tasks/deploy";
 import { EChainId, ESupportedChains, getNetworkRpcUrls } from "./tasks/helpers/constants";
 import "./tasks/runner/benchmarks";
+import "./tasks/runner/deployCallerProbe";
 import "./tasks/runner/deployFull";
 import "./tasks/runner/deployPoll";
 import "./tasks/runner/encodeErrors";

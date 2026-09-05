@@ -11,8 +11,11 @@
 // publishMessage(Batch) on the resolved Poll, and that Poll emitted
 // PublishMessage. The Poll constructor also emits PublishMessage for a
 // placeholder leaf — event presence alone is not a vote. Unknown indirect
-// execution (smart accounts / EntryPoint) stays "unverified" until a W1
-// adapter establishes the relationship.
+// execution (smart accounts / EntryPoint / sponsored bundles) stays
+// "unverified". Same account address does not mean the same transaction shape:
+// a relayer can preserve msg.sender while failing the from/to/calldata checks.
+// W1 must use the sponsored-execution verifier in lib/sponsored/verifier.ts —
+// do not relax this module back to generic log matching.
 //
 // The provider interface is deliberately minimal so the decision logic can be
 // unit-tested without a network or a React harness.
@@ -275,6 +278,8 @@ export async function checkReceiptStatus(args: {
     return { status: "unexpected", pollMatch, accountMatch, to, pollAddress };
   }
 
-  // Unknown target (EntryPoint / smart account). Do not guess.
+    // Unknown target (EntryPoint / smart account). Do not guess and do not fall
+  // back to log-topic matching. W1's sponsored verifier in sponsored/verifier.ts
+  // is a separate checker: it needs managed ids + user-op success + inner evidence.
   return { status: "unverified", pollMatch, accountMatch, to, pollAddress };
 }

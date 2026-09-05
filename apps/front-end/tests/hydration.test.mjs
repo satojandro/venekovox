@@ -15,7 +15,7 @@ try {
   if (!stripTypeScriptTypes) throw new Error("Install workspace dependencies to run this test on Node 20.");
   javascript = stripTypeScriptTypes(source);
 }
-const { runHydration, hydrationContextKey } = await import(
+const { createFlightAnchor, hydrationContextKey, invalidateFlight, runHydration } = await import(
   `data:text/javascript;base64,${Buffer.from(javascript).toString("base64")}`
 );
 
@@ -42,7 +42,7 @@ function session(overrides = {}) {
     busy: false,
     status: "idle",
     hydratedFor: null,
-    inFlightFor: null,
+    flightAnchor: createFlightAnchor(),
     operationId: 0,
     liveReceipt: null,
   };
@@ -55,19 +55,12 @@ function session(overrides = {}) {
   function io() {
     const snapshot = state.generation;
     return {
-      canApply: () =>
-        snapshot === state.generation && !state.busy && !BLOCKED.includes(state.status),
+      canApply: () => snapshot === state.generation && !state.busy && !BLOCKED.includes(state.status),
       getOperationId: () => state.operationId,
       liveReceipt: () => state.liveReceipt,
       contextKey: hydrationContextKey,
       isHydratedFor: (key) => state.hydratedFor === key,
-      isInFlightFor: (key) => state.inFlightFor === key,
-      beginFlight: (key) => {
-        if (snapshot === state.generation) state.inFlightFor = key;
-      },
-      endFlight: (key) => {
-        if (snapshot === state.generation && state.inFlightFor === key) state.inFlightFor = null;
-      },
+      flightAnchor: () => state.flightAnchor,
       markHydrated: (key) => {
         if (snapshot === state.generation) state.hydratedFor = key;
       },
@@ -105,7 +98,7 @@ function session(overrides = {}) {
       state.generation += 1;
       state.operationId += 1;
       state.hydratedFor = null;
-      state.inFlightFor = null;
+      invalidateFlight(state.flightAnchor);
     },
     setPeek(value) {
       peekResult = value;
@@ -286,6 +279,7 @@ test("a delayed hydration must not overwrite a newer submission receipt", async 
   await s.waitFor(() => s.writes.some((w) => w.type === "ready"));
   // Submission starts and completes while the old receipt RPC is in flight.
   s.state.operationId += 1;
+  invalidateFlight(s.state.flightAnchor); // vote() invalidates the stale run's lock
   s.state.busy = false;
   s.state.status = "voted";
   s.state.liveReceipt = newReceipt;
@@ -296,4 +290,56 @@ test("a delayed hydration must not overwrite a newer submission receipt", async 
     false,
     "stale reverted receipt must not replace the new submission",
   );
+});
+
+test("delayed hydration -> submission -> stale cleanup -> successful fresh hydration", async () => {
+  const s = session();
+  s.peekGate.resolve();
+  // Run A: hydration starts; its participation lookup is delayed.
+  const staleRun = runHydration(s.io());
+  await s.waitFor(() => s.state.flightAnchor.key === s.contextKey);
+  assert.equal(s.state.flightAnchor.owner, 0, "Run A owns its lock");
+
+  // A vote starts while the lookup is still in flight: the operation id bumps
+  // and vote() invalidates the lock held by the older run.
+  s.state.operationId += 1;
+  invalidateFlight(s.state.flightAnchor);
+  assert.equal(s.state.flightAnchor.key, null, "new operation invalidates the old lock");
+
+  // Vote completes: a fresh hydration starts and must NOT be skipped as
+  // "already in flight"; it acquires the lock under the new operation id.
+  s.state.status = "voted";
+  const freshRun = runHydration(s.io());
+  await s.waitFor(() => s.state.flightAnchor.owner === 1);
+  assert.equal(s.state.flightAnchor.key, s.contextKey, "fresh run holds the lock");
+
+  // Run A's stale lookup finally resolves. Its cleanup must not clear the
+  // newer run's lock, and it must not apply any stale results: the only new
+  // write is Run B's "ready" (its receipt check is still gated).
+  const writesBeforeStale = s.writes.length;
+  s.lookupGate.resolve();
+  await staleRun;
+  assert.equal(s.state.flightAnchor.owner, 1, "stale cleanup must never clear a newer run's lock");
+  assert.equal(s.state.flightAnchor.key, s.contextKey);
+  assert.equal(s.writes.length, writesBeforeStale + 1, "stale run applied nothing after the vote");
+  assert.equal(s.writes.at(-1).type, "ready", "fresh run's lookup applied");
+
+  // Run B completes normally: applies its results, marks hydrated, and
+  // releases the lock it owns.
+  s.receiptGate.resolve();
+  await freshRun;
+  assert.equal(s.state.flightAnchor.key, null, "fresh run releases its own lock");
+  assert.equal(s.state.hydratedFor, s.contextKey, "fresh run marks the context hydrated");
+
+  // A later hydration — the vote flow's finally clears hydratedFor before
+  // hydrating — sees no lock and completes again: participation recovery is
+  // not blocked until a wallet-event reset or remount.
+  s.state.hydratedFor = null;
+  const recovery = runHydration({
+    ...s.io(),
+    loadReceipt: () => null,
+    checkReceipt: async () => ({ status: "confirmed", pollMatch: true, accountMatch: true }),
+  });
+  await recovery;
+  assert.equal(s.writes.filter((w) => w.type === "ready").length, 2, "post-recovery hydration runs a fresh lookup");
 });

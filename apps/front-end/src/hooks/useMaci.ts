@@ -5,15 +5,13 @@ import * as maciSdk from "@maci-protocol/sdk/browser";
 import * as domainobjs from "@maci-protocol/domainobjs";
 import { createVoteFlow, type SubmitResult, type VoteProgress, type VoteStatus } from "./voteFlow";
 import { createReceiptStore, applySubmittedReceipt, type VoteReceipt } from "../lib/receipts";
+import { checkReceiptStatus, isRecheckable, type ReceiptCheckStatus, type ReceiptProvider } from "../lib/receiptStatus";
 import {
-  checkReceiptStatus,
-  isRecheckable,
-  type ReceiptCheckStatus,
-  type ReceiptProvider,
-} from "../lib/receiptStatus";
-import {
+  createFlightAnchor,
   hydrationContextKey,
+  invalidateFlight,
   runHydration,
+  type FlightAnchor,
   type HydrationWrite,
   type KeyState,
   type WalletPeek,
@@ -187,7 +185,10 @@ export function useMaci() {
   // Contexts already hydrated: `${chainId}:${account}` — prevents duplicate
   // lookups without blocking re-hydration for a DIFFERENT context.
   const hydratedFor = useRef<string | null>(null);
-  const inFlightFor = useRef<string | null>(null);
+  // Owned in-flight lock: a hydration run may release only the lock it itself
+  // acquired, and a new submission invalidates any older run's lock (Astra
+  // hydration regression: stale cleanup must never leave the account locked).
+  const flightAnchor: FlightAnchor = useMemo(() => createFlightAnchor(), []);
   const receiptStore = useMemo(() => createReceiptStore(), []);
 
   const setProgress = useCallback((progress: VoteProgress) => {
@@ -284,22 +285,10 @@ export function useMaci() {
     await runHydration({
       canApply,
       getOperationId: () => operationId.current,
+      flightAnchor: () => flightAnchor,
       liveReceipt: () => receiptRef.current,
       contextKey: hydrationContextKey,
       isHydratedFor: (key) => hydratedFor.current === key,
-      isInFlightFor: (key) => inFlightFor.current === key,
-      beginFlight: (key) => {
-        if (snapshot === generation.current && startedOp === operationId.current) inFlightFor.current = key;
-      },
-      endFlight: (key) => {
-        if (
-          snapshot === generation.current &&
-          startedOp === operationId.current &&
-          inFlightFor.current === key
-        ) {
-          inFlightFor.current = null;
-        }
-      },
       markHydrated: (key) => {
         if (snapshot === generation.current && startedOp === operationId.current) hydratedFor.current = key;
       },
@@ -391,7 +380,7 @@ export function useMaci() {
       generation.current += 1;
       operationId.current += 1;
       hydratedFor.current = null;
-      inFlightFor.current = null;
+      invalidateFlight(flightAnchor);
       receiptRef.current = null;
       receiptAccountRef.current = null;
       setProgress({ account: null, status: "idle" });
@@ -499,6 +488,11 @@ export function useMaci() {
       if (busy.current) throw new Error("A wallet operation is already in progress.");
       busy.current = true;
       operationId.current += 1;
+      // Invalidate any in-flight hydration lock: it was acquired for the
+      // PREVIOUS operation and can never be released by that run now (its
+      // captured operation id is stale). Without this, the account stays
+      // "in flight" and later hydrations skip it until a wallet event.
+      invalidateFlight(flightAnchor);
       activeGeneration.current = generation.current;
       try {
         return await flow.current!(option, weight);

@@ -78,6 +78,15 @@ export function receiptKey(context: ReceiptContext): string {
   ].join(":");
 }
 
+export function applySubmittedReceipt(persist: () => void, displayAndVerify: () => void): void {
+  try {
+    persist();
+  } catch {
+    // Persistence is best-effort. A submitted vote must still be shown and verified.
+  }
+  displayAndVerify();
+}
+
 export function createReceiptStore(storage: ReceiptStorage = globalThis.localStorage) {
   return {
     save(context: ReceiptContext, receipt: VoteReceipt): void {

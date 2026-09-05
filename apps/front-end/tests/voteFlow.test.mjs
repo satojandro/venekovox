@@ -22,6 +22,7 @@ const { createVoteFlow } = await import(`data:text/javascript;base64,${Buffer.fr
 function fixture(overrides = {}) {
   const calls = [];
   const progress = [];
+  const receipts = [];
   const session = {
     account: "0xabc",
     signer: {},
@@ -49,15 +50,17 @@ function fixture(overrides = {}) {
   const vote = createVoteFlow({
     sdk: wrappedSdk,
     getSession: async () => session,
-    getConfig: () => ({ maciAddress: "0xmaci", pollId: 0n, startBlock: 11567000 }),
+    getConfig: () => ({ maciAddress: "0xmaci", pollId: 0n, startBlock: 11567000, chainId: 11155111n }),
     onProgress: (state) => progress.push(state),
+    onReceipt: (ctx, receipt) => receipts.push({ ctx, receipt }),
   });
-  return { vote, calls, progress, session };
+  return { vote, calls, progress, receipts, session };
 }
 
 test("first click uses the returned poll index, without a React render between join and publish", async () => {
   const f = fixture();
-  assert.deepEqual(await f.vote(2), { hash: "0xreceipt" });
+  const result = await f.vote(2);
+  assert.equal(result.hash, "0xreceipt");
   assert.deepEqual(
     f.calls.map((c) => c.name),
     ["getSignedupUserData", "signup", "getJoinedUserData", "joinPoll", "publish"],
@@ -139,7 +142,7 @@ test("retry after a rejected publish reuses membership rather than rejoining", a
     },
     publish: async () => {
       if (++attempts === 1) throw new Error("Rejected");
-      return { hash: "0xreceipt" };
+      return { hash: "0xreceipt", privateKey: "ephemeral-secret" };
     },
   });
   await assert.rejects(f.vote(0), /Rejected/);
@@ -189,7 +192,9 @@ test("failed membership lookup does not blindly submit another join transaction"
 
 test("invalid or missing poll state index never reaches publish", async () => {
   for (const pollStateIndex of [undefined, "0", "-1"]) {
-    const f = fixture({ joinPoll: async () => ({ pollStateIndex }) });
+    const f = fixture({
+      joinPoll: async () => ({ pollStateIndex }),
+    });
     await assert.rejects(f.vote(0), /confirm poll membership/);
     assert.equal(
       f.calls.some((c) => c.name === "publish"),
@@ -209,4 +214,63 @@ test("invalid options and weights cannot start signup", async () => {
     await assert.rejects(f.vote(option, weight), /Invalid vote/);
     assert.equal(f.calls.length, 0);
   }
+});
+
+test("submission result carries the context captured at submission start", async () => {
+  const f = fixture();
+  const result = await f.vote(1);
+  assert.equal(result.hash, "0xreceipt");
+  assert.equal(result.account, "0xabc");
+  assert.equal(result.maciAddress, "0xmaci");
+  assert.equal(result.pollId, 0n);
+  assert.equal(result.chainId, 11155111n);
+});
+
+test("receipt is stored under the captured context, even if the wallet changes mid-flight", async () => {
+  // Regression: start submission as wallet A, switch to wallet B while
+  // confirmation is pending. A's receipt must be stored under A's context and
+  // never presented as B's submission.
+  let release;
+  const f = fixture({
+    publish: () =>
+      new Promise((resolve) => {
+        release = resolve;
+      }),
+  });
+  const promise = f.vote(0);
+  while (!release) await new Promise((resolve) => setImmediate(resolve));
+  f.session.account = "0xbeef"; // wallet B takes over mid-flight
+  release({ hash: "0xreceipt", privateKey: "ephemeral-secret" });
+  const result = await promise;
+  assert.equal(f.receipts.length, 1);
+  assert.equal(f.receipts[0].ctx.account, "0xabc"); // A, not B
+  assert.equal(f.receipts[0].ctx.chainId, 11155111n);
+  assert.equal(f.receipts[0].receipt.txHash, "0xreceipt");
+  // The result carries the same captured context for the page's display guard.
+  assert.equal(result.account, "0xabc");
+});
+
+test("a throwing receipt store does not fail the submitted vote", async () => {
+  const session = {
+    account: "0xabc",
+    signer: {},
+    publicKey: "public",
+    privateKey: "private",
+    assertCurrent: async () => {},
+  };
+  const vote = createVoteFlow({
+    sdk: {
+      getSignedupUserData: async () => ({ isRegistered: true, stateIndex: "5" }),
+      getJoinedUserData: async () => ({ isJoined: true, pollStateIndex: "17" }),
+      publish: async () => ({ hash: "0xreceipt", privateKey: "ephemeral-secret" }),
+    },
+    getSession: async () => session,
+    getConfig: () => ({ maciAddress: "0xmaci", pollId: 0n, startBlock: 11567000, chainId: 11155111n }),
+    onProgress: () => {},
+    onReceipt: () => {
+      throw new Error("storage full");
+    },
+  });
+  const result = await vote(0); // must resolve, not reject
+  assert.equal(result.hash, "0xreceipt");
 });

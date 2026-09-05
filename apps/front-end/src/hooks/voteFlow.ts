@@ -1,4 +1,5 @@
 import type { JsonRpcSigner } from "ethers";
+import type { VoteReceipt } from "../lib/receipts";
 
 export type VoteStatus = "idle" | "connecting" | "signing-up" | "joining" | "ready" | "voting" | "voted";
 export interface VoteProgress {
@@ -6,6 +7,20 @@ export interface VoteProgress {
   status: VoteStatus;
   stateIndex?: string;
   pollStateIndex?: string;
+}
+
+// The wallet/contract context a submission belongs to. Captured when the
+// submission STARTS so a receipt can never migrate to a different wallet,
+// chain, contract or poll if the user switches mid-flight (Astra regression #2).
+export interface SubmitContext {
+  chainId: bigint;
+  maciAddress: string;
+  pollId: bigint;
+  account: string;
+}
+
+export interface SubmitResult extends SubmitContext {
+  hash: string;
 }
 
 interface VoteSession {
@@ -24,15 +39,17 @@ type VoteSdk = Pick<
 interface VoteFlowOptions {
   sdk: VoteSdk;
   getSession: () => Promise<VoteSession>;
-  getConfig: () => { maciAddress: string; pollId: bigint; startBlock: number };
+  getConfig: () => { maciAddress: string; pollId: bigint; startBlock: number; chainId: bigint };
   onProgress: (progress: VoteProgress) => void;
+  /** Called once the publish transaction is confirmed, BEFORE success is reported. */
+  onReceipt?: (context: SubmitContext, receipt: VoteReceipt) => void;
 }
 
 /** One invocation owns signup, join and publish. React state is display-only. */
-export function createVoteFlow({ sdk, getSession, getConfig, onProgress }: VoteFlowOptions) {
+export function createVoteFlow({ sdk, getSession, getConfig, onProgress, onReceipt }: VoteFlowOptions) {
   let busy = false;
 
-  return async (voteOptionIndex: number, newVoteWeight = 1n): Promise<{ hash: string }> => {
+  return async (voteOptionIndex: number, newVoteWeight = 1n): Promise<SubmitResult> => {
     // Synchronous lock: two clicks in the same render cannot start two transactions.
     if (busy) throw new Error("A vote submission is already in progress.");
     busy = true;
@@ -46,10 +63,14 @@ export function createVoteFlow({ sdk, getSession, getConfig, onProgress }: VoteF
       if (!Number.isSafeInteger(voteOptionIndex) || voteOptionIndex < 0 || newVoteWeight <= 0n) {
         throw new Error("Invalid vote option or weight.");
       }
-      const { maciAddress, pollId, startBlock } = getConfig();
+      // Capture the full context up front — every receipt and guard uses THIS
+      // snapshot, not whatever the wallet happens to be when the tx resolves.
+      const { maciAddress, pollId, startBlock, chainId } = getConfig();
+      const context: SubmitContext = { chainId, maciAddress, pollId, account: "" };
       report({});
       const session = await getSession();
       const { account, signer, publicKey, privateKey, assertCurrent } = session;
+      context.account = account;
       report({ account });
       await assertCurrent();
 
@@ -107,9 +128,18 @@ export function createVoteFlow({ sdk, getSession, getConfig, onProgress }: VoteF
         nonce: 1n,
         salt: undefined,
       });
+      // Persist the receipt under the CAPTURED context before reporting success,
+      // so the confirmation UI is always backed by a stored receipt. Storage
+      // failure must not fail an already-submitted on-chain vote; the honest
+      // outcome of a failed save is "unable to confirm" after a reload.
+      try {
+        onReceipt?.({ ...context }, { txHash: result.hash, submittedAt: Date.now() });
+      } catch {
+        // Receipt persistence is best-effort; the submission itself stands.
+      }
       report({ status: "voted" });
       // Do not leak the SDK's ephemeral encryption private key to the page.
-      return { hash: result.hash };
+      return { hash: result.hash, ...context };
     } catch (error) {
       report({ status: "idle" });
       throw error;

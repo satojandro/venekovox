@@ -4,7 +4,7 @@ import { BrowserProvider, isAddress, type Eip1193Provider } from "ethers";
 import * as maciSdk from "@maci-protocol/sdk/browser";
 import * as domainobjs from "@maci-protocol/domainobjs";
 import { createVoteFlow, type SubmitResult, type VoteProgress, type VoteStatus } from "./voteFlow";
-import { createReceiptStore, type VoteReceipt } from "../lib/receipts";
+import { createReceiptStore, applySubmittedReceipt, type VoteReceipt } from "../lib/receipts";
 import {
   checkReceiptStatus,
   isRecheckable,
@@ -126,8 +126,14 @@ function asReceiptProvider(wallet: WalletProvider): ReceiptProvider {
         status: receipt.status,
         to: receipt.to,
         from: receipt.from,
+        contractAddress: receipt.contractAddress,
         logs: receipt.logs.map((log) => ({ address: log.address, topics: [...log.topics] })),
       };
+    },
+    async getTransaction(hash) {
+      const tx = await provider.getTransaction(hash);
+      if (!tx) return null;
+      return { to: tx.to, from: tx.from, data: tx.data };
     },
     async call(to, data) {
       return provider.call({ to, data });
@@ -175,6 +181,9 @@ export function useMaci() {
   const busy = useRef(false);
   const statusRef = useRef<VoteStatus>("idle");
   const rechecking = useRef(false);
+  const operationId = useRef(0);
+  const receiptRef = useRef<VoteReceipt | null>(null);
+  const receiptAccountRef = useRef<string | null>(null);
   // Contexts already hydrated: `${chainId}:${account}` — prevents duplicate
   // lookups without blocking re-hydration for a DIFFERENT context.
   const hydratedFor = useRef<string | null>(null);
@@ -193,6 +202,8 @@ export function useMaci() {
           hydratedFor.current = null;
           setProgress({ account: null, status: "idle" });
           setParticipation({ status: "disconnected" });
+          receiptRef.current = null;
+          receiptAccountRef.current = null;
           setReceipt(null);
           setReceiptAccount(null);
           setReceiptStatus(null);
@@ -240,6 +251,11 @@ export function useMaci() {
           setParticipation({ status: "lookup-failed", registered: write.registered, lookupFailed: true });
           return;
         case "receipt":
+          if (receiptRef.current && receiptRef.current.txHash.toLowerCase() !== write.receipt.txHash.toLowerCase()) {
+            return;
+          }
+          receiptRef.current = write.receipt;
+          receiptAccountRef.current = write.account;
           setReceipt(write.receipt);
           setReceiptAccount(write.account);
           setReceiptStatus(write.status);
@@ -257,28 +273,38 @@ export function useMaci() {
    */
   const hydrate = useCallback(async () => {
     const snapshot = generation.current;
+    const startedOp = operationId.current;
     const canApply = () =>
       mounted.current &&
       snapshot === generation.current &&
+      startedOp === operationId.current &&
       !busy.current &&
       !IN_FLIGHT_STATUSES.includes(statusRef.current);
 
     await runHydration({
       canApply,
+      getOperationId: () => operationId.current,
+      liveReceipt: () => receiptRef.current,
       contextKey: hydrationContextKey,
       isHydratedFor: (key) => hydratedFor.current === key,
       isInFlightFor: (key) => inFlightFor.current === key,
       beginFlight: (key) => {
-        if (snapshot === generation.current) inFlightFor.current = key;
+        if (snapshot === generation.current && startedOp === operationId.current) inFlightFor.current = key;
       },
       endFlight: (key) => {
-        if (snapshot === generation.current && inFlightFor.current === key) inFlightFor.current = null;
+        if (
+          snapshot === generation.current &&
+          startedOp === operationId.current &&
+          inFlightFor.current === key
+        ) {
+          inFlightFor.current = null;
+        }
       },
       markHydrated: (key) => {
-        if (snapshot === generation.current) hydratedFor.current = key;
+        if (snapshot === generation.current && startedOp === operationId.current) hydratedFor.current = key;
       },
       clearHydrated: () => {
-        if (snapshot === generation.current) hydratedFor.current = null;
+        if (snapshot === generation.current && startedOp === operationId.current) hydratedFor.current = null;
       },
       peekWallet,
       getConfig,
@@ -325,9 +351,23 @@ export function useMaci() {
   }, [applyHydrationWrite, receiptStore]);
 
   const verifyDisplayedReceipt = useCallback(
-    async (args: { txHash: string; maciAddress: string; pollId: bigint; account: string; generation: number }) => {
+    async (args: {
+      txHash: string;
+      maciAddress: string;
+      pollId: bigint;
+      account: string;
+      generation: number;
+      operationId: number;
+    }) => {
+      const stillThisReceipt = () =>
+        mounted.current &&
+        args.generation === generation.current &&
+        args.operationId === operationId.current &&
+        receiptRef.current?.txHash.toLowerCase() === args.txHash.toLowerCase() &&
+        receiptAccountRef.current?.toLowerCase() === args.account.toLowerCase();
+
       const wallet = window.ethereum;
-      if (!wallet || !mounted.current || args.generation !== generation.current) return;
+      if (!wallet || !stillThisReceipt()) return;
       try {
         const result = await checkReceiptStatus({
           provider: asReceiptProvider(wallet),
@@ -336,13 +376,9 @@ export function useMaci() {
           pollId: args.pollId,
           account: args.account,
         });
-        if (mounted.current && args.generation === generation.current) {
-          setReceiptStatus(result.status);
-        }
+        if (stillThisReceipt()) setReceiptStatus(result.status);
       } catch {
-        if (mounted.current && args.generation === generation.current) {
-          setReceiptStatus("unavailable");
-        }
+        if (stillThisReceipt()) setReceiptStatus("unavailable");
       }
     },
     [],
@@ -353,8 +389,11 @@ export function useMaci() {
     const wallet = window.ethereum;
     const reset = () => {
       generation.current += 1;
+      operationId.current += 1;
       hydratedFor.current = null;
       inFlightFor.current = null;
+      receiptRef.current = null;
+      receiptAccountRef.current = null;
       setProgress({ account: null, status: "idle" });
       setParticipation({ status: "checking" });
       setReceipt(null);
@@ -409,22 +448,25 @@ export function useMaci() {
       onReceipt: (context, value) => {
         // Persist under the context CAPTURED AT SUBMISSION START: a wallet
         // switch mid-flight can never file A's vote under B (Astra regression).
-        receiptStore.save(context, value);
-        // Display only if the submission still belongs to the live generation.
-        if (mounted.current && activeGeneration.current === generation.current) {
-          setReceipt(value);
-          setReceiptAccount(context.account);
-          setReceiptStatus("unverified");
-          // The SDK already waited for the receipt; verify publication now so
-          // the user does not need a reload to leave "unverified".
-          void verifyDisplayedReceipt({
-            txHash: value.txHash,
-            maciAddress: context.maciAddress,
-            pollId: context.pollId,
-            account: context.account,
-            generation: activeGeneration.current,
-          });
-        }
+        applySubmittedReceipt(
+          () => receiptStore.save(context, value),
+          () => {
+            if (!mounted.current || activeGeneration.current !== generation.current) return;
+            receiptRef.current = value;
+            receiptAccountRef.current = context.account;
+            setReceipt(value);
+            setReceiptAccount(context.account);
+            setReceiptStatus("unverified");
+            void verifyDisplayedReceipt({
+              txHash: value.txHash,
+              maciAddress: context.maciAddress,
+              pollId: context.pollId,
+              account: context.account,
+              generation: activeGeneration.current,
+              operationId: operationId.current,
+            });
+          },
+        );
       },
     });
   }
@@ -456,6 +498,7 @@ export function useMaci() {
     async (option: number, weight = 1n): Promise<SubmitResult> => {
       if (busy.current) throw new Error("A wallet operation is already in progress.");
       busy.current = true;
+      operationId.current += 1;
       activeGeneration.current = generation.current;
       try {
         return await flow.current!(option, weight);
@@ -475,6 +518,7 @@ export function useMaci() {
     if (rechecking.current || busy.current || !receipt || !receiptAccount) return;
     if (!isRecheckable(receiptStatus)) return;
     const snapshot = generation.current;
+    const op = operationId.current;
     const stored = receipt;
     const account = receiptAccount;
     rechecking.current = true;
@@ -486,9 +530,17 @@ export function useMaci() {
         pollId,
         account,
         generation: snapshot,
+        operationId: op,
       });
     } catch {
-      if (mounted.current && snapshot === generation.current) setReceiptStatus("unavailable");
+      if (
+        mounted.current &&
+        snapshot === generation.current &&
+        op === operationId.current &&
+        receiptRef.current?.txHash.toLowerCase() === stored.txHash.toLowerCase()
+      ) {
+        setReceiptStatus("unavailable");
+      }
     } finally {
       rechecking.current = false;
     }

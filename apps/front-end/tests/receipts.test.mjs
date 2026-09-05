@@ -16,7 +16,7 @@ try {
   if (!stripTypeScriptTypes) throw new Error("Install workspace dependencies to run this test on Node 20.");
   javascript = stripTypeScriptTypes(source);
 }
-const { createReceiptStore, parseStoredReceipt, receiptKey } = await import(
+const { createReceiptStore, parseStoredReceipt, receiptKey, applySubmittedReceipt } = await import(
   `data:text/javascript;base64,${Buffer.from(javascript).toString("base64")}`
 );
 
@@ -129,4 +129,15 @@ test("parseStoredReceipt labels the failure reason for diagnostics", () => {
     ok: true,
     receipt: { txHash: goodHash, submittedAt: 1757000000000 },
   });
+});
+
+test("a throwing persist still displays and verifies the in-memory receipt", () => {
+  const displayed = [];
+  applySubmittedReceipt(
+    () => {
+      throw new Error("storage full");
+    },
+    () => displayed.push("shown"),
+  );
+  assert.deepEqual(displayed, ["shown"]);
 });

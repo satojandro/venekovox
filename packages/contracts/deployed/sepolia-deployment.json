@@ -1,5 +1,7 @@
 {
   "network": "sepolia",
+  "_warning": "HISTORICAL Aug 2025 deployment. Canonical Aug 2026 revival: MACI 0x44F31f3823ceFE00C2FA5acEB2576F119143Fe3a (Poll-0 0x29D39dD442c91dAc51a292fd04a9A7Edd16c22CB, block 11567347, dates 0/0 = NOT VOTABLE). Do not use these 2025 addresses.",
+  "_corrupted_entries": "FreeForAllChecker, Verifier, PoseidonT3, ConstantInitialVoiceCreditProxyFactory, deployer contain non-hex corruption and were never valid addresses. Treated as lost.",
   "deployer": "0xAA003843C50b5d943Df62F1A344292极8D7bb083a",
   "contracts": {
     "FreeForAllPolicy": "0x539E567a28759f141CCb62e8F21cBc929d113913",

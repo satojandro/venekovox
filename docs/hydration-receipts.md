@@ -8,14 +8,15 @@ Slice implemented in `68f658cf`, reviewed at `7fce1e1` on 2026-09-05. This repla
 
 [receipts.ts](../apps/front-end/src/lib/receipts.ts) stores transaction hash and submission time under chain + MACI + poll + wallet. It does not store the selected option. Context scoping prevents ordinary cross-context cache lookup, but is not proof of transaction provenance. Local storage is user-editable and can be unavailable.
 
-P1 follow-up (2026-09-05) tightened the truth contract:
+P1 follow-up (2026-09-05) tightened the truth contract, then a review at `c6e1fa874` showed the first verifier checked the **MACI recipient** rather than a Poll publication. The current contract:
 
 - **Strict shape (G11).** `parseStoredReceipt` accepts only a real `0x`-prefixed 64-hex transaction hash and a finite positive timestamp, and labels the failure reason (invalid-json / invalid-tx-hash / invalid-time). Any malformed record loads as `null` = "unable to confirm".
-- **Chain verification (G02).** [receiptStatus.ts](../apps/front-end/src/lib/receiptStatus.ts) checks the receipt on-chain during hydration: only a mined, successful transaction to the configured MACI contract renders as "confirmed". The UI now distinguishes `unverified` (just submitted), `pending`, `confirmed`, `unexpected` (right chain, wrong contract), `reverted` and `unavailable` (RPC failed — never "failed").
-- **Marker retry + distinct states (G03).** The hydrated-context marker is set only after a successful lookup, so transient failures retry; wallet probe errors are no longer collapsed into "disconnected"; a wallet on the wrong chain gets its own state and is never hydrated cross-chain.
-- **Read-only key (G04 guard).** Hydration now reads existing key material and surfaces missing/invalid states instead of silently creating a new voting identity on page load. An explicit vote still creates a key when needed.
+- **Chain verification (G02, still partial).** [receiptStatus.ts](../apps/front-end/src/lib/receiptStatus.ts) resolves the poll through `MACI.getPoll`. **Confirmed** requires the participating account to call `publishMessage` or `publishMessageBatch` on that Poll (calldata + `to`) and that Poll to emit `PublishMessage`. The constructor's placeholder `PublishMessage` is not a vote. A successful MACI signup is `unexpected`. Unknown indirect execution (EntryPoint / smart account) stays `unverified` until a W1 adapter exists. Generic log-topic address matching is not used.
+- **Marker retry + distinct states (G03, still partial).** [hydration.ts](../apps/front-end/src/lib/hydration.ts) peeks before any write. Duplicate/in-flight/busy/stale runs cannot blank the display and then skip restore. An operation/receipt revision invalidates in-flight hydration when a submission starts, so a delayed RPC cannot overwrite a newer receipt. Each hydration run owns the in-flight lock (`FlightAnchor`): a new submission invalidates an older run's lock, and cleanup releases only the lock that exact run acquired — so a delayed hydration finishing after a vote no longer leaves the account permanently "in flight" (regression added with `dcf63d545`). The marker is set only after participation lookup **and** the receipt check attempt. A unit race harness covers overlapping peek/lookup/receipt/submit/event cases including delayed overwrite and stale cleanup after a submission. There is still no React/browser mount harness.
+- **Post-submit status.** After `publish` the hook verifies immediately and exposes a guarded `recheckReceipt` for pending/unavailable/unverified/unexpected. Persistence errors do not skip in-memory display and verification. Users should not need a reload to leave `unverified`.
+- **Read-only key (G04 guard).** Hydration now reads existing key material and surfaces missing/invalid/storage-error states instead of silently creating a new voting identity on page load. An explicit vote still creates a key when needed.
 
-The current hydration path still does **not** match chain events to the specific poll message (it verifies the receipt and recipient, not the emitted `PublishMessage`), and smart-account execution-context matching remains dependent on W1.
+The poll page shows participation notices even when no account is in React state (so wrong-chain is not hidden behind "Connect Wallet"), keeps vote buttons visible next to a reverted receipt, and offers "Check again" for recoverable statuses.
 
 ## Required recovery contract
 
@@ -34,4 +35,4 @@ Transaction matching must be specified against the deployed ABI and execution mo
 
 Run submit → refresh → reconnect, then repeat with wallet/network switches during hydration and submission. Cover failed RPC lookup/retry, pending/reverted/unrelated transaction hashes, malformed/unavailable storage, missing voting key and smart-account execution. Assertions must observe actual hook/UI behavior for race cases.
 
-Current 14 flow and 5 receipt unit tests pass with test doubles. They do not prove React hydration race safety or live receipt validation. See [runbook](runbook.md) for the exact command. There is no complete voter dashboard claim.
+Current 14 flow, 8 receipt-storage, Poll-publication, and hydration-race unit tests are listed in [runbook](runbook.md). They do not prove React hydration race safety or live receipt validation. There is no complete voter dashboard claim.

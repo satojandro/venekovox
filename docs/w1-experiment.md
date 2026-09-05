@@ -38,7 +38,7 @@ Lab UI: [`/w1`](../apps/front-end/src/pages/W1Experiment.tsx). Marking rows “p
 - Durable `transaction_id` lab draft (E4 restore); hash may be missing at save time.
 - `WalletAdapter` seam: injected path is real; `createPrivyAdapter()` throws until E1–E6 pass.
 - Thin `GET /w1/transactions/:id` using server-side credentials (status GET failures are unavailable, not denied).
-- Lab-only `POST /w1/lab/sponsored-send` (gated by `W1_LAB_ALLOW_SPONSORED_SEND`); not wired into production voting.
+- Lab-only `POST /w1/lab/sponsored-send`: requires operator token (`x-w1-lab-operator-token`), configured chain/probe, `probe()`/`alwaysRevert()` selectors only, and zero value. The env toggle alone is not authorization. Not wired into production voting.
 
 **Not implemented / not claimed**
 
@@ -62,13 +62,19 @@ Frontend unit tests:
 pnpm --dir apps/front-end test:unit
 ```
 
+Backend lab-send policy / route tests:
+
+```sh
+pnpm --dir apps/backend test:unit
+```
+
 Local CallerProbe shape tests (needs contracts `node_modules`):
 
 ```sh
 pnpm --dir packages/contracts test tests/CallerProbe.test.ts
 ```
 
-Set on the **server** only: `PRIVY_APP_ID`, `PRIVY_APP_SECRET`. Optional: `W1_WEBHOOK_SECRET`. For lab sponsored sends: `W1_LAB_ALLOW_SPONSORED_SEND=true` and `W1_LAB_WALLET_ID`. Frontend: `VITE_W1_BACKEND_URL`, `VITE_W1_PROBE_ADDRESS` (the probe address is not a secret).
+Set on the **server** only: `PRIVY_APP_ID`, `PRIVY_APP_SECRET`. Optional: `W1_WEBHOOK_SECRET`. For lab sponsored sends (keep disabled until configured): `W1_LAB_OPERATOR_TOKEN`, `W1_LAB_PROBE_ADDRESS`, `W1_LAB_CHAIN_ID` (default Sepolia), `W1_LAB_WALLET_ID`, then `W1_LAB_ALLOW_SPONSORED_SEND=true`. Enter the operator token in the `/w1` UI (memory only — never a `VITE_` env). Frontend: `VITE_W1_BACKEND_URL`, `VITE_W1_PROBE_ADDRESS` (the probe address is not a secret).
 
 ## Next concrete action
 

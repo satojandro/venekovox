@@ -53,3 +53,71 @@ test("malformed lab drafts are rejected", () => {
   assert.equal(parseLabDraft("{").ok, false);
   assert.equal(parseLabDraft(JSON.stringify({ transactionId: "tx-1" })).ok, false);
 });
+
+test("same transaction update that omits userOperationHash preserves the broadcast id", () => {
+  const storage = fakeStorage();
+  upsertLabDraft(
+    {
+      transactionId: "tx-same",
+      chainId: "11155111",
+      userOperationHash: "0x" + "11".repeat(32),
+      intent: "probe",
+    },
+    storage,
+  );
+  const updated = upsertLabDraft(
+    {
+      transactionId: "tx-same",
+      chainId: "11155111",
+      // Status responses may omit the hash — must not erase it.
+      transactionHash: "0x" + "ab".repeat(32),
+    },
+    storage,
+  );
+  assert.equal(updated.userOperationHash, "0x" + "11".repeat(32));
+  assert.equal(updated.transactionHash, "0x" + "ab".repeat(32));
+  assert.equal(updated.intent, "probe");
+});
+
+test("different transaction_id starts a fresh draft without inherited metadata", async () => {
+  const storage = fakeStorage();
+  const first = upsertLabDraft(
+    {
+      transactionId: "tx-old",
+      chainId: "11155111",
+      participant: "0x" + "a1".repeat(20),
+      userOperationHash: "0x" + "11".repeat(32),
+      transactionHash: "0x" + "ab".repeat(32),
+      intent: "probe",
+    },
+    storage,
+  );
+  await new Promise((r) => setTimeout(r, 5));
+  const next = upsertLabDraft({ transactionId: "tx-new", chainId: "11155111" }, storage);
+  assert.notEqual(next.submittedAt, first.submittedAt);
+  assert.equal(next.userOperationHash, undefined);
+  assert.equal(next.transactionHash, undefined);
+  assert.equal(next.participant, undefined);
+  assert.equal(next.intent, undefined);
+});
+
+test("throwing storage surfaces after identifiers exist in memory (persist regression)", () => {
+  const storage = {
+    getItem: () => null,
+    setItem: () => {
+      throw new Error("quota exceeded");
+    },
+  };
+  assert.throws(
+    () =>
+      upsertLabDraft(
+        {
+          transactionId: "tx-broadcast",
+          chainId: "11155111",
+          userOperationHash: "0x" + "11".repeat(32),
+        },
+        storage,
+      ),
+    /quota exceeded/,
+  );
+});

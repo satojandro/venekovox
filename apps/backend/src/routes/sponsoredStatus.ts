@@ -1,5 +1,6 @@
-import { Router, Request, Response } from "express";
+import { Router, type Request, type Response } from "express";
 import { mapPrivyTransaction, mapPrivyWebhook, isSponsorshipDeniedSendStatus } from "./privyMap";
+import { labSendEnvFromProcess, validateLabSponsoredSend } from "./labSendPolicy";
 
 const router: import("express").Router = Router();
 
@@ -60,7 +61,6 @@ router.get("/transactions/:transactionId", async (req: Request, res: Response) =
       });
     }
     if (!response.ok) {
-      // Status GET failures are not sponsorship denial.
       return res.status(502).json({
         status: "error",
         vendorLookup: "error",
@@ -93,54 +93,37 @@ router.get("/transactions/:transactionId", async (req: Request, res: Response) =
  * POST /w1/lab/sponsored-send
  *
  * Lab-only Privy sponsored eth_sendTransaction. Production voting must not use this.
- * Requires PRIVY_APP_ID / PRIVY_APP_SECRET / W1_LAB_WALLET_ID on the server.
- * Optional W1_LAB_ALLOW_SPONSORED_SEND=true gate (default off).
+ * Requires operator token + allowlisted probe/chain/selectors/zero value. The env
+ * toggle alone is not authorization.
  */
 router.post("/lab/sponsored-send", async (req: Request, res: Response) => {
-  if (process.env.W1_LAB_ALLOW_SPONSORED_SEND !== "true") {
-    return res.status(503).json({
-      status: "blocked",
-      error_code: "LAB_SEND_DISABLED",
-      message: "Set W1_LAB_ALLOW_SPONSORED_SEND=true on the server to enable lab-only sponsored sends (E2–E6).",
-    });
-  }
-
-  const creds = privyCredentials();
-  const walletId = process.env.W1_LAB_WALLET_ID?.trim();
-  if (!creds || !walletId) {
-    return res.status(503).json({
-      status: "blocked",
-      error_code: "PRIVY_LAB_NOT_CONFIGURED",
-      message: "E1 incomplete: need PRIVY_APP_ID, PRIVY_APP_SECRET, and W1_LAB_WALLET_ID on the server.",
-    });
-  }
-
-  const body = req.body ?? {};
-  const to = typeof body.to === "string" ? body.to : "";
-  const data = typeof body.data === "string" ? body.data : "0x";
-  const chainId = body.chainId != null ? BigInt(body.chainId) : 11155111n;
-  const value = typeof body.value === "string" ? body.value : "0x0";
-  if (!/^0x[0-9a-fA-F]{40}$/.test(to)) {
-    return res.status(400).json({ status: "error", error_code: "INVALID_TO" });
-  }
-  if (!/^0x[0-9a-fA-F]*$/.test(data)) {
-    return res.status(400).json({ status: "error", error_code: "INVALID_DATA" });
-  }
-
   try {
-    const response = await fetch(`https://api.privy.io/v1/wallets/${encodeURIComponent(walletId)}/rpc`, {
+    const validated = validateLabSponsoredSend(
+      labSendEnvFromProcess(),
+      { operatorTokenHeader: req.get("x-w1-lab-operator-token") },
+      req.body ?? {},
+    );
+    if (!validated.ok) {
+      return res.status(validated.httpStatus).json({
+        status: validated.httpStatus >= 500 ? "blocked" : "error",
+        error_code: validated.error_code,
+        message: validated.message,
+      });
+    }
+
+    const response = await fetch(`https://api.privy.io/v1/wallets/${encodeURIComponent(validated.walletId)}/rpc`, {
       method: "POST",
       headers: {
-        Authorization: `Basic ${basicAuth(creds.appId, creds.appSecret)}`,
-        "privy-app-id": creds.appId,
+        Authorization: `Basic ${basicAuth(validated.appId, validated.appSecret)}`,
+        "privy-app-id": validated.appId,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         method: "eth_sendTransaction",
-        caip2: caip2ForChain(chainId),
+        caip2: caip2ForChain(validated.chainId),
         sponsor: true,
         params: {
-          transaction: { to, data, value },
+          transaction: { to: validated.to, data: validated.data, value: validated.value },
         },
       }),
     });
@@ -176,7 +159,6 @@ router.post("/lab/sponsored-send", async (req: Request, res: Response) => {
     }
 
     const rpcBody = (await response.json()) as Record<string, unknown>;
-    // Privy may nest under data or return fields at the top level.
     const dataObj = (typeof rpcBody.data === "object" && rpcBody.data !== null ? rpcBody.data : rpcBody) as Record<
       string,
       unknown

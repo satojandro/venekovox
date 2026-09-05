@@ -25,16 +25,16 @@ No implementation owner is assigned indefinitely by this document. W1 is an expe
 Dated record for this change:
 
 ```text
-Task ID / owner / date: W1 review-fix / session 2026-09-05
-Base commit and working branch: 8b9085af → w1-privy-experiment
-Goal and acceptance gate: Close Astra false-confirmation / typing / E4 gaps; keep architecture unapproved
-Changed paths and decisions: sponsored verifier (EntryPoint + linkedToUserOperation), lab draft/E4, backend status vs deny, lab sponsored-send
-Commands run and exact results: frontend unit tests **102 passed, 0 failed**. Full workspace build blocked (no node_modules); isolated tsc showed missing deps + one fixed outerReceipt typing error.
+Task ID / owner / date: W1 security review-fix / Hermes / 2026-09-05
+Base commit and working branch: 80791eb1 → w1-privy-experiment
+Goal and acceptance gate: Close unauth lab-send, persist-hide-id, chainId 400, draft-hash erase; keep architecture unapproved
+Changed paths and decisions: labSendPolicy + route auth/allowlist; W1Experiment operator token + persist-after-display; upsertLabDraft same-tx preserve / new-tx fresh; backend + labDraft tests; env/docs
+Commands run and exact results: frontend unit **105 passed**; backend policy/route **15 passed**. Full frontend/backend builds blocked (no workspace node_modules / pnpm).
 Live evidence (public links only): none — E1–E6 still unverified
-Known failures / unverified claims: Sepolia sponsorship entitlement, TEE, live Privy send, MACI E5, full frontend build
-Dirty or uncommitted work: review-fix changes on branch until committed
-Next concrete action: Alejandro E1 + deploy-caller-probe; then lab sponsored E2
-External setup required and who controls it: Privy Dashboard + W1_LAB_* server env — Alejandro
+Known failures / unverified claims: Sepolia sponsorship entitlement, TEE, live Privy send, MACI E5, full tsc/vite build
+Dirty or uncommitted work: security review-fix changes local until committed
+Next concrete action: commit/push when asked; Alejandro configure W1_LAB_* then E1–E2
+External setup required and who controls it: Privy Dashboard + W1_LAB_OPERATOR_TOKEN / probe / wallet — Alejandro
 ```
 
 Use this small record in a PR description or a dated handoff entry:

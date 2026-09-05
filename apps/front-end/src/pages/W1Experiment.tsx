@@ -97,6 +97,8 @@ export default function W1Experiment() {
   const [report, setReport] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [submittedAt, setSubmittedAt] = useState<number | null>(null);
+  /** Operator token for lab sponsored send — memory only; never a VITE_ env. */
+  const [operatorToken, setOperatorToken] = useState("");
   const approved = useMemo(() => architectureMayBeApproved(notes), [notes]);
   const trustedEntryPoints = ENTRY_POINTS?.length ? ENTRY_POINTS : [...DEFAULT_TRUSTED_ENTRY_POINTS];
 
@@ -154,21 +156,30 @@ export default function W1Experiment() {
 
   const persistVendor = useCallback(
     (vendor: VendorView, intent?: string) => {
-      const draft = upsertLabDraft({
+      const update: Parameters<typeof upsertLabDraft>[0] = {
         transactionId: vendor.transactionId,
         chainId: CHAIN_ID.toString(),
-        participant: participant || undefined,
-        pollAddress: pollAddress || undefined,
-        userOperationHash: vendor.userOperationHash || undefined,
-        transactionHash: vendor.transactionHash || undefined,
-        intent,
-        submittedAt: submittedAt ?? undefined,
-      });
+      };
+      if (participant) update.participant = participant;
+      if (pollAddress) update.pollAddress = pollAddress;
+      if (vendor.userOperationHash) update.userOperationHash = vendor.userOperationHash;
+      if (vendor.transactionHash) update.transactionHash = vendor.transactionHash;
+      if (intent) update.intent = intent;
+      if (submittedAt) update.submittedAt = submittedAt;
+      const draft = upsertLabDraft(update);
       setSubmittedAt(draft.submittedAt);
       return draft;
     },
     [participant, pollAddress, submittedAt],
   );
+
+  function validateOptionalAddresses(): string | null {
+    const acct = participant.trim();
+    const poll = pollAddress.trim();
+    if (acct && !/^0x[0-9a-fA-F]{40}$/.test(acct)) return "Participating account must be a 20-byte hex address.";
+    if (poll && !/^0x[0-9a-fA-F]{40}$/.test(poll)) return "Poll address must be a 20-byte hex address.";
+    return null;
+  }
 
   async function decodeProbe(event: FormEvent) {
     event.preventDefault();
@@ -406,13 +417,25 @@ export default function W1Experiment() {
       setError("Set VITE_W1_PROBE_ADDRESS first.");
       return;
     }
+    if (!operatorToken.trim()) {
+      setError("Enter the lab operator token (server W1_LAB_OPERATOR_TOKEN). It is not a VITE_ secret.");
+      return;
+    }
+    const addressError = validateOptionalAddresses();
+    if (addressError) {
+      setError(addressError);
+      return;
+    }
     const iface = new Interface(CALLER_PROBE_ABI);
     const data = iface.encodeFunctionData(revert ? "alwaysRevert" : "probe");
     const intent = revert ? "alwaysRevert" : "probe";
     try {
       const response = await fetch(`${BACKEND}/w1/lab/sponsored-send`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-w1-lab-operator-token": operatorToken.trim(),
+        },
         body: JSON.stringify({
           to: PROBE,
           data,
@@ -421,22 +444,37 @@ export default function W1Experiment() {
         }),
       });
       const body = (await response.json()) as StatusApiResponse;
-      if (response.status === 503) {
-        setReport(JSON.stringify({ blocked: true, ...body }, null, 2));
+      if (response.status === 503 || response.status === 401) {
+        setReport(JSON.stringify({ blocked: response.status === 503, unauthorized: response.status === 401, ...body }, null, 2));
         return;
       }
       const vendor = asVendorView(body.vendor);
       if (vendor) {
-        // Persist immediately at broadcast — E4 recovery boundary.
-        const draft = persistVendor(vendor, intent);
+        // Always keep broadcast identifiers in memory first — persistence must not hide them.
         setTransactionId(vendor.transactionId);
         if (vendor.transactionHash) setTxHash(vendor.transactionHash);
+
+        let draft = null;
+        let persistWarning: string | null = null;
+        try {
+          draft = persistVendor(vendor, intent);
+        } catch (persistErr) {
+          persistWarning =
+            persistErr instanceof Error
+              ? persistErr.message
+              : "Draft storage failed. Copy the transaction_id below — the send already happened.";
+        }
+
         setReport(
           JSON.stringify(
             {
-              meaning: "Lab-only sponsored send. Production voting is still gated. Identifiers saved for refresh (E4).",
+              meaning: "Lab-only sponsored send. Production voting is still gated.",
               configuredChainId: CHAIN_ID.toString(),
+              transactionId: vendor.transactionId,
+              userOperationHash: vendor.userOperationHash,
+              transactionHash: vendor.transactionHash,
               draft,
+              persistWarning,
               vendor,
               raw: body,
             },
@@ -519,9 +557,20 @@ export default function W1Experiment() {
             Decode outer vs inner caller
           </button>
         </form>
+        <label className="block text-sm">
+          Lab operator token (memory only — matches server <code>W1_LAB_OPERATOR_TOKEN</code>, never a <code>VITE_</code> env)
+          <input
+            type="password"
+            autoComplete="off"
+            className="mt-1 w-full bg-gray-950 border border-gray-700 rounded p-2"
+            value={operatorToken}
+            onChange={(event) => setOperatorToken(event.target.value)}
+            placeholder="operator token"
+          />
+        </label>
         <p className="text-xs text-gray-500">
           Injected buttons are user-funded diagnostics. Lab sponsored buttons call the backend proxy with{" "}
-          <code>sponsor: true</code> (E2–E6) and are not wired into voting.
+          <code>sponsor: true</code> (E2–E6), require the operator token, and are not wired into voting.
         </p>
         <div className="flex flex-wrap gap-3">
           <button type="button" className="border border-gray-600 px-3 py-2 rounded" onClick={() => void sendInjectedProbe(false)}>

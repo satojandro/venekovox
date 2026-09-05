@@ -24,6 +24,17 @@ export type LabDraftParse =
   | { ok: true; draft: LabDraft }
   | { ok: false; reason: string };
 
+export type LabDraftUpdate = {
+  transactionId: string;
+  chainId: string;
+  submittedAt?: number;
+  participant?: string;
+  pollAddress?: string;
+  userOperationHash?: string;
+  transactionHash?: string;
+  intent?: string;
+};
+
 export function parseLabDraft(raw: string): LabDraftParse {
   let parsed: unknown;
   try {
@@ -95,23 +106,53 @@ export function saveLabDraft(
   storage.setItem(KEY, JSON.stringify(parsed.draft));
 }
 
-/** Merge new fields without resetting submittedAt when the same transaction_id is updated. */
+function assignOptional(
+  draft: LabDraft,
+  key: "participant" | "pollAddress" | "userOperationHash" | "transactionHash" | "intent",
+  value: string | undefined,
+): void {
+  if (typeof value === "string" && value.length > 0) draft[key] = value;
+}
+
+/**
+ * Upsert a lab draft.
+ *
+ * - Same transaction_id: preserve existing identifiers when the update omits them
+ *   (e.g. a status response without user_operation_hash must not erase the broadcast id).
+ * - Different transaction_id: start a fresh record — do not inherit prior metadata or timestamp.
+ */
 export function upsertLabDraft(
-  next: Omit<LabDraft, "submittedAt"> & { submittedAt?: number },
+  next: LabDraftUpdate,
   storage: ReceiptStorage | null = globalThis.localStorage,
 ): LabDraft {
   const existing = loadLabDraft(storage);
-  const submittedAt =
-    existing && existing.transactionId === next.transactionId
-      ? existing.submittedAt
-      : next.submittedAt && next.submittedAt > 0
-        ? next.submittedAt
-        : Date.now();
+  const sameTx = !!existing && existing.transactionId === next.transactionId;
+
+  if (!sameTx) {
+    const draft: LabDraft = {
+      transactionId: next.transactionId,
+      chainId: next.chainId,
+      submittedAt: next.submittedAt && next.submittedAt > 0 ? next.submittedAt : Date.now(),
+    };
+    assignOptional(draft, "participant", next.participant);
+    assignOptional(draft, "pollAddress", next.pollAddress);
+    assignOptional(draft, "userOperationHash", next.userOperationHash);
+    assignOptional(draft, "transactionHash", next.transactionHash);
+    assignOptional(draft, "intent", next.intent);
+    saveLabDraft(draft, storage);
+    return draft;
+  }
+
   const draft: LabDraft = {
-    ...existing,
-    ...next,
-    submittedAt,
+    transactionId: next.transactionId,
+    chainId: next.chainId || existing.chainId,
+    submittedAt: existing.submittedAt,
   };
+  assignOptional(draft, "participant", next.participant ?? existing.participant);
+  assignOptional(draft, "pollAddress", next.pollAddress ?? existing.pollAddress);
+  assignOptional(draft, "userOperationHash", next.userOperationHash ?? existing.userOperationHash);
+  assignOptional(draft, "transactionHash", next.transactionHash ?? existing.transactionHash);
+  assignOptional(draft, "intent", next.intent ?? existing.intent);
   saveLabDraft(draft, storage);
   return draft;
 }

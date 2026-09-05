@@ -4,7 +4,7 @@ This directory separates **product intent**, **observed implementation**, and **
 
 | Reader                           | Reading order                                                                                                                                  |
 | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Alejandro / product collaborator | [Vision](product-vision.md) → [architecture](architecture.md) → [roadmap](roadmap.md)                                                          |
+| Alejandro / product collaborator | [Vision](product-vision.md) → [architecture](architecture.md) → [design rationale](design-rationale.md) → [roadmap](roadmap.md)                |
 | New implementation agent         | [Handoff](agent-handoff.md) → [current state](current-state.md) → [decisions](decisions.md) → relevant [integration spec](integration-spec.md) |
 | Judge                            | [Judge guide](judges.md) → [technology/prize map](technology-prizes.md) → linked implementation/evidence                                       |
 | Operator / demo runner           | [Runbook](runbook.md) → [current state](current-state.md) → [roadmap acceptance gates](roadmap.md)                                             |

@@ -12,7 +12,9 @@
     "test:ui": "vitest --ui",
     "test:vote-flow": "node --test tests/voteFlow.test.mjs",
     "test:receipts": "node --test tests/receipts.test.mjs",
-    "test:unit": "node --test tests/voteFlow.test.mjs tests/receipts.test.mjs"
+    "test:receipt-status": "node --test tests/receiptStatus.test.mjs",
+    "test:hydration": "node --test tests/hydration.test.mjs",
+    "test:unit": "node --test tests/voteFlow.test.mjs tests/receipts.test.mjs tests/receiptStatus.test.mjs tests/hydration.test.mjs"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.0",

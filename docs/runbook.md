@@ -85,16 +85,16 @@ The default version is v1; v2 does not exist at the review baseline. Build invok
 Current focused regression suite:
 
 ```sh
-node --test apps/front-end/tests/voteFlow.test.mjs apps/front-end/tests/receipts.test.mjs
+pnpm --dir apps/front-end test:unit
 ```
 
-On Node 20 it uses installed TypeScript; newer Node can use native stripping. This documentation review ran it with Node 24: **19 passed**. Supported-toolchain checks for an implementation change include:
+This runs `voteFlow`, `receipts`, `receiptStatus` and `hydration` tests. On Node 20 it uses installed TypeScript; newer Node can use native stripping. Record the exact pass/fail counts from the command; do not copy a previous snapshot. Supported-toolchain checks for an implementation change include:
 
 ```sh
 pnpm --dir apps/front-end build
 pnpm types
 ```
 
-Use the existing repository lint/format checks on changed files. The 19 unit tests do not exercise React hydration races, actual Self proofs, browser proving, smart-account execution, chain receipt provenance or tally/indexer correctness.
+Use the existing repository lint/format checks on changed files. These unit tests do not exercise React component mount, actual Self proofs, browser proving, live chain receipt provenance or tally/indexer correctness.
 
 Record live smoke evidence under the [judge checklist](judges.md): exact release commit, environment, public tx/query links, expected versus actual outcomes and limitations. Do not capture passport details, raw proof payloads, secrets or ballot-key material in recordings.

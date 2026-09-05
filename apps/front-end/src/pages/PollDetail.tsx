@@ -58,6 +58,17 @@ const content = {
     notEligible: "Only verified Venezuelan citizens may vote. You can still view the results.",
     voteOptions: { yes: "Yes", no: "No", abstain: "Abstain" },
     voteConfirmation: "Your encrypted vote has been submitted. Results will be available after the verified tally.",
+    submissionRecorded: "Your encrypted vote was recorded. Awaiting on-chain confirmation…",
+    submissionPending: "Submission found on chain — awaiting confirmation.",
+    submissionFailed: "Your submission failed on-chain. You can try again.",
+    submissionUnknown: "Could not verify your submission on-chain. Refresh to retry.",
+    submissionUnexpected:
+      "Submission found on-chain, but for a different contract than this poll. Please check the configuration.",
+    wrongChain: "Your wallet is connected to the wrong network. Switch to Sepolia to participate.",
+    keyMissing:
+      "No voting key found on this device. Vote to create one, or restore your key to recover your participation.",
+    keyInvalid: "The saved voting key is invalid. Restore your key before continuing.",
+    lookupFailed: "The chain did not answer. Check your connection and refresh.",
     resultsTitle: "Live Results",
     totalVotes: "Total Votes",
     privacyTitle: "Anonymous & Secure",
@@ -76,6 +87,17 @@ const content = {
     voteOptions: { yes: "Sí", no: "No", abstain: "Abstenerse" },
     voteConfirmation:
       "Tu voto cifrado ha sido enviado. Los resultados estarán disponibles después del escrutinio verificado.",
+    submissionRecorded: "Tu voto cifrado fue registrado. Esperando confirmación on-chain…",
+    submissionPending: "Envío encontrado en la cadena — esperando confirmación.",
+    submissionFailed: "Tu envío falló en la cadena. Puedes intentarlo de nuevo.",
+    submissionUnknown: "No se pudo verificar tu envío en la cadena. Actualiza para reintentar.",
+    submissionUnexpected:
+      "Envío encontrado en la cadena, pero para un contrato distinto de esta encuesta. Revisa la configuración.",
+    wrongChain: "Tu wallet está conectada a la red incorrecta. Cambia a Sepolia para participar.",
+    keyMissing:
+      "No se encontró una clave de votación en este dispositivo. Vota para crear una, o restaura tu clave para recuperar tu participación.",
+    keyInvalid: "La clave de votación guardada no es válida. Restaura tu clave para continuar.",
+    lookupFailed: "La cadena no respondió. Revisa tu conexión y actualiza.",
     resultsTitle: "Resultados en Vivo",
     totalVotes: "Votos Totales",
     privacyTitle: "Anónimo y Seguro",
@@ -114,9 +136,41 @@ export default function PollDetailPage() {
   const maci = useMaci();
   const currentContent = content[language];
 
-  // A receipt only counts as "submission confirmed" for the wallet that owns it.
-  // A restored receipt from a previous session displays without local vote state.
-  const confirmedReceipt = maci.receipt && maci.account && maci.receiptAccount === maci.account ? maci.receipt : null;
+  // A receipt only counts as "submission confirmed" for the wallet that owns it,
+  // AND only when the chain verified it. A stored hash alone is never
+  // confirmation: the copy depends on receiptStatus (G02), and "counted" is the
+  // tally's claim (P4), never this UI's.
+  const ownedReceipt = maci.receipt && maci.account && maci.receiptAccount === maci.account ? maci.receipt : null;
+  const receiptState = ownedReceipt ? (maci.receiptStatus ?? "unverified") : null;
+  const confirmedReceipt = ownedReceipt && receiptState === "confirmed" ? ownedReceipt : null;
+  // Only a reverted submission may be retried. Anything else with a live receipt
+  // locks the buttons so we never double-submit while the outcome is unknown.
+  const votesLocked = !!ownedReceipt && receiptState !== "reverted";
+
+  const receiptBanner =
+    receiptState === "reverted"
+      ? { title: currentContent.submissionFailed, box: "bg-red-900/40 border-red-500/50", text: "text-red-200" }
+      : receiptState === "unexpected"
+        ? {
+            title: currentContent.submissionUnexpected,
+            box: "bg-yellow-900/30 border-yellow-500/40",
+            text: "text-yellow-200",
+          }
+        : receiptState === "unavailable"
+          ? { title: currentContent.submissionUnknown, box: "bg-gray-800/60 border-gray-600/50", text: "text-gray-300" }
+          : receiptState === "pending"
+            ? {
+                title: currentContent.submissionPending,
+                box: "bg-blue-900/40 border-blue-500/50",
+                text: "text-blue-200",
+              }
+            : receiptState === "unverified"
+              ? {
+                  title: currentContent.submissionRecorded,
+                  box: "bg-blue-900/40 border-blue-500/50",
+                  text: "text-blue-200",
+                }
+              : null;
 
   const total = mockPollDetail.results.yes + mockPollDetail.results.no + mockPollDetail.results.abstain;
   const percentages = {
@@ -129,7 +183,7 @@ export default function PollDetailPage() {
   const VOTE_OPTIONS: Record<string, number> = { yes: 0, no: 1, abstain: 2 };
 
   const handleVote = async (vote: string) => {
-    if (submitting.current || confirmedReceipt) return;
+    if (submitting.current || votesLocked) return;
     submitting.current = true;
     setError(null);
     try {
@@ -212,11 +266,16 @@ export default function PollDetailPage() {
               {/* 3. Voting Interface */}
               <section className="mb-8">
                 {mockPollDetail.userIsEligible ? (
-                  confirmedReceipt ? (
+                  receiptState === "confirmed" ? (
                     <div className="bg-blue-900/40 border border-blue-500/50 text-center p-6 rounded-lg">
                       <p className="font-semibold text-blue-200 mb-3">{currentContent.voteConfirmation}</p>
                       {userVote && <p className="text-lg text-white mb-4">{currentContent.voteOptions[userVote]}</p>}
-                      <p className="text-xs text-blue-200 break-all">Tx: {confirmedReceipt.txHash}</p>
+                      <p className="text-xs text-blue-200 break-all">Tx: {ownedReceipt!.txHash}</p>
+                    </div>
+                  ) : receiptBanner ? (
+                    <div className={`border text-center p-6 rounded-lg ${receiptBanner.box}`}>
+                      <p className={`font-semibold mb-3 ${receiptBanner.text}`}>{receiptBanner.title}</p>
+                      <p className="text-xs text-gray-300 break-all">Tx: {ownedReceipt!.txHash}</p>
                     </div>
                   ) : (
                     <>
@@ -236,6 +295,18 @@ export default function PollDetailPage() {
                             {maci.status === "voting" && (
                               <span className="ml-2 text-yellow-300">Publishing encrypted vote…</span>
                             )}
+                            {maci.participation.status === "wrong-chain" && (
+                              <div className="mt-2 text-sm text-yellow-300">{currentContent.wrongChain}</div>
+                            )}
+                            {maci.participation.status === "key-missing" && (
+                              <div className="mt-2 text-sm text-yellow-300">{currentContent.keyMissing}</div>
+                            )}
+                            {maci.participation.status === "key-invalid" && (
+                              <div className="mt-2 text-sm text-yellow-300">{currentContent.keyInvalid}</div>
+                            )}
+                            {maci.participation.status === "lookup-failed" && (
+                              <div className="mt-2 text-sm text-yellow-300">{currentContent.lookupFailed}</div>
+                            )}
                           </span>
                         ) : (
                           <button
@@ -254,21 +325,21 @@ export default function PollDetailPage() {
                       )}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <button
-                          disabled={!!confirmedReceipt || maci.isBusy}
+                          disabled={votesLocked || maci.isBusy}
                           onClick={() => handleVote("yes")}
                           className="w-full py-3 px-4 rounded-lg font-semibold bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-105"
                         >
                           {currentContent.voteOptions.yes}
                         </button>
                         <button
-                          disabled={!!confirmedReceipt || maci.isBusy}
+                          disabled={votesLocked || maci.isBusy}
                           onClick={() => handleVote("no")}
                           className="w-full py-3 px-4 rounded-lg font-semibold bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-105"
                         >
                           {currentContent.voteOptions.no}
                         </button>
                         <button
-                          disabled={!!confirmedReceipt || maci.isBusy}
+                          disabled={votesLocked || maci.isBusy}
                           onClick={() => handleVote("abstain")}
                           className="w-full py-3 px-4 rounded-lg font-semibold bg-gray-600 hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-105"
                         >

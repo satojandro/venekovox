@@ -19,7 +19,7 @@ export default defineConfig({
   },
   // MACI workspace packages are CommonJS; ensure proper pre-bundling
   optimizeDeps: {
-    include: ["@maci-protocol/sdk", "@maci-protocol/domainobjs"],
+    include: ["@maci-protocol/sdk/browser", "@maci-protocol/domainobjs"],
     esbuildOptions: {
       resolveExtensions: [".mjs", ".js", ".ts", ".jsx", ".tsx", ".json"],
     },

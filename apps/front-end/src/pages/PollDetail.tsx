@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Shield, Globe, CheckCircle, BarChart2, Users, ArrowRight } from "lucide-react";
+import { useRef, useState } from "react";
+import { Shield, Globe, CheckCircle, BarChart2, ArrowRight } from "lucide-react";
 import { useMaci } from "../hooks/useMaci";
 
 // --- MOCK DATA ---
@@ -57,8 +57,7 @@ const content = {
     verifiedToVote: "You are verified to vote in this poll",
     notEligible: "Only verified Venezuelan citizens may vote. You can still view the results.",
     voteOptions: { yes: "Yes", no: "No", abstain: "Abstain" },
-    voteConfirmation: "Your vote has been cast anonymously.",
-    updateVote: "Update Vote",
+    voteConfirmation: "Your encrypted vote has been submitted. Results will be available after the verified tally.",
     resultsTitle: "Live Results",
     totalVotes: "Total Votes",
     privacyTitle: "Anonymous & Secure",
@@ -75,8 +74,8 @@ const content = {
     verifiedToVote: "Estás verificado para votar en esta encuesta",
     notEligible: "Solo los ciudadanos venezolanos verificados pueden votar. Aún puedes ver los resultados.",
     voteOptions: { yes: "Sí", no: "No", abstain: "Abstenerse" },
-    voteConfirmation: "Tu voto ha sido emitido de forma anónima.",
-    updateVote: "Actualizar Voto",
+    voteConfirmation:
+      "Tu voto cifrado ha sido enviado. Los resultados estarán disponibles después del escrutinio verificado.",
     resultsTitle: "Resultados en Vivo",
     totalVotes: "Votos Totales",
     privacyTitle: "Anónimo y Seguro",
@@ -112,6 +111,7 @@ export default function PollDetailPage() {
   const [userVote, setUserVote] = useState<string | null>(null); // null, 'yes', 'no', 'abstain'
   const [txHash, setTxHash] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const submitting = useRef(false);
   const maci = useMaci();
   const currentContent = content[language];
 
@@ -126,23 +126,17 @@ export default function PollDetailPage() {
   const VOTE_OPTIONS: Record<string, number> = { yes: 0, no: 1, abstain: 2 };
 
   const handleVote = async (vote: string) => {
+    if (submitting.current || txHash) return;
+    submitting.current = true;
     setError(null);
     try {
-      if (!maci.account) {
-        await maci.connect();
-      }
-      if (!maci.stateIndex) {
-        await maci.signup();
-      }
-      if (!maci.pollStateIndex && !maci.isEligibleToVote) {
-        await maci.joinPollFlow();
-      }
       const result = await maci.vote(VOTE_OPTIONS[vote]);
       setTxHash(result.hash);
       setUserVote(vote);
     } catch (err) {
-      console.error("Vote failed:", err);
       setError(err instanceof Error ? err.message : "Vote failed");
+    } finally {
+      submitting.current = false;
     }
   };
 
@@ -209,9 +203,7 @@ export default function PollDetailPage() {
                     <div className="bg-blue-900/40 border border-blue-500/50 text-center p-6 rounded-lg">
                       <p className="font-semibold text-blue-200 mb-3">{currentContent.voteConfirmation}</p>
                       <p className="text-lg text-white mb-4">{currentContent.voteOptions[userVote]}</p>
-                      <button onClick={() => setUserVote(null)} className="text-sm text-blue-300 hover:underline">
-                        {currentContent.updateVote}
-                      </button>
+                      <p className="text-xs text-blue-200 break-all">Tx: {txHash}</p>
                     </div>
                   ) : (
                     <>
@@ -234,6 +226,7 @@ export default function PollDetailPage() {
                           </span>
                         ) : (
                           <button
+                            disabled={maci.isBusy}
                             onClick={() => maci.connect().catch((e) => setError(e.message))}
                             className="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                           >
@@ -248,21 +241,21 @@ export default function PollDetailPage() {
                       )}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <button
-                          disabled={!!txHash || maci.status === "voting" || maci.status === "joining"}
+                          disabled={!!txHash || maci.isBusy}
                           onClick={() => handleVote("yes")}
                           className="w-full py-3 px-4 rounded-lg font-semibold bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-105"
                         >
                           {currentContent.voteOptions.yes}
                         </button>
                         <button
-                          disabled={!!txHash || maci.status === "voting" || maci.status === "joining"}
+                          disabled={!!txHash || maci.isBusy}
                           onClick={() => handleVote("no")}
                           className="w-full py-3 px-4 rounded-lg font-semibold bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-105"
                         >
                           {currentContent.voteOptions.no}
                         </button>
                         <button
-                          disabled={!!txHash || maci.status === "voting" || maci.status === "joining"}
+                          disabled={!!txHash || maci.isBusy}
                           onClick={() => handleVote("abstain")}
                           className="w-full py-3 px-4 rounded-lg font-semibold bg-gray-600 hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-105"
                         >

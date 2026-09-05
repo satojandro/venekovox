@@ -117,6 +117,30 @@ Acceptance: a real registered/resolved name changes the live user experience; an
 user's name cannot authorize participation; unresolved names degrade gracefully;
 transaction and registry/resolver evidence is recorded.
 
+#### Planned ENS interaction contract (S1.1)
+
+Product overview: [target journey](journey.md#target-journey--proposed).
+This contract is proposed; no ENS calls are added by the documentation patch.
+
+1. Capture the actual participating account and chain from the selected wallet
+   adapter. Record the ENS registry/resolver network separately if different.
+2. Resolve an existing name, verify applicable forward/reverse agreement, and
+   discard stale responses after an account change. An address is always usable.
+3. Offer optional creation of a persistent public pseudonym with a clear linkage
+   notice. Confirm supported registry, ownership, collisions, fees/sponsorship,
+   transfer/expiry and recovery semantics before implementing registration.
+4. After a mined registration/update, re-read resolution before displaying success.
+   A pending name transaction is not a confirmed profile. Retry must not duplicate
+   registration or consume payment twice.
+5. Keep eligibility authorization entirely separate: never write document data,
+   Self nullifiers, MACI private keys or choices to ENS; never use a resolved name
+   as proof of unique humanity or permission to join.
+
+Test missing name, resolver failure, mismatch, duplicate name, rejected registration,
+account switch during lookup and profile recovery. Name-service failure must leave
+an already-authorized participant able to vote. Contract-level nontransferability
+and no-expiry requirements remain open feasibility/recovery decisions (D04).
+
 ### A4. Poll metadata → contract lifecycle → UI (S3.2)
 
 Proposed descriptor fields: schema version, chain ID, MACI address, poll ID and
@@ -143,7 +167,12 @@ currently has **no dedicated result events** — verified by `grep` in
 [journey-map.md §6](journey-map.md). `MergeState` alone cannot trigger a claim that
 results are final.
 
-Choose a supported strategy before implementation (decision D13):
+Choose a supported strategy before implementation (decision D13). The Graph
+[supports call and block handlers](https://thegraph.com/docs/en/subgraphs/developing/creating/subgraph-manifest/)
+as well as events; call handlers depend on tracing support. Missing dedicated
+events do not make indexing impossible. A proof-checked publication wrapper is
+also an option to evaluate if preserving upstream contracts is required. A wrapper
+must verify source commitments/results, not merely emit operator-supplied totals.
 
 ```
   OPTION A  contract extension
@@ -155,8 +184,12 @@ Choose a supported strategy before implementation (decision D13):
   OPTION B  call/block indexing (Graph callHandlers / blockHandlers)
             poll Tally.getTallyResults() on a schedule
             pro: no contract change
-            con: polling latency, not event-driven
+            con: network/trace support or polling latency must be verified
 ```
+
+Any result event must identify option indices as well as values and bind them to
+the verified tally commitment. `addTallyResults` can publish a subset of options;
+one event or `isTallied()` alone does not establish publication completeness.
 
 Account for dynamic poll/tally addresses, completeness of all options, result
 publication and the limitations of the target Graph network. An unauthenticated JSON
@@ -249,7 +282,8 @@ Frontend public configuration: `VITE_SELF_SCOPE`, `VITE_SELF_ENDPOINT`,
 `VITE_MACI_ADDRESS`, `VITE_CHAIN_ID`, `VITE_POLL_ID`, `VITE_MACI_START_BLOCK`. Backend
 verification reads `SELF_SCOPE`, `SELF_ENDPOINT`, `MOCK_PASSPORT`, and the server port
 configuration. Frontend/backend scope, callback endpoint and mock environment must
-agree. No Privy/paymaster env contract has been implemented yet.
+agree. This main baseline has no Privy/paymaster environment contract. The separate W1
+experiment does; use its reviewed server configuration and reconcile its docs on merge.
 
 ### B2. Start and check services
 

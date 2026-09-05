@@ -6,7 +6,9 @@ Every function name below was read from source in this repository, not from memo
 **Read this first, then any other doc.** If a claim here disagrees with another doc,
 this file is wrong or stale — fix it here.
 
-Baseline: `main` @ `05d8f2a35` (2026-09-05). Chain: Sepolia `11155111`.
+Code snapshot: `05d8f2a35`; documentation reviewed against main `d75b472`
+(2026-09-05). Chain configuration: Sepolia `11155111`. This is not live
+deployment evidence. See [branch and deployment status](status.md#branch-and-deployment-status).
 MACI `0x44F31f3823ceFE00C2FA5acEB2576F119143Fe3a` · Poll-0 `0x29D39dD442c91…c22CB`.
 
 ---
@@ -53,7 +55,7 @@ primary source, it does not belong in this document.
                                      │                  │                 │                 ▲
                                      │ ~~~~~~>          │                 │  NO EVENTS      │
                                      │ no contract      │                 │ ~~~~~~~~~~~~~~> │
-                                     │ bridge (G01)     │                 │  cannot index   │
+                                     │ bridge (G01)     │                 │  missing path   │
                                      │                  │                 │  results (G06)  │
                                      │                  │                 │                 │
                                      │                  └── events ───────┼────[OK]─────────┘
@@ -75,14 +77,15 @@ primary source, it does not belong in this document.
 ```
 
 **The single most important line on this page:** stage 4 → stage 5 is severed.
-`Tally.sol` has no events, so the Graph cannot see results. Everything else
-in the map is connected or plainly absent.
+There is no implemented tally-result ingestion path. Missing dedicated tally
+events explain the current event-driven gap, not a limitation on all Graph
+indexing strategies. Eligibility and browser proving assets are also blockers.
 
 ---
 
 ## 2. Stage 3 — the vote, call by call
 
-This is the only stage with end-to-end code. Entry: `apps/front-end/src/hooks/voteFlow.ts`.
+This stage has an orchestrated code path; browser proving and live acceptance remain open. Entry: `apps/front-end/src/hooks/voteFlow.ts`.
 
 ```
   User clicks "Submit"
@@ -145,8 +148,8 @@ This is the only stage with end-to-end code. Entry: `apps/front-end/src/hooks/vo
               ├─> generateVote({ pollId, voteOptionIndex, salt, nonce,     │
               │      privateKey, stateIndex, voteWeight,                   │
               │      coordinatorPublicKey, maxVoteOption, newPublicKey }):44│
-              │      ── ENCRYPTION ──  ECDH shared secret between the      │
-              │         voter's MACI key and the COORDINATOR's key →       │
+              │      ── ENCRYPTION ──  ECDH shared secret between a fresh  │
+              │         ephemeral private key and coordinator public key →       │
               │         the ballot is encrypted to the coordinator         │
               │                                                            │
               └─> submitVote({ pollAddress, vote, signer })  vote/submit.ts:10
@@ -163,20 +166,22 @@ This is the only stage with end-to-end code. Entry: `apps/front-end/src/hooks/vo
 
 ### What stage 3 does and does not give you
 
-| Question                            | Answer                                        |
-| ----------------------------------- | --------------------------------------------- |
-| Is the ballot encrypted?            | Yes — to the coordinator's public key         |
-| Is it on-chain?                     | Yes — `Poll.publishMessage`                   |
-| Is it anonymous to the coordinator? | **No.** Coordinator holds the decryption key  |
-| Is it counted?                      | **No.** Counting is stage 4                   |
-| Can anyone else link it to me?      | Signup tx links wallet → MACI pubkey publicly |
+| Question                            | Answer                                                                                 |
+| ----------------------------------- | -------------------------------------------------------------------------------------- |
+| Is the ballot encrypted?            | Yes — to the coordinator's public key                                                  |
+| Is it on-chain?                     | Yes — `Poll.publishMessage`                                                            |
+| Is it anonymous to the coordinator? | **No.** Coordinator holds the decryption key                                           |
+| Is it counted?                      | **No.** Counting is stage 4                                                            |
+| Is participation unlinkable?        | No: signup/join reuse a public key; transactions and registration relations are public |
 
 ---
 
 ## 3. Stage 5 — where The Graph enters (and where it stops)
 
-The Graph never talks to MACI. **It only reads event logs.** There is no
-push from MACI to the Graph.
+The current subgraph uses event triggers and contract reads. For example,
+`handleDeployPoll` reads MACI and Poll state. There is no application push to
+The Graph. Call/block handlers are other possible triggers, subject to network
+and indexer support; they are not implemented for tally results here.
 
 ```
   Sepolia chain                          Graph Node                    schema.v1.graphql
@@ -205,9 +210,9 @@ push from MACI to the Graph.
     ├─ emit PollJoined(...)    ────────> handlePollJoined   poll.ts:121 ─> Registration
     │                                     │                                 +
     │                                     └─ poll.registrationCount++       Poll
-    │                                          ^^^^ THIS IS THE TURNOUT      .registrationCount
-    │                                               METRIC — auditable but
-    │                                               NOT attributable
+    │                                          ^^^^ THIS IS THE JOIN COUNT      .registrationCount
+    │                                               METRIC — auditable;
+    │                                               public-key linked
     │
     ├─ emit PublishMessage(...)────────> handlePublishMessage poll.ts:38 ─> Vote
     │                                     │                                  .data  [BigInt!]!
@@ -234,7 +239,7 @@ push from MACI to the Graph.
   │    The Graph literally cannot read the choice. Neither can anyone      │
   │    except the coordinator.                                             │
   │                                                                        │
-  │ 2. NO RESULTS. Tally.sol emits no events → the Graph indexes nothing   │
+  │ 2. NO RESULTS. No tally-result handler → this subgraph indexes nothing   │
   │    about outcomes. `poll.tally` is stored as an address and never      │
   │    read. There is no `Tally` datasource in templates/*.yaml.           │
   │                                                                        │
@@ -244,18 +249,19 @@ push from MACI to the Graph.
   └────────────────────────────────────────────────────────────────────────┘
 ```
 
-### What the Graph CAN already answer today (prize evidence)
+### Queries supported by the source model (live evidence pending)
 
 ```
-  Q: how many people joined poll X?     A: Poll.registrationCount   [OK] live
-  Q: how many encrypted messages?       A: Poll.numMessages         [OK] live
-  Q: when does the poll close?          A: Poll.startDate/endDate   [OK] live
-  Q: what were the results?             A: ✗ IMPOSSIBLE today       [GAP G06]
+  Q: how many registrations for poll X?     A: Poll.registrationCount   [OK] source
+  Q: how many encrypted messages?       A: Poll.numMessages         [OK] source
+  Q: when does the poll close?          A: Poll.startDate/endDate   [OK] source
+  Q: what were the results?             A: ✗ NOT IMPLEMENTED       [GAP G06]
 ```
 
-That third row is the honest Graph pitch for the prize: **turnout without
-attribution.** Auditable, non-attributable — which is exactly the
-standardization gap the Messari governance schema does not cover.
+The proposed Graph pitch is **auditable participation counts and encrypted
+ballot choices, with explicit privacy and finality semantics**. Registrations
+are linked to public keys; counts are not proof of unique people or counted
+voters. A live claim requires deployment and query evidence in status.md.
 
 ---
 
@@ -291,22 +297,24 @@ standardization gap the Messari governance schema does not cover.
          │  200 OK
          ▼
   ┌──────────────┐
-  │ browser flag │  localStorage "verified" = true
+  │ browser flag │  localStorage "venekovox_verified" = "true"
   └──────┬───────┘
          │
          │  ~~~~~~~~~~~~~~~~~~~~ GAP G01 ~~~~~~~~~~~~~~~~~~~~
          │  NOTHING reaches the chain.
          │  MACI.signUp(_publicKey, _signUpPolicyData) is called
          │  with sgData = "0x"  (voteFlow.ts:83) — empty policy data.
-         │  The deployed policy is FreeForAll → ANY wallet can vote.
+         │  Configured policy is FreeForAll: no Self gate.
          X
   ┌──────────────┐
   │ MACI policy  │  ← should reject unverified wallets here
   └──────────────┘
 ```
 
-**The one-line version:** Self proves you are a person. The contract never
-hears about it. Anyone with a wallet can vote today.
+**The one-line version:** Self verification does not authorize contract participation in this flow.
+The configured FreeForAll policy does not enforce Self eligibility. Actual
+submission still requires an open poll, membership and working proving assets;
+the recorded Poll-0 configuration is not currently votable.
 
 ---
 
@@ -371,7 +379,7 @@ the proof, or the tally.
         │  contain zero `event` declarations.
         │
         │  consequences:
-        │    ✗ The Graph cannot index results (events are its only input)
+        │    ✗ This subgraph has no configured result ingestion
         │    ✗ No datasource for Tally in apps/subgraph/templates/*.yaml
         │    ✗ No result entity in schemas/schema.v1.graphql
         │    ✗ UI cannot show verified results  →  shows MOCK data (G05)
@@ -381,7 +389,9 @@ the proof, or the tally.
   └──────────────┘
 ```
 
-**Fixing this is the highest-value single piece of work in the project.**
+**This is a required M1 outcome.** Follow the dependency order in
+[roadmap.md](roadmap.md); eligibility, a votable poll and browser proving must
+also work. Do not defer proving assets until after tally integration.
 Two real options (decision D13, unresolved):
 
 ```
@@ -392,11 +402,15 @@ Two real options (decision D13, unresolved):
             pro: clean, canonical    con: modifies upstream MACI contract
 
   OPTION B  call/block indexing (Graph `blockHandlers` / callHandlers)
-            poll Tally.getTallyResults() on a schedule
-            pro: no contract change  con: polling latency, not event-driven
+            read verified result state using supported triggers
+            pro: no contract change  con: verify trigger/network support
 ```
 
 ---
+
+The order above is schematic: `addTallyResults` itself requires `isTallied()`
+to be true. Completed tally batches do not prove that every option has been
+published. Check publication completeness separately before displaying totals.
 
 ## 7. Where each technology enters — the answer to "what are we using"
 
@@ -417,18 +431,18 @@ Two real options (decision D13, unresolved):
                                stage            handlePollJoined        poll.ts:121
                                                 handlePublishMessage    poll.ts:38
                                                 [OK] 10/10 matchstick
-                                                [GAP] cannot see results
+                                                [GAP] no result ingestion
 
-  Tally.sol   after poll close dead end         Tally.tallyVotes()      Tally.sol:108
+  Tally.sol   after poll close dead end         Tally.tallyVotes()      Tally.sol:125
                                                 Tally.addTallyResults() Tally.sol:344
                                                 [OK] contract works
                                                 [GAP] emits nothing
 
   ENS         (nowhere yet)    (nowhere yet)    [NONE] zero source references
 
-  Privy/7702  (nowhere yet)    (nowhere yet)    [NONE] 2 vendor reports only
-                                                would change the `signer` in
-                                                every [OK] call above
+  Privy/7702  (nowhere yet)    (nowhere yet)    [NONE] on this code snapshot
+                                                W1 experiment is on a separate branch;
+                                                see status.md before integration
 ```
 
 ---
@@ -444,8 +458,10 @@ Two real options (decision D13, unresolved):
    4    zkeys → browser        proving assets not in public/        G08
 ```
 
-Fix them in that order. Link 1 makes the product claim true.
-Link 2 makes the results real. Links 3 and 4 are downstream of 2.
+Use [roadmap.md](roadmap.md) as the single sequencing authority. Link 1
+enforces eligibility. Link 4 is required before joining/submitting, hence
+before an end-to-end tally. Link 2 publishes verified results; link 3 renders
+them. Real poll metadata can be implemented alongside these dependencies.
 
 ---
 
@@ -471,7 +487,7 @@ When a stage changes, update **three** things in the same commit as the code:
 Never add a function name you cannot verify against a file here. If the design
 is agreed but the code does not exist, mark it `[PLAN]` and leave the chain empty.
 
-If Astra (or any agent) proposes a future path, it goes in `integration-spec.md` —
+If Astra (or any agent) proposes a future path, it goes in `build.md` Part A (with a product overview in `journey.md`) —
 **not here**. This file is the as-built map.
 
 ## 10. Verifying this map yourself
@@ -479,7 +495,7 @@ If Astra (or any agent) proposes a future path, it goes in `integration-spec.md`
 ```sh
 cd ~/Projects/venekovox
 
-# no tally events — this is why results cannot be indexed
+# no dedicated tally events — current ingestion needs another path
 grep -nE "event " packages/contracts/contracts/Tally.sol \
                   packages/contracts/contracts/interfaces/ITally.sol
 

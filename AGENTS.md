@@ -1,8 +1,8 @@
 # VenekoVox contributor instructions
 
-Start with [docs/agent-handoff.md](docs/agent-handoff.md), then [current state](docs/current-state.md), [decisions](docs/decisions.md) and [roadmap](docs/roadmap.md). These replace the old 2025 task list and agent-specific persona instructions.
+Start with [agent continuity](docs/agents.md), then the [as-built journey map](docs/journey-map.md), [current status](docs/status.md) and [roadmap and decisions](docs/roadmap.md). These replace the old 2025 task list and agent-specific persona instructions.
 
-- Build the verified-human polling journey first. Read the relevant [integration spec](docs/integration-spec.md) before changing identity, wallet, tally or schema boundaries.
+- Build the verified-human polling journey first. Read the relevant [integration specification](docs/build.md) before changing identity, wallet, tally or schema boundaries.
 - Inspect the actual branch/worktree and preserve others' work. Do not assume a recorded baseline is latest main.
 - Distinguish implemented, locally tested, reported and live-verified behavior. Mock data and cached receipts are not on-chain truth.
 - Preserve Self Pass scope; ENS is naming, not personhood. MACI voting keys are independent from wallet keys. Contract caller identity must work for the chosen smart-account model.

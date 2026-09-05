@@ -46,6 +46,110 @@ A CLI/operator-created poll is acceptable for M1. A complete public creation flo
 is a later milestone. Smart-wallet compatibility and eligibility binding must be
 decided together before a final M1 policy deployment.
 
+## Target journey — proposed
+
+**Design intent, not shipped behavior.** The as-built counterpart remains
+[journey-map.md](journey-map.md). Stage IDs refer to [roadmap.md](roadmap.md).
+ENS and community features are extensions; they are not extra requirements for M1.
+
+### Onboarding and the optional public profile
+
+```
+  ONBOARDING AND THE OPTIONAL PUBLIC PROFILE
+
+   1 Open poll, read eligibility
+        │
+        ▼
+   2 Connect or recover participating account
+        │
+        ├──────────────────────────────┐
+        │                              │  (optional side path)
+        ▼                              ▼
+   3 Self eligibility           E  ENS name registration
+     verification                      │  or resolution
+        │                              ▼
+        ▼                          F  Display verified name
+   4 Contract participation             — or address fallback
+     authorization
+        │
+        ▼
+   5 Enter ballot flow
+
+   NOTE: there is deliberately NO arrow from ENS (E) to authorization (4).
+         A name identifies a public profile; it neither proves personhood
+         nor permits voting.
+```
+
+There is deliberately no arrow from ENS to authorization. A name identifies a
+public profile; it neither proves personhood nor permits voting. Resolve the
+participating account, not a different owner/signing address. Explain public
+linkage before registration; name-service failure must not block an eligible vote.
+
+### Submission, interruption and results
+
+```
+  SUBMISSION, INTERRUPTION AND RESULTS
+
+   A  Authorized account + recoverable MACI key
+        │
+        ▼
+   B  Check signup and poll membership
+        │
+        ▼
+   C  Sign command, encrypt with ephemeral key
+        │
+        ▼
+   D  Publish to the selected Poll
+        │
+        ▼
+   E  Persist identifiers and verify execution
+        │
+        ├──────────────────────────────┐
+        │  interrupted or              │
+        │  outcome unknown             │
+        ▼                              ▼
+   F  Submission confirmed        R  Restore captured context
+        │                              │  and reconcile
+        │                              │
+        │◄─────────────────────────────┘  (retry loops back to E)
+        ▼
+   T  After close: process and verify tally
+        │
+        ▼
+   P  Publish complete checked aggregates
+        │
+        ▼
+   I  Index provenance and display results
+```
+
+This is an application sequence, not one atomic on-chain transaction. Signup,
+join and publish may complete separately. An interrupted or timed-out send may
+already have broadcast; reconcile before retrying. A confirmed publication does
+not guarantee the encrypted command will be counted under MACI rules.
+
+### Step contracts for implementation and review
+
+| User moment / stage               | What executes (proposed where absent)                                            | Data and trust boundary                                                                        | Success evidence                                                           | Failure / recovery                                                                  |
+| --------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Understand the poll / S3.2        | Load a descriptor bound to chain, Poll and ordered options; read schedule/policy | Public question and metadata; editorial resources separate from ballot definition              | Descriptor and deployed configuration agree                                | Disable submission on mismatch; failed load is not an empty poll                    |
+| Connect / S2.2                    | Injected fallback or tested sponsored-account adapter                            | Wallet custody/recovery and gas sponsorship; actual caller may differ from outer sender        | Correct account/chain and zero-ETH experiment evidence                     | Recover session; denied sponsorship never silently spends user ETH                  |
+| Verify / S2.1                     | Self Pass proof under declared policy; enforce authorization on signup/join      | Minimized disclosures; scoped nullifier/replay binding; no identity payload in public profiles | Eligible passes and bypass/replay/wrong-account fail                       | Expired or rejected proof offers retry; two wallets must not bypass uniqueness      |
+| Choose a name / S1.1              | Optional subname registration and verified resolution                            | Public name links to account/history; no Self attributes or ballot data                        | Real registry/resolver evidence and forward/reverse match where applicable | Missing name, collision or resolver outage falls back to address                    |
+| Prepare ballot / S3.1             | Recover MACI key; lookup signup/join; generate join proof                        | Independent signing key and proving assets; current public-key reuse permits linkage           | Correct membership context and proof accepted                              | Missing key is a recovery state; do not silently replace registered key             |
+| Submit / S3.1                     | Sign command; ephemeral ECDH encryption; publish to Poll                         | Ciphertext and transaction metadata public; coordinator can decrypt                            | Direct-EOA or validated sponsored-execution evidence for this Poll/account | Save failure retains in-memory identifiers; unknown outcome requires reconciliation |
+| Return / S3.1                     | Restore original context and query chain/vendor                                  | Cached IDs are recovery hints, not proof                                                       | No stale account/operation can overwrite current state                     | RPC outage is unknown; wallet recovery alone does not restore MACI key              |
+| Inspect results / S4.1, S5.1–S5.2 | Verify tally, publish checked options, index and render provenance               | Public aggregates; commitments and completeness checked before finality                        | Same totals from verified source, query and UI, with block/version         | Processing, incomplete publication, reorg and indexer lag stay visible              |
+| Learn/discuss / M4                | Resource panel and separately moderated discussion                               | Public discussion must not require attaching a ballot choice                                   | Source provenance, moderation and profile behavior work                    | Resources/discussion can fail without blocking the ballot                           |
+| Ask an agent / S5.3–S5.4          | Read public metadata/results; later constrained poll creation                    | No private keys, Self payloads or human-ballot authority                                       | Cited answer or authorized, idempotent creation                            | Unsupported claims remain unanswered; payment/deploy failures reconcile             |
+
+### Growing this map without growing the document set
+
+For each implemented step, update its as-built call path, captured identifiers,
+failure/recovery branch and source permalink in the same change. Mark evidence
+separately as source-reviewed, locally tested or live-verified. Promote a design
+only after its implementation and acceptance evidence exist. Keep operator/tally
+work visible even when it runs after the participant has left the page.
+
 ## 4. Experience principles
 
 - Use ordinary language: "Verify eligibility", "Submit privately", "Submission confirmed", "Results being verified". Technical detail belongs in expandable evidence views.
@@ -67,11 +171,12 @@ Public on-chain voting has two failure modes that push in opposite directions:
 - **Open voting is buyable.** If ballots are attributable, a briber can verify compliance. On-chain attribution makes vote-buying _auditable_ — by the buyer.
 - **Hidden voting is unauditable.** If nobody can see anything, the operator can invent results.
 
-MACI's answer: **attribute nothing to anyone, but prove the aggregate.** Votes are
-encrypted to a coordinator, spent with nullifiers, and the final tally ships with a
-zk-proof of correct computation. Bribery becomes _verification-blind_ — a briber
-cannot check how their victim voted — while anyone can verify that the published
-tally is the honest decryption of the real ballots.
+MACI combines encrypted commands, protocol rules for valid votes and key changes,
+and proofs of tally computation. Its anti-collusion properties are not a guarantee
+that participation or choices are unattributable to the coordinator. The current
+application does not demonstrate the full anti-collusion user journey. Joining
+nullifiers prevent repeated membership under the circuit rules; they do not
+establish Self-unique humans or anonymously spend every ballot.
 
 VenekoVox adds the missing layer on the identity side: **proof of unique humanness**
 via Self.xyz passport zk-proofs, so "one person, one voice" doesn't depend on wallet
@@ -90,23 +195,27 @@ P1 replaced it with one atomic operation (`voteFlow.ts`), for these reasons:
 
 ### Trust boundaries (stated plainly)
 
-- **The coordinator sees ciphertexts and produces the tally.** MACI prevents the coordinator from _attributing_ votes and from _faking_ the tally (zk proof), but standard MACI does not hide tally inputs from the coordinator. We never claim "nobody can decrypt ballots" or "hidden forever".
+- **The coordinator can decrypt commands and produces tally proofs.** Contract verification constrains accepted computations under the protocol and circuit assumptions. It does not prevent correlation with public keys, participation records or transaction metadata, and does not guarantee coordinator availability. We never claim "nobody can decrypt ballots" or "hidden forever".
 - **Self.xyz proves passport ownership**, not citizenship policy, at the UI layer. Binding verified proofs to MACI participation (uniqueness via nullifiers, policy via the eligibility contract) is S2.1. Until then the on-chain gate is `FreeForAllPolicy` and the demo must be presented as such.
 - **The Graph indexer is infrastructure, not the source of truth.** Contracts are; the subgraph makes them queryable. Results UI must distinguish pending tally, verified tally, and unavailable (never render pending as zero).
 
 ### Why two keys
 
-Every voter holds two independent keys:
+The current flow uses separate key material for three purposes:
 
-| Key                       | Where it lives                                   | What it does                   |
-| ------------------------- | ------------------------------------------------ | ------------------------------ |
-| Wallet key (secp256k1)    | MetaMask / injected wallet                       | signs transactions, pays gas   |
-| MACI keypair (babyjubjub) | generated in-browser, serialized in localStorage | joins the poll, encrypts votes |
+| Key                          | Where it lives                                   | What it does                                           |
+| ---------------------------- | ------------------------------------------------ | ------------------------------------------------------ |
+| Wallet key (secp256k1)       | MetaMask / injected wallet                       | signs transactions, pays gas                           |
+| MACI keypair (babyjubjub)    | generated in-browser, serialized in localStorage | identifies membership and signs commands               |
+| Ephemeral encryption keypair | generated for a submission                       | derives an ECDH secret with the coordinator public key |
 
-The MACI key is the _voting identity inside the anonymity system_. Linking it to the
-wallet key would make signups attributable (wallet → MACI key → ballots). MACI v3 has
-no signature-derived keypair derivation, so the keypair is created client-side and
-persisted. Known limitation (G04): the key is browser-scoped, not account-scoped.
+Independent key generation does not remove public linkage. In this application,
+signup and joining reuse the MACI public key, and transaction metadata is public.
+The coordinator can decrypt commands; do not promise participation anonymity.
+The MACI keypair is created client-side and persisted. In
+[generateVote](../packages/sdk/ts/vote/generate.ts), the command is signed with
+the MACI private key but encrypted using a separate ephemeral private key and
+the coordinator public key. Known limitation (G04): the key is browser-scoped, not account-scoped.
 Hydration must read an existing key and show a missing/recovery state, never silently
 generate a replacement identity.
 

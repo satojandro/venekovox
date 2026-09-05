@@ -18,9 +18,9 @@ authorization or privacy responsibilities.
 Hard facts about this codebase, verified against source:
 
 - **A vote's recipient is the POLL contract, not MACI.** `PollFactory.connect(pollAddress).publishMessage(...)` in `packages/sdk/ts/vote/submit.ts:13`.
-- **`Tally.sol` emits zero events.** Results cannot reach the Graph today.
+- **No tally-result ingestion is implemented.** `Tally.sol` has no dedicated result events; a supported ingestion strategy is still required.
 - **ENS has no code in this repository.**
-- **Self verification stops at a browser flag.** `sgData` is `0x`; the deployed policy is `FreeForAll`.
+- **Self verification stops at a browser flag.** `sgData` is `0x`; the recorded configuration uses `FreeForAll`. Verify selected deployment state before live claims.
 - Wallet recovery and MACI-key recovery are separate. Receipt cache recovery is not transaction verification. Standard MACI coordinator trust must remain visible in privacy claims.
 
 Demographic analytics is long-term product scope
@@ -75,3 +75,15 @@ controls implementation truth. The decision register explains design choices; th
 roadmap sets gates. Historical notes remain useful history, but their "next steps" are
 not a second active backlog. Resolve contradictions by updating these canonical
 documents in the same change.
+
+## Documentation repair handoff (2026-09-05)
+
+- Base: main `d75b47230c46a78be26942749f9884d2ba8a4167`.
+- Scope: documentation only; privacy/evidence corrections, proposed journey and
+  ENS interaction contract, consolidated links and branch/deployment context.
+- Code boundary: as-built map remains the main/P1 snapshot; W1 source is separate.
+- Validation: relative document links and patch applicability checked; no application
+  build, live wallet operation, deployment or new prize eligibility verification.
+- Next: apply the patch on its base (or review changes against newer main), then
+  reconcile W1 into the consolidated docs when its code is merged. Do not infer
+  architecture approval from the presence of a proposed diagram.

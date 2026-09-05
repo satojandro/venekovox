@@ -15,7 +15,7 @@ This directory separates **product intent**, **observed implementation**, and **
 - Implementation status, known defects, baseline and verification evidence live in [current state](current-state.md). Code and chain observations override stale status claims.
 - Dependencies and completion gates live in [roadmap](roadmap.md). A checked task needs evidence, not just a commit message.
 - Proposed technical contracts live in [integration spec](integration-spec.md). Resolve open decisions before deploying contracts that bake them in.
-- [Hydration/receipts](hydration-receipts.md) describes the current slice and its limits. [First vote-flow review](vote-flow-review.md) is historical, not the active backlog.
+- Demographic analytics is **in long-term product scope** ([spec](demographic-analytics-spec.md)); DA0 is an optional bounded demo inside the event, DA1+ follow after M1. It does not change the M1 gates, and its existence does not claim implementation.
 - Root [AGENTS.md](../AGENTS.md) and [todo.md](../todo.md) point here. Uploaded planning notes and old deployment records are background; reconcile them against this index rather than following competing plans.
 
 ## Terms that must not be conflated

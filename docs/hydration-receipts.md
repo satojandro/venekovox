@@ -1,83 +1,30 @@
-# Refresh hydration + vote receipts — P1 slice 2
+# Refresh hydration and receipt recovery
 
-Follow-up to `vote-flow-review.md`. Implemented after Astra's review of
-`19c3bae08`. One acceptance test covers both features: **submit → refresh →
-reconnect → see the correct participation and submission state.**
+Slice implemented in `68f658cf`, reviewed at `7fce1e1` on 2026-09-05. This replaces the earlier description that overstated validation and race protection. Open findings are G02–G04/G11 in [current state](current-state.md).
 
-## What changed
+## Implemented behavior
 
-### Hydration (`useMaci.ts`)
+[useMaci.ts](../apps/front-end/src/hooks/useMaci.ts) attempts mount/account/chain-event hydration from already-connected wallet state and SDK signup/join lookups. It includes generation/busy guards, though not all writes are guarded. The vote flow captures submission context and the page suppresses confirmations belonging to another account.
 
-On mount — and again on every `accountsChanged` / `chainChanged` event — the
-hook inspects the ALREADY-connected wallet (via `eth_accounts`, which never
-pops a connection prompt) and restores state from the chain:
+[receipts.ts](../apps/front-end/src/lib/receipts.ts) stores transaction hash and submission time under chain + MACI + poll + wallet. It does not store the selected option. Context scoping prevents ordinary cross-context cache lookup, but is not proof of transaction provenance. Local storage is user-editable and can be unavailable.
 
-- **Participation** (`registered`, `stateIndex`, `pollStateIndex`) comes from
-  the SDK's on-chain lookups (`getSignedupUserData`, `getJoinedUserData`),
-  anchored at `VITE_MACI_START_BLOCK` to avoid a genesis scan.
-- **States:** `checking` → `ready` | `disconnected` | `lookup-failed`.
-- **A failed chain lookup is `lookup-failed`, never "not registered."** Not
-  knowing is a different answer than a "no" — this distinction is load-bearing
-  for trust in the results story.
-- **Stale-request discipline:** every state write is guarded by
-  mounted-ness, a generation counter (bumped by wallet events), the busy lock,
-  and the live submission status. A hydration that loses a race to a newer
-  submission discards itself; it can never overwrite newer state.
+The current hydration path does **not** fetch a chain receipt, check status, or match publish events to the configured poll. Therefore its restored “submission confirmed” display is stronger than the evidence supports. Current shape validation also accepts any hash beginning with `0x`.
 
-### Receipts (`src/lib/receipts.ts`)
+## Required recovery contract
 
-A receipt records that an encrypted vote message was **submitted**. It is NOT
-proof the vote was counted (that is P4's tally domain).
+1. Inspect account/chain without prompting. Distinguish no provider, disconnected, wrong chain and failed lookup.
+2. Snapshot context and generation. Guard initial resets and every later state write. A refresh lookup must not overwrite a newer submission or wallet context.
+3. Read existing key material; expose missing/corrupt/recovery state. Do not silently create a new identity during read-only hydration.
+4. Look up signup and poll membership. A failure is unknown/retryable, not “not registered”. Clear or invalidate hydration markers appropriately after failure.
+5. Parse stored receipts strictly, then query the configured chain. Verify successful inclusion and expected poll publish evidence. For smart accounts, support the actual execution/event context rather than assuming outer transaction `from` equals the participant.
+6. Distinguish cached/unverified, pending, failed, confirmed and temporarily unavailable. A not-found receipt may be pending or unavailable; do not infer failure from one lookup.
+7. Keep “submission confirmed” separate from “counted”. Indexer lag and tally finality have separate states.
+8. Storage failure must not erase the useful in-memory result of an already-confirmed submission. Keep receipt ownership anchored to the original captured context.
 
-- **Key = chainId + MACI address + pollId + wallet address** (lowercased). The
-  context IS the namespace: a receipt cannot be loaded under a different
-  chain, contract, poll or wallet.
-- **Stored data:** transaction hash + submission time only. Never the selected
-  option, never a "counted" claim.
-- **Failure semantics:** missing, corrupt or malformed storage always reads as
-  "unable to confirm", never "confirmed". A throwing store does not fail an
-  already-submitted on-chain vote.
-- **Storage is injectable** (`ReceiptStorage`): the embedded-wallet /
-  smart-account integration (Astra, in flight) replaces localStorage without
-  touching the vote flow.
+Transaction matching must be specified against the deployed ABI and execution model; hash format alone cannot establish that the expected encrypted publish occurred. Define confirmation depth/reorg handling in the deployment profile and recheck stale cache entries.
 
-### Wallet-switch display guard (the regression Astra caught)
+## Acceptance
 
-The hook already suppressed stale _progress_ after a wallet change, but the
-page could still receive the completed _promise_ and render A's transaction
-under B. Fix at both layers:
+Run submit → refresh → reconnect, then repeat with wallet/network switches during hydration and submission. Cover failed RPC lookup/retry, pending/reverted/unrelated transaction hashes, malformed/unavailable storage, missing voting key and smart-account execution. Assertions must observe actual hook/UI behavior for race cases.
 
-- The flow captures chain/account/MACI/poll **when submission starts**, saves
-  the receipt under that captured context, and returns it in the result.
-- The page only renders the confirmation if the completing account is still
-  the live one; on any account change it clears local submission display.
-  A's receipt stays safely filed under A.
-
-### UI (`PollDetail.tsx`)
-
-The confirmation panel is now driven by the **validated receipt** (receipt
-present AND `receiptAccount === account`), not by transient React state — so a
-reload restores "submission confirmed" from persisted truth, with the tx hash.
-Vote buttons disable off the same validated receipt.
-
-## Tests
-
-- `apps/front-end/tests/voteFlow.test.mjs` — 14 tests: the original flow
-  regressions plus submission-context capture, the wallet-switch receipt
-  regression, and a throwing-store case.
-- `apps/front-end/tests/receipts.test.mjs` — 5 tests: context-scoped keys,
-  roundtrip, corrupt/malformed → unconfirmed, cross-wallet isolation,
-  unavailable-storage semantics.
-
-Run: `pnpm test:unit` from `apps/front-end` (or `node --test tests/`).
-
-## Deliberately remaining
-
-- Account-scoped MACI voting-key migration (browser-wide key storage is
-  preserved; receipt scoping does not disguise this).
-- Vote updates / nonce semantics remain unsupported by design.
-- Participation hydrates on the next interaction in the worst case; no full
-  voter dashboard yet (P3 territory).
-- Wallet access is still direct `window.ethereum`; the replaceable wallet
-  interface lands with the smart-wallet/sponsorship work before P2's
-  deployment decision.
+Current 14 flow and 5 receipt unit tests pass with test doubles. They do not prove React hydration race safety or live receipt validation. See [runbook](runbook.md) for the exact command. There is no complete voter dashboard claim.

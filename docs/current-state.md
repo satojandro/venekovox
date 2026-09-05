@@ -1,6 +1,6 @@
 # Current state and evidence
 
-**Reviewed:** 2026-09-05. **Code baseline:** `7fce1e185a2d24a38e20a56bb99f900a07df2cef` (main). This is a snapshot, not live deployment monitoring.
+**Reviewed:** 2026-09-05. **Code baseline:** `7fce1e185a2d24a38e20a56bb99f900a07df2cef` (main), with the P1 hydration/receipt-truth follow-up at `60b61b444`. This is a snapshot, not live deployment monitoring.
 
 Status vocabulary: **implemented** = source exists; **locally checked** = listed command passed; **reported** = another agent supplied evidence not independently reproduced here; **live verified** requires chain/browser evidence; **planned** = no completed implementation claim.
 

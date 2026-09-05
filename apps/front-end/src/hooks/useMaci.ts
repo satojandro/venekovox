@@ -5,6 +5,7 @@ import * as maciSdk from "@maci-protocol/sdk/browser";
 import * as domainobjs from "@maci-protocol/domainobjs";
 import { createVoteFlow, type SubmitResult, type VoteProgress, type VoteStatus } from "./voteFlow";
 import { createReceiptStore, type VoteReceipt } from "../lib/receipts";
+import { checkReceiptStatus, type ReceiptCheckStatus } from "../lib/receiptStatus";
 
 const { Keypair, PrivateKey } = domainobjs as typeof import("@maci-protocol/domainobjs");
 const KEYPAIR_STORAGE_KEY = "venekovox_maci_keypair";
@@ -34,6 +35,19 @@ function getOrCreateKeypair(): InstanceType<typeof Keypair> {
   return keypair;
 }
 
+/**
+ * Read-only key access for HYDRA TION: unlike getOrCreateKeypair, this never
+ * creates or writes a voting identity. Read-only restore must not silently
+ * replace a missing key with a brand-new identity (G04). The vote flow still
+ * creates a key on an explicit user action.
+ */
+function readKeypair(): { keypair: InstanceType<typeof Keypair> } | { missing: true } | { invalid: true } {
+  const stored = localStorage.getItem(KEYPAIR_STORAGE_KEY);
+  if (!stored) return { missing: true };
+  if (!PrivateKey.isValidSerialized(stored)) return { invalid: true };
+  return { keypair: new Keypair(PrivateKey.deserialize(stored)) };
+}
+
 type WalletProvider = Eip1193Provider & {
   on?: (event: string, listener: () => void) => void;
   removeListener?: (event: string, listener: () => void) => void;
@@ -46,19 +60,27 @@ declare global {
 
 /**
  * Read-only wallet probe: inspects an ALREADY-connected wallet without prompting
- * (eth_accounts never pops a modal). Returns null when no wallet is installed or
- * nothing is connected — that is "nothing to restore", not a failure.
+ * (eth_accounts never pops a modal). The result distinguishes the cases that
+ * matter for honest hydration: no wallet installed, wallet present but nothing
+ * connected, a probe error, or a usable connected account. All null-cases used
+ * to collapse into "disconnected" (G03).
  */
-async function peekWallet(): Promise<{ wallet: WalletProvider; account: string; chainId: bigint } | null> {
+export type WalletPeek =
+  | { kind: "found"; wallet: WalletProvider; account: string; chainId: bigint }
+  | { kind: "no-provider" }
+  | { kind: "not-connected" }
+  | { kind: "error" };
+
+async function peekWallet(): Promise<WalletPeek> {
   const wallet = window.ethereum;
-  if (!wallet) return null;
+  if (!wallet) return { kind: "no-provider" };
   try {
     const accounts: string[] = await wallet.request({ method: "eth_accounts" });
-    if (!accounts || accounts.length === 0) return null;
+    if (!accounts || accounts.length === 0) return { kind: "not-connected" };
     const chainId = BigInt(await wallet.request({ method: "eth_chainId" }));
-    return { wallet, account: accounts[0], chainId };
+    return { kind: "found", wallet, account: accounts[0], chainId };
   } catch {
-    return null;
+    return { kind: "error" };
   }
 }
 
@@ -87,7 +109,14 @@ async function getWallet() {
  * as "not registered" — it means we don't know (Astra hydration spec).
  */
 export interface Participation {
-  status: "checking" | "disconnected" | "ready" | "lookup-failed";
+  status:
+    | "checking"
+    | "disconnected"
+    | "wrong-chain" // wallet connected, but on a chain other than the poll's
+    | "key-missing" // no MACI voting key on this device; nothing we can safely hydrate
+    | "key-invalid" // stored key does not deserialize; recovery required
+    | "ready"
+    | "lookup-failed";
   registered?: boolean;
   stateIndex?: string;
   pollStateIndex?: string;
@@ -104,6 +133,8 @@ export function useMaci() {
   const [receipt, setReceipt] = useState<VoteReceipt | null>(null);
   /** The account the displayed receipt was validated for (receipts store no identity). */
   const [receiptAccount, setReceiptAccount] = useState<string | null>(null);
+  /** What the chain said about the stored receipt (null = no receipt shown). */
+  const [receiptStatus, setReceiptStatus] = useState<ReceiptCheckStatus | null>(null);
   const mounted = useRef(true);
   const generation = useRef(0);
   const flow = useRef<ReturnType<typeof createVoteFlow> | null>(null);
@@ -139,27 +170,58 @@ export function useMaci() {
     setProgress({ account: null, status: "idle" });
     setParticipation({ status: "checking" });
     setReceipt(null);
+    setReceiptStatus(null);
 
     const peek = await peekWallet();
-    if (!peek) {
+    if (peek.kind === "no-provider" || peek.kind === "not-connected") {
       if (canApply()) {
         setParticipation({ status: "disconnected" });
         hydratedFor.current = null; // retry when a wallet connects
       }
       return;
     }
+    if (peek.kind === "error") {
+      // The probe itself failed (provider misbehaving, request threw). That is
+      // "we don't know", never "disconnected" — and nothing to look up.
+      if (canApply()) setParticipation({ status: "lookup-failed", lookupFailed: true });
+      return;
+    }
+
     const { wallet, account, chainId } = peek;
-    const contextKey = `${chainId.toString()}:${account.toLowerCase()}`;
+    let config;
+    try {
+      config = getConfig();
+    } catch {
+      if (canApply()) setParticipation({ status: "lookup-failed", lookupFailed: true });
+      return;
+    }
+    // Never hydrate a wallet that is on the wrong chain: receipts and
+    // participation are chain-specific and a cross-chain lookup is meaningless.
+    if (chainId !== config.chainId) {
+      if (canApply()) setParticipation({ status: "wrong-chain" });
+      return;
+    }
+
+    const contextKey = `${chainId}:${account.toLowerCase()}`;
     if (hydratedFor.current === contextKey) return;
-    hydratedFor.current = contextKey;
+
     if (canApply()) setProgress({ account, status: "idle" });
+
+    // Read-only key access: restore an existing identity, never create one.
+    // Without a key there is nothing we can safely look up or claim (G04).
+    const keyState = readKeypair();
+    if ("missing" in keyState || "invalid" in keyState) {
+      if (canApply()) {
+        setParticipation({ status: "invalid" in keyState ? "key-invalid" : "key-missing" });
+      }
+      return;
+    }
+    const publicKey = keyState.keypair.publicKey.serialize();
 
     let registered: boolean | undefined;
     try {
-      const config = getConfig();
       const provider = new BrowserProvider(wallet);
       const signer = await provider.getSigner();
-      const publicKey = getOrCreateKeypair().publicKey.serialize();
 
       const signupData = await maciSdk.getSignedupUserData({
         maciAddress: config.maciAddress,
@@ -193,9 +255,16 @@ export function useMaci() {
       return;
     }
 
-    // Receipt recovery: load under the exact context this hydration verified.
+    // Only a SUCCESSFUL hydration marks the context as done. Failure paths
+    // above leave the marker unset, so a transient RPC error can be retried on
+    // the next mount/event instead of being blocked forever (G03).
+    hydratedFor.current = contextKey;
+
+    // Receipt recovery: load under the exact context this hydration verified,
+    // then ask the chain what actually happened. A stored hash alone is
+    // "unverified" — only a mined, successful tx to the configured MACI
+    // contract is "confirmed" (G02). "Counted" is never claimed here (P4).
     try {
-      const config = getConfig();
       const stored = receiptStore.load({
         chainId,
         maciAddress: config.maciAddress,
@@ -203,12 +272,20 @@ export function useMaci() {
         account,
       });
       if (stored && canApply()) {
-        setReceipt(stored);
-        setReceiptAccount(account);
+        const result = await checkReceiptStatus({
+          provider: new BrowserProvider(wallet),
+          txHash: stored.txHash,
+          maciAddress: config.maciAddress,
+        });
+        if (canApply()) {
+          setReceipt(stored);
+          setReceiptAccount(account);
+          setReceiptStatus(result.status);
+        }
       }
     } catch {
-      // getConfig failure here means misconfiguration; participation state above
-      // already reflects the chain truth, so do not downgrade it.
+      // Storage or config failure; the participation state above stands and is
+      // the better truth. Leave receipt unset rather than claiming anything.
     }
   }, [receiptStore, setProgress]);
 
@@ -222,6 +299,7 @@ export function useMaci() {
       setParticipation({ status: "checking" });
       setReceipt(null);
       setReceiptAccount(null);
+      setReceiptStatus(null);
       // Re-hydrate for whatever context the wallet switched to.
       void hydrate();
     };
@@ -273,9 +351,12 @@ export function useMaci() {
         // switch mid-flight can never file A's vote under B (Astra regression).
         receiptStore.save(context, value);
         // Display only if the submission still belongs to the live generation.
+        // The receipt was just broadcast: until the chain confirms it, the
+        // honest state is "unverified" (G02) — never "confirmed".
         if (mounted.current && activeGeneration.current === generation.current) {
           setReceipt(value);
           setReceiptAccount(context.account);
+          setReceiptStatus("unverified");
         }
       },
     });
@@ -316,6 +397,7 @@ export function useMaci() {
     ...state,
     participation,
     receipt,
+    receiptStatus,
     receiptAccount,
     connect,
     vote,

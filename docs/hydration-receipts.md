@@ -8,7 +8,14 @@ Slice implemented in `68f658cf`, reviewed at `7fce1e1` on 2026-09-05. This repla
 
 [receipts.ts](../apps/front-end/src/lib/receipts.ts) stores transaction hash and submission time under chain + MACI + poll + wallet. It does not store the selected option. Context scoping prevents ordinary cross-context cache lookup, but is not proof of transaction provenance. Local storage is user-editable and can be unavailable.
 
-The current hydration path does **not** fetch a chain receipt, check status, or match publish events to the configured poll. Therefore its restored “submission confirmed” display is stronger than the evidence supports. Current shape validation also accepts any hash beginning with `0x`.
+P1 follow-up (2026-09-05) tightened the truth contract:
+
+- **Strict shape (G11).** `parseStoredReceipt` accepts only a real `0x`-prefixed 64-hex transaction hash and a finite positive timestamp, and labels the failure reason (invalid-json / invalid-tx-hash / invalid-time). Any malformed record loads as `null` = "unable to confirm".
+- **Chain verification (G02).** [receiptStatus.ts](../apps/front-end/src/lib/receiptStatus.ts) checks the receipt on-chain during hydration: only a mined, successful transaction to the configured MACI contract renders as "confirmed". The UI now distinguishes `unverified` (just submitted), `pending`, `confirmed`, `unexpected` (right chain, wrong contract), `reverted` and `unavailable` (RPC failed — never "failed").
+- **Marker retry + distinct states (G03).** The hydrated-context marker is set only after a successful lookup, so transient failures retry; wallet probe errors are no longer collapsed into "disconnected"; a wallet on the wrong chain gets its own state and is never hydrated cross-chain.
+- **Read-only key (G04 guard).** Hydration now reads existing key material and surfaces missing/invalid states instead of silently creating a new voting identity on page load. An explicit vote still creates a key when needed.
+
+The current hydration path still does **not** match chain events to the specific poll message (it verifies the receipt and recipient, not the emitted `PublishMessage`), and smart-account execution-context matching remains dependent on W1.
 
 ## Required recovery contract
 

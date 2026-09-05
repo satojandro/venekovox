@@ -13,6 +13,44 @@ export interface VoteReceipt {
   submittedAt: number; // epoch milliseconds
 }
 
+// A mined transaction hash on an EVM chain is exactly 32 bytes of hex,
+// lower- or upper-cased, with a 0x prefix. Anything else is not a receipt
+// we can ever verify against a chain (G11).
+const TX_HASH_RE = /^0x[0-9a-fA-F]{64}$/;
+
+export function isValidTxHash(value: string): boolean {
+  return TX_HASH_RE.test(value);
+}
+
+export type StoredReceiptParse =
+  | { ok: true; receipt: VoteReceipt }
+  | { ok: false; reason: "invalid-json" | "invalid-tx-hash" | "invalid-time" };
+
+/**
+ * Strict parse of a raw localStorage record. Missing or malformed storage is
+ * "unable to confirm", never success. The label lets callers tell a corrupt
+ * record apart from one with an unverifiable transaction hash.
+ */
+export function parseStoredReceipt(raw: string): StoredReceiptParse {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return { ok: false, reason: "invalid-json" };
+  }
+  if (typeof parsed !== "object" || parsed === null) {
+    return { ok: false, reason: "invalid-json" };
+  }
+  const { txHash, submittedAt } = parsed as Record<string, unknown>;
+  if (typeof txHash !== "string" || !isValidTxHash(txHash)) {
+    return { ok: false, reason: "invalid-tx-hash" };
+  }
+  if (typeof submittedAt !== "number" || !Number.isFinite(submittedAt) || submittedAt <= 0) {
+    return { ok: false, reason: "invalid-time" };
+  }
+  return { ok: true, receipt: { txHash, submittedAt } };
+}
+
 export interface ReceiptContext {
   chainId: bigint;
   maciAddress: string;
@@ -52,19 +90,8 @@ export function createReceiptStore(storage: ReceiptStorage = globalThis.localSto
       if (!storage) return null;
       const raw = storage.getItem(receiptKey(context));
       if (!raw) return null;
-      try {
-        const parsed = JSON.parse(raw) as VoteReceipt;
-        if (
-          typeof parsed.txHash !== "string" ||
-          !parsed.txHash.startsWith("0x") ||
-          typeof parsed.submittedAt !== "number"
-        ) {
-          return null;
-        }
-        return parsed;
-      } catch {
-        return null;
-      }
+      const parsed = parseStoredReceipt(raw);
+      return parsed.ok ? parsed.receipt : null;
     },
   };
 }

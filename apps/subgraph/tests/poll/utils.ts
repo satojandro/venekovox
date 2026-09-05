@@ -2,7 +2,13 @@ import { Address, Bytes, BigInt as GraphBN, ethereum } from "@graphprotocol/grap
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { newMockEvent } from "matchstick-as";
 
-import { MergeState, PublishMessage, ChainHashUpdated, IpfsHashAdded } from "../../generated/templates/Poll/Poll";
+import {
+  MergeState,
+  PublishMessage,
+  ChainHashUpdated,
+  IpfsHashAdded,
+  PollJoined,
+} from "../../generated/templates/Poll/Poll";
 
 export function createMergeStateEvent(address: Address, stateRoot: GraphBN, totalSignups: GraphBN): MergeState {
   const event = changetype<MergeState>(newMockEvent());
@@ -59,5 +65,21 @@ export function createIpfsHashAddedEvent(address: Address, ipfsHash: Bytes): Ipf
   event.parameters.push(new ethereum.EventParam("_ipfsHash", ethereum.Value.fromBytes(ipfsHash)));
   event.address = address;
 
+  return event;
+}
+
+export function createPollJoinedEvent(pollAddress: Address, nullifier: GraphBN, publicKeyX: GraphBN): PollJoined {
+  const event = changetype<PollJoined>(newMockEvent());
+  event.address = pollAddress;
+
+  const params: ethereum.EventParam[] = [
+    new ethereum.EventParam("_pollPublicKeyX", ethereum.Value.fromUnsignedBigInt(publicKeyX)),
+    new ethereum.EventParam("_pollPublicKeyY", ethereum.Value.fromUnsignedBigInt(GraphBN.fromI32(0))),
+    new ethereum.EventParam("_voiceCreditBalance", ethereum.Value.fromUnsignedBigInt(GraphBN.fromI32(0))),
+    new ethereum.EventParam("_nullifier", ethereum.Value.fromUnsignedBigInt(nullifier)),
+    new ethereum.EventParam("_pollStateIndex", ethereum.Value.fromUnsignedBigInt(GraphBN.fromI32(0))),
+  ];
+
+  event.parameters = params;
   return event;
 }

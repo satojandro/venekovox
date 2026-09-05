@@ -17,6 +17,7 @@ type User @entity(immutable: true) {
   createdAt: BigInt! # uint256
   "relations"
   accounts: [Account!]! @derivedFrom(field: "owner")
+  registrations: [Registration!] @derivedFrom(field: "user")
 }
 
 type Account @entity(immutable: true) {
@@ -37,6 +38,7 @@ type Poll @entity(immutable: false) {
   voteOptions: BigInt! # uint256
   messageProcessor: Bytes! # address
   tally: Bytes! # address
+  registrationCount: BigInt! # uint256
   createdAt: BigInt!
   updatedAt: BigInt!
   mode: BigInt! # uint8
@@ -49,6 +51,15 @@ type Poll @entity(immutable: false) {
   maci: MACI!
   votes: [Vote!]! @derivedFrom(field: "poll")
   chainHashes: [ChainHash!]! @derivedFrom(field: "poll")
+  registrations: [Registration!] @derivedFrom(field: "poll")
+}
+
+type Registration @entity(immutable: true) {
+  id: ID! # pollId-userId
+  createdAt: BigInt!
+  "relations"
+  user: User!
+  poll: Poll!
 }
 
 type Vote @entity(immutable: true) {

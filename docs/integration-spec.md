@@ -29,6 +29,8 @@ Existing entry points: [Self verifier](../apps/backend/src/routes/verify.ts), [M
 
 Negative acceptance cases: bypass Self UI; reuse authorization from another account or poll; change chain; use expired/replayed authorization; use two wallets for the same scoped identity; interrupt after registration before join; recover and retry. Demonstrate both eligible and ineligible paths against the actual deployed policy.
 
+Demographic analytics attributes (see [demographic-analytics-spec](demographic-analytics-spec.md)) are a separate, consented, versioned collection policy. They do not undo the eligibility-path minimization (G09): the eligibility verifier still minimizes nationality/gender disclosure and logging, and analytics collection never re-introduces raw disclosure payloads into eligibility responses or logs.
+
 ## 2. Wallet and sponsorship adapter (W1)
 
 Current [useMaci](../apps/front-end/src/hooks/useMaci.ts) depends on `window.ethereum` and an ethers signer. Preserve the proven flow's context checks while replacing this coupling.

@@ -47,6 +47,10 @@ T4 design can proceed while P2 is being resolved, but must use the P4 result mod
 
 Add discussion and resource panels with moderation, source attribution, abuse controls and privacy separation from ballots. Explore news-triggered drafts before autonomous publication. Reassess privacy and representativeness claims as audiences and datasets grow.
 
+## Demographic analytics (product direction)
+
+Privacy-preserving demographic research is in long-term product scope per [demographic-analytics-spec.md](demographic-analytics-spec.md). DA0 (bounded design, optional synthetic demo) may run alongside the critical path; DA1–DA3 follow M1. A spec's existence does not mark any roadmap feature implemented — the M1 acceptance gates above are unchanged, and demographic ballot results must never be claimed until authenticated attribute-to-counted-ballot linkage and release protection exist.
+
 ## Next implementation order
 
 1. Repair hydration/receipt truth and define MACI-key migration behavior (P1 gaps).

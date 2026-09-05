@@ -14,6 +14,8 @@ The human polling journey is the product; agents are downstream. Self Pass verif
 
 Smart wallets are planned, with Privy a candidate. Before final P2 deployment, confirm the account that contracts actually see. Wallet recovery and MACI-key recovery are separate. Receipt cache recovery is not transaction verification. Standard MACI coordinator trust must remain visible in privacy claims.
 
+Demographic analytics is long-term product scope ([spec](demographic-analytics-spec.md)), not a this-week requirement. Never relabel a profile-distribution chart as a demographic ballot result, and never count MACI encrypted-message entities as unique voters. DA0-design work never displaces the M1 journey's acceptance gates.
+
 Do not resurrect Enterprise flowId/API-key homework. Do not deploy a new FreeForAll poll and call it verified-human enforcement. Do not interpret default poll date numbers as durations. Do not treat mock results, joined count or encrypted-message count as finalized voter results.
 
 ## Task ownership and interruption record

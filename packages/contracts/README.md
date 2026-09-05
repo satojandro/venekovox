@@ -12,41 +12,10 @@ For more information please refer to the [documentation for Contracts](https://m
 [contracts-actions-badge]: https://github.com/privacy-scaling-explorations/maci/actions/workflows/contracts-build.yml/badge.svg
 [contracts-actions-link]: https://github.com/privacy-scaling-explorations/maci/actions?query=workflow%3Acontracts
 
-## Sepolia Deployment
+## VenekoVox deployment guidance
 
-Latest deployment information for the Sepolia testnet:
+Use the [project runbook](../../docs/runbook.md) and [current-state record](../../docs/current-state.md) to select and verify a deployment. Local generated deployment output is not an independently verified registry.
 
-**Network**: sepolia  
-**Deployer**: 0xAA003843C50b5d943Df62F1A34429208D7bb083a  
-**Deployment Date**: 2025-08-31T04:12:37Z  
-**Deployment Cost**: 0.004053 ETH
+The [2025 deployment JSON](deployed/sepolia-deployment.json) is archival and contains malformed address strings. Do not copy it into live configuration. The previously repeated “latest deployment” address table has been removed to prevent accidental use.
 
-### Contract Addresses
-
-| Contract                               | Address                                      |
-| -------------------------------------- | -------------------------------------------- |
-| FreeForAllPolicy                       | 0x539E567a28759f141CCb62e8F21cBc929d113913   |
-| FreeForAllChecker                      | 0x67E4A6665A2572e9eAecdcA4923C20B73F4ab82F   |
-| FreeForAllPolicyFactory                | 0x2F4AE206907653994Bf941a极60c6Adf1da6E629E5 |
-| FreeForAllCheckerFactory               | 0x3edE286686F73FAD66803d2B1906c5E01eE87ec0   |
-| Verifier                               | 0xBBbb3Dcfa28d58ACC652e6F392E9C8d0249a7C8F   |
-| PoseidonT3                             | 0x29965420A676eDd6319Dc2f3d448B45C096583b9   |
-| PoseidonT4                             | 0xA1d3a5D56800219C94A6f14210846223eaf0f0b5   |
-| PoseidonT5                             | 0x0323BE2F031fce7a233dE1c49bf8F3EBCff8b3ad   |
-| PoseidonT6                             | 0xBD26295667极7d6FC81BeDb21F427140C7033aB35  |
-| PollFactory                            | 0x62A48C4d22c79F极dbbba39FbaC7A603Ba6A2a6f0  |
-| MessageProcessorFactory                | 0xCFd3ee05E72068Ff6804a85064d81963F89c3421   |
-| TallyFactory                           | 0x5C37e1c7EAf3fFACFFCF789d7551fda139C87143   |
-| MACI                                   | 0x88823dAdE6A8e8eb6C9226CB1CD9a0b5a3a9CA3c   |
-| VerifyingKeysRegistry                  | 0x7D8175773Cf99568323a4FfEc99A5Cb8B4F1d4f8   |
-| ConstantInitialVoiceCreditProxyFactory | 0x717dAe6C842065f2F3b669c933de8bdb6722a7E3   |
-
-> ⚠️ **HISTORICAL RECORD (Aug 2025 deployment).** These addresses are from the
-> original 2025 hackathon deployment. The CANONICAL Aug 2026 revival deployment is:
-> MACI `0x44F31f3823ceFE00C2FA5acEB2576F119143Fe3a` (Poll-0 `0x29D39dD442c91dAc51a292fd04a9A7Edd16c22CB`,
-> deployed 2026-08-25, block 11567347). Source of truth: `deployed-contracts.json`
-> (untracked, regenerated at deploy time) and `apps/front-end/.env.example`.
-> Poll-0 of the 2026 deployment is NOT VOTABLE (start/end dates 0/0) — a fresh poll
-> with explicit dates is required for any demo.
-> See [deployed/sepolia-deployment.json](./deployed/sepolia-deployment.json) for the
-> 2025 details below.
+The configured 2026 revival Poll-0 was reported to have zero start/end timestamps; verify the chosen poll and deploy explicit future windows for a new demo after eligibility policy decisions are settled.

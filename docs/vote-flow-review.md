@@ -1,3 +1,5 @@
+> **Historical implementation report.** The patch described below was integrated in `19c3bae08`; later hydration/receipt work landed in `68f658cf`. Its original build/access limits and next steps describe that earlier environment, not current status. Use [current state](current-state.md), [hydration and receipts](hydration-receipts.md) and [roadmap](roadmap.md) for active work. The implementation agent subsequently reported successful integration builds; this review independently reran the current 19 unit tests.
+
 # Reliable vote submission — first P1 implementation
 
 Base reviewed: `32cc13d26b30c8aeaa215f698e185fdfc4907f87`.

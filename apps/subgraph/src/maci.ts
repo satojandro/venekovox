@@ -26,6 +26,7 @@ export function handleDeployPoll(event: DeployPollEvent): void {
   poll.pollId = event.params._pollId;
   poll.messageProcessor = contracts.messageProcessor;
   poll.tally = contracts.tally;
+  poll.registrationCount = GraphBN.fromI32(0);
   poll.voteOptions = voteOptions;
   poll.treeDepth = GraphBN.fromI32(treeDepths.value0);
   poll.duration = duration;

@@ -2,13 +2,14 @@
 
 import { Bytes, ipfs, Value, BigInt as GraphBN, JSONValue } from "@graphprotocol/graph-ts";
 
-import { Poll, Vote, MACI, ChainHash } from "../generated/schema";
+import { Poll, Vote, MACI, ChainHash, User, Registration } from "../generated/schema";
 import {
   Poll as PollContract,
   MergeState as MergeStateEvent,
   PublishMessage as PublishMessageEvent,
   ChainHashUpdated as ChainHashUpdatedEvent,
   IpfsHashAdded as IpfsHashAddedEvent,
+  PollJoined as PollJoinedEvent,
   Poll__hashMessageAndPublicKeyInput_messageStruct as HashMessageAndPublicKeyInputMessageStruct,
   Poll__hashMessageAndPublicKeyInput_encryptionPublicKeyStruct as HashMessageAndPublicKeyInputPublicKeyStruct,
 } from "../generated/templates/Poll/Poll";
@@ -113,6 +114,43 @@ export function processIpfsVotes(data: JSONValue, userData: Value): void {
   if (poll) {
     poll.numMessages = poll.numMessages.plus(GraphBN.fromI32(counter));
     poll.updatedAt = GraphBN.fromString(timestamp);
+    poll.save();
+  }
+}
+
+export function handlePollJoined(event: PollJoinedEvent): void {
+  const poll = Poll.load(event.address);
+
+  if (!poll) {
+    return;
+  }
+
+  // creation of userId by concatenation
+  const userId = `${event.params._pollPublicKeyX.toString()}-${event.params._pollPublicKeyY.toString()}`;
+
+  // load or create user
+  let user = User.load(userId);
+
+  if (user == null) {
+    user = new User(userId);
+    user.createdAt = event.block.timestamp;
+    user.save();
+  }
+
+  // create a unique registration for poll+user
+  const registrationId = `${poll.id.toHexString()}-${user.id}`;
+  let registration = Registration.load(registrationId);
+
+  if (registration == null) {
+    registration = new Registration(registrationId);
+    registration.user = user.id;
+    registration.poll = poll.id;
+    registration.createdAt = event.block.timestamp;
+    registration.save();
+
+    // update registration count
+    poll.registrationCount = poll.registrationCount.plus(GraphBN.fromI32(1));
+    poll.updatedAt = event.block.timestamp;
     poll.save();
   }
 }

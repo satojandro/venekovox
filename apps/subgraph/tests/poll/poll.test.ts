@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle, @typescript-eslint/no-unnecessary-type-assertion */
-import { BigInt, Bytes } from "@graphprotocol/graph-ts";
+import { BigInt, Bytes, Address } from "@graphprotocol/graph-ts";
 import { test, describe, afterEach, clearStore, assert, beforeEach, mockIpfsFile, beforeAll } from "matchstick-as";
 
 import { ChainHash, MACI, Poll } from "../../generated/schema";
@@ -10,6 +10,7 @@ import {
   handleChainHashUpdate,
   handleIpfsHashAdded,
   processIpfsVotes,
+  handlePollJoined,
 } from "../../src/poll";
 import { DEFAULT_POLL_ADDRESS, mockMaciContract, mockPollContract } from "../common";
 import { createDeployPollEvent } from "../maci/utils";
@@ -19,6 +20,7 @@ import {
   createIpfsHashAddedEvent,
   createMergeStateEvent,
   createPublishMessageEvent,
+  createPollJoinedEvent,
 } from "./utils";
 
 export { handleMergeState, handlePublishMessage, handleChainHashUpdate, handleIpfsHashAdded, processIpfsVotes };
@@ -119,5 +121,37 @@ describe("Poll", () => {
 
     assert.fieldEquals("Poll", poll.id.toHex(), "numMessages", "0");
     assert.entityCount("Vote", 0);
+  });
+
+  test("should increment registrationCount on PollJoined", () => {
+    clearStore();
+
+    const poll = new Poll(DEFAULT_POLL_ADDRESS);
+    poll.pollId = BigInt.fromI32(1);
+    poll.startDate = BigInt.fromI32(10000000);
+    poll.endDate = BigInt.fromI32(20000000);
+    poll.duration = BigInt.fromI32(10000000);
+    poll.treeDepth = BigInt.fromI32(10);
+    poll.voteOptions = BigInt.fromI32(3);
+    poll.messageProcessor = Address.fromString("0x0000000000000000000000000000000000000001");
+    poll.tally = Address.fromString("0x0000000000000000000000000000000000000002");
+    poll.registrationCount = BigInt.fromI32(0);
+    poll.createdAt = BigInt.fromI32(10000000);
+    poll.updatedAt = BigInt.fromI32(10000000);
+    poll.mode = BigInt.fromI32(0);
+    poll.totalSignups = BigInt.fromI32(0);
+    poll.numMessages = BigInt.fromI32(0);
+    poll.owner = Address.fromString("0x0000000000000000000000000000000000000003");
+    poll.maci = Bytes.fromI32(1);
+    poll.save();
+
+    const event = createPollJoinedEvent(DEFAULT_POLL_ADDRESS, BigInt.fromI32(1), BigInt.fromI32(111));
+    handlePollJoined(event);
+
+    assert.entityCount("Poll", 1);
+    assert.fieldEquals("Poll", DEFAULT_POLL_ADDRESS.toHex(), "registrationCount", "1");
+    assert.fieldEquals("Poll", DEFAULT_POLL_ADDRESS.toHex(), "pollId", "1");
+    assert.fieldEquals("Poll", DEFAULT_POLL_ADDRESS.toHex(), "numMessages", "0");
+    assert.fieldEquals("Poll", DEFAULT_POLL_ADDRESS.toHex(), "totalSignups", "0");
   });
 });

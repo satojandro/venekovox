@@ -21,7 +21,7 @@ flowchart TD
 
 | Work                      | Current status                                           | Completion gate                                                                                                                                                                                                          |
 | ------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| P1 reliable submission    | Core flow implemented; 30 flow/receipt/status tests pass | G02/G11 resolved and G03/G04 guard implemented (2026-09-05); remaining: real submit → refresh → reconnect smoke, mount/event race harness, key-scope decision; no stale-account confirmation or false unregistered state |
+| P1 reliable submission    | Core flow implemented; poll-publication verifier and unit race harness added | G11 resolved; G02 resolved again after review at `c6e1fa874` (Poll `PublishMessage` + account context, not MACI recipient); G03 still partial (code repaired + unit harness, no browser mount/live smoke); remaining: real submit → refresh → reconnect smoke, key-scope decision; no stale-account confirmation or false unregistered state |
 | W1 wallet compatibility   | Planned, smart-wallet coding paused for docs             | EOA and candidate smart account use actual caller consistently; viable sponsorship and SDK path demonstrated before P2 binding is frozen                                                                                 |
 | P2 eligibility            | Self verifier exists; bridge missing                     | G01/G09/G10 resolved; eligible passes, bypass/replay/wrong-account fail; policy and uniqueness decisions recorded                                                                                                        |
 | Deployment/proving assets | Existing poll unsuitable for current demo                | G07/G08 resolved; explicit windows/mode/policy; browser assets served; public manifest verified                                                                                                                          |
@@ -53,7 +53,7 @@ Privacy-preserving demographic research is in long-term product scope per [demog
 
 ## Next implementation order
 
-1. Repair hydration/receipt truth and define MACI-key migration behavior (P1 gaps).
+1. Repair hydration/receipt truth and define MACI-key migration behavior (P1 gaps). Poll-publication verification and a unit race harness are in; live submit→refresh smoke and the React mount harness remain.
 2. Run the bounded W1 caller/SDK/sponsorship compatibility spike; record the proposed account model.
 3. Resolve P2 policy/uniqueness/ballot-mode decisions; implement enforcement and negative tests.
 4. Provision assets and deploy a correctly configured poll; replace M1 mock metadata.

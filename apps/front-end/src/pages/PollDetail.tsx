@@ -61,14 +61,17 @@ const content = {
     submissionRecorded: "Your encrypted vote was recorded. Awaiting on-chain confirmation…",
     submissionPending: "Submission found on chain — awaiting confirmation.",
     submissionFailed: "Your submission failed on-chain. You can try again.",
-    submissionUnknown: "Could not verify your submission on-chain. Refresh to retry.",
-    submissionUnexpected:
-      "Submission found on-chain, but for a different contract than this poll. Please check the configuration.",
+    submissionUnknown: "Could not verify your submission on-chain.",
+    submissionUnexpected: "This transaction is not a vote publication for this poll.",
+    checkAgain: "Check again",
+    retryVote: "You can choose an option below to try again.",
     wrongChain: "Your wallet is connected to the wrong network. Switch to Sepolia to participate.",
     keyMissing:
       "No voting key found on this device. Vote to create one, or restore your key to recover your participation.",
     keyInvalid: "The saved voting key is invalid. Restore your key before continuing.",
     lookupFailed: "The chain did not answer. Check your connection and refresh.",
+    keyStorageError:
+      "This browser blocked access to the saved voting key. Check site storage permissions and try again.",
     resultsTitle: "Live Results",
     totalVotes: "Total Votes",
     privacyTitle: "Anonymous & Secure",
@@ -90,14 +93,17 @@ const content = {
     submissionRecorded: "Tu voto cifrado fue registrado. Esperando confirmación on-chain…",
     submissionPending: "Envío encontrado en la cadena — esperando confirmación.",
     submissionFailed: "Tu envío falló en la cadena. Puedes intentarlo de nuevo.",
-    submissionUnknown: "No se pudo verificar tu envío en la cadena. Actualiza para reintentar.",
-    submissionUnexpected:
-      "Envío encontrado en la cadena, pero para un contrato distinto de esta encuesta. Revisa la configuración.",
+    submissionUnknown: "No se pudo verificar tu envío en la cadena.",
+    submissionUnexpected: "Esta transacción no es una publicación de voto para esta encuesta.",
+    checkAgain: "Verificar de nuevo",
+    retryVote: "Puedes elegir una opción abajo para intentarlo de nuevo.",
     wrongChain: "Tu wallet está conectada a la red incorrecta. Cambia a Sepolia para participar.",
     keyMissing:
       "No se encontró una clave de votación en este dispositivo. Vota para crear una, o restaura tu clave para recuperar tu participación.",
     keyInvalid: "La clave de votación guardada no es válida. Restaura tu clave para continuar.",
     lookupFailed: "La cadena no respondió. Revisa tu conexión y actualiza.",
+    keyStorageError:
+      "Este navegador bloqueó el acceso a la clave de votación guardada. Revisa los permisos de almacenamiento e inténtalo de nuevo.",
     resultsTitle: "Resultados en Vivo",
     totalVotes: "Votos Totales",
     privacyTitle: "Anónimo y Seguro",
@@ -170,6 +176,19 @@ export default function PollDetailPage() {
                   box: "bg-blue-900/40 border-blue-500/50",
                   text: "text-blue-200",
                 }
+              : null;
+
+  const participationNotice =
+    maci.participation.status === "wrong-chain"
+      ? currentContent.wrongChain
+      : maci.participation.status === "key-missing"
+        ? currentContent.keyMissing
+        : maci.participation.status === "key-invalid"
+          ? currentContent.keyInvalid
+          : maci.participation.status === "lookup-failed"
+            ? currentContent.lookupFailed
+            : maci.participation.status === "key-storage-error"
+              ? currentContent.keyStorageError
               : null;
 
   const total = mockPollDetail.results.yes + mockPollDetail.results.no + mockPollDetail.results.abstain;
@@ -272,11 +291,6 @@ export default function PollDetailPage() {
                       {userVote && <p className="text-lg text-white mb-4">{currentContent.voteOptions[userVote]}</p>}
                       <p className="text-xs text-blue-200 break-all">Tx: {ownedReceipt!.txHash}</p>
                     </div>
-                  ) : receiptBanner ? (
-                    <div className={`border text-center p-6 rounded-lg ${receiptBanner.box}`}>
-                      <p className={`font-semibold mb-3 ${receiptBanner.text}`}>{receiptBanner.title}</p>
-                      <p className="text-xs text-gray-300 break-all">Tx: {ownedReceipt!.txHash}</p>
-                    </div>
                   ) : (
                     <>
                       <div className="mb-3 text-center text-sm text-gray-300">
@@ -295,18 +309,6 @@ export default function PollDetailPage() {
                             {maci.status === "voting" && (
                               <span className="ml-2 text-yellow-300">Publishing encrypted vote…</span>
                             )}
-                            {maci.participation.status === "wrong-chain" && (
-                              <div className="mt-2 text-sm text-yellow-300">{currentContent.wrongChain}</div>
-                            )}
-                            {maci.participation.status === "key-missing" && (
-                              <div className="mt-2 text-sm text-yellow-300">{currentContent.keyMissing}</div>
-                            )}
-                            {maci.participation.status === "key-invalid" && (
-                              <div className="mt-2 text-sm text-yellow-300">{currentContent.keyInvalid}</div>
-                            )}
-                            {maci.participation.status === "lookup-failed" && (
-                              <div className="mt-2 text-sm text-yellow-300">{currentContent.lookupFailed}</div>
-                            )}
                           </span>
                         ) : (
                           <button
@@ -318,6 +320,28 @@ export default function PollDetailPage() {
                           </button>
                         )}
                       </div>
+                      {participationNotice && (
+                        <div className="mb-3 text-center text-sm text-yellow-300">{participationNotice}</div>
+                      )}
+                      {receiptBanner && ownedReceipt && (
+                        <div className={`border text-center p-4 rounded-lg mb-4 ${receiptBanner.box}`}>
+                          <p className={`font-semibold mb-2 ${receiptBanner.text}`}>{receiptBanner.title}</p>
+                          {receiptState === "reverted" && (
+                            <p className={`text-sm mb-2 ${receiptBanner.text}`}>{currentContent.retryVote}</p>
+                          )}
+                          <p className="text-xs text-gray-300 break-all">Tx: {ownedReceipt.txHash}</p>
+                          {maci.canRecheck && (
+                            <button
+                              type="button"
+                              disabled={maci.isBusy}
+                              onClick={() => maci.recheckReceipt()}
+                              className="mt-3 bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
+                            >
+                              {currentContent.checkAgain}
+                            </button>
+                          )}
+                        </div>
+                      )}
                       {error && (
                         <div className="mb-3 bg-red-900/40 border border-red-500/50 text-red-200 p-3 rounded-lg text-sm">
                           {error}

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { mapPrivyTransaction, mapPrivyWebhook, isSponsorshipDeniedStatus } from "./privyMap";
+import { mapPrivyTransaction, mapPrivyWebhook, isSponsorshipDeniedSendStatus } from "./privyMap";
 
 const router: import("express").Router = Router();
 
@@ -17,11 +17,17 @@ function basicAuth(appId: string, appSecret: string): string {
   return Buffer.from(`${appId}:${appSecret}`).toString("base64");
 }
 
+function caip2ForChain(chainId: bigint | number | string): string {
+  return `eip155:${chainId.toString()}`;
+}
+
 /**
  * GET /w1/transactions/:transactionId
  *
  * Server-side Privy status lookup. The App Secret never enters the Vite bundle.
  * A missing credential is a blocked experiment (E1), not a client-side retry loop.
+ * HTTP 400/402/403 on *status lookup* are unavailable — they do not prove sponsorship
+ * was denied for a send that already returned a transaction_id.
  */
 router.get("/transactions/:transactionId", async (req: Request, res: Response) => {
   const transactionId = req.params.transactionId;
@@ -46,13 +52,6 @@ router.get("/transactions/:transactionId", async (req: Request, res: Response) =
         "privy-app-id": creds.appId,
       },
     });
-    if (isSponsorshipDeniedStatus(response.status)) {
-      return res.status(200).json({
-        status: "ok",
-        vendorLookup: "ok",
-        vendor: { transactionId, phase: "denied", userOperationHash: null, transactionHash: null },
-      });
-    }
     if (response.status === 404) {
       return res.json({
         status: "ok",
@@ -61,10 +60,12 @@ router.get("/transactions/:transactionId", async (req: Request, res: Response) =
       });
     }
     if (!response.ok) {
+      // Status GET failures are not sponsorship denial.
       return res.status(502).json({
         status: "error",
         vendorLookup: "error",
         error_code: "PRIVY_STATUS_UNAVAILABLE",
+        httpStatus: response.status,
         vendor: cached ?? null,
       });
     }
@@ -84,6 +85,138 @@ router.get("/transactions/:transactionId", async (req: Request, res: Response) =
       vendorLookup: "error",
       error_code: "PRIVY_STATUS_UNAVAILABLE",
       vendor: cached ?? null,
+    });
+  }
+});
+
+/**
+ * POST /w1/lab/sponsored-send
+ *
+ * Lab-only Privy sponsored eth_sendTransaction. Production voting must not use this.
+ * Requires PRIVY_APP_ID / PRIVY_APP_SECRET / W1_LAB_WALLET_ID on the server.
+ * Optional W1_LAB_ALLOW_SPONSORED_SEND=true gate (default off).
+ */
+router.post("/lab/sponsored-send", async (req: Request, res: Response) => {
+  if (process.env.W1_LAB_ALLOW_SPONSORED_SEND !== "true") {
+    return res.status(503).json({
+      status: "blocked",
+      error_code: "LAB_SEND_DISABLED",
+      message: "Set W1_LAB_ALLOW_SPONSORED_SEND=true on the server to enable lab-only sponsored sends (E2–E6).",
+    });
+  }
+
+  const creds = privyCredentials();
+  const walletId = process.env.W1_LAB_WALLET_ID?.trim();
+  if (!creds || !walletId) {
+    return res.status(503).json({
+      status: "blocked",
+      error_code: "PRIVY_LAB_NOT_CONFIGURED",
+      message: "E1 incomplete: need PRIVY_APP_ID, PRIVY_APP_SECRET, and W1_LAB_WALLET_ID on the server.",
+    });
+  }
+
+  const body = req.body ?? {};
+  const to = typeof body.to === "string" ? body.to : "";
+  const data = typeof body.data === "string" ? body.data : "0x";
+  const chainId = body.chainId != null ? BigInt(body.chainId) : 11155111n;
+  const value = typeof body.value === "string" ? body.value : "0x0";
+  if (!/^0x[0-9a-fA-F]{40}$/.test(to)) {
+    return res.status(400).json({ status: "error", error_code: "INVALID_TO" });
+  }
+  if (!/^0x[0-9a-fA-F]*$/.test(data)) {
+    return res.status(400).json({ status: "error", error_code: "INVALID_DATA" });
+  }
+
+  try {
+    const response = await fetch(`https://api.privy.io/v1/wallets/${encodeURIComponent(walletId)}/rpc`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${basicAuth(creds.appId, creds.appSecret)}`,
+        "privy-app-id": creds.appId,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        method: "eth_sendTransaction",
+        caip2: caip2ForChain(chainId),
+        sponsor: true,
+        params: {
+          transaction: { to, data, value },
+        },
+      }),
+    });
+
+    if (isSponsorshipDeniedSendStatus(response.status)) {
+      return res.status(200).json({
+        status: "ok",
+        vendorLookup: "ok",
+        vendor: {
+          transactionId: `denied-${Date.now()}`,
+          phase: "denied",
+          userOperationHash: null,
+          transactionHash: null,
+        },
+        httpStatus: response.status,
+      });
+    }
+
+    if (!response.ok) {
+      let detail: unknown = null;
+      try {
+        detail = await response.json();
+      } catch {
+        detail = null;
+      }
+      return res.status(502).json({
+        status: "error",
+        vendorLookup: "error",
+        error_code: "PRIVY_SEND_FAILED",
+        httpStatus: response.status,
+        detail,
+      });
+    }
+
+    const rpcBody = (await response.json()) as Record<string, unknown>;
+    // Privy may nest under data or return fields at the top level.
+    const dataObj = (typeof rpcBody.data === "object" && rpcBody.data !== null ? rpcBody.data : rpcBody) as Record<
+      string,
+      unknown
+    >;
+    const transactionId =
+      (typeof dataObj.transaction_id === "string" && dataObj.transaction_id) ||
+      (typeof rpcBody.transaction_id === "string" && rpcBody.transaction_id) ||
+      null;
+    const userOperationHash =
+      (typeof dataObj.user_operation_hash === "string" && dataObj.user_operation_hash) ||
+      (typeof rpcBody.user_operation_hash === "string" && rpcBody.user_operation_hash) ||
+      null;
+    const transactionHash =
+      (typeof dataObj.transaction_hash === "string" && dataObj.transaction_hash) ||
+      (typeof dataObj.hash === "string" && dataObj.hash) ||
+      (typeof rpcBody.hash === "string" && rpcBody.hash) ||
+      null;
+
+    if (!transactionId) {
+      return res.status(502).json({
+        status: "error",
+        vendorLookup: "error",
+        error_code: "PRIVY_SEND_MISSING_IDS",
+        raw: rpcBody,
+      });
+    }
+
+    const vendor = {
+      transactionId,
+      phase: "pending" as const,
+      userOperationHash,
+      transactionHash: transactionHash && transactionHash.length > 2 ? transactionHash : null,
+    };
+    cache.set(transactionId, vendor);
+    return res.json({ status: "ok", vendorLookup: "ok", vendor });
+  } catch {
+    return res.status(502).json({
+      status: "error",
+      vendorLookup: "error",
+      error_code: "PRIVY_SEND_UNAVAILABLE",
     });
   }
 });

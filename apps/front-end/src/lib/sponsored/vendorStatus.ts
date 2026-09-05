@@ -69,7 +69,10 @@ export function mapPrivyWebhook(event: PrivyWebhookEvent | null | undefined): Ve
   };
 }
 
-/** HTTP errors that mean sponsorship was refused, not "try paying ETH instead". */
-export function isSponsorshipDeniedStatus(httpStatus: number): boolean {
-  return httpStatus === 400 || httpStatus === 402 || httpStatus === 403;
+/**
+ * Explicit sponsorship-rejection signals from a *send* path (not a status GET).
+ * Reading an existing transaction must not map 400/403 into "denied".
+ */
+export function isSponsorshipDeniedSendStatus(httpStatus: number): boolean {
+  return httpStatus === 402 || httpStatus === 403;
 }

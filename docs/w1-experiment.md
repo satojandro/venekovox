@@ -34,16 +34,18 @@ Lab UI: [`/w1`](../apps/front-end/src/pages/W1Experiment.tsx). Marking rows “p
 **Implemented**
 
 - `CallerProbe` / `ProbeForwarder` plus `deploy-caller-probe` (Alejandro runs it; agents do not handle keys).
-- Sponsored verifier: managed ids + `UserOperationEvent.success` for **this** user-op hash + Poll `PublishMessage`. Outer `from`/`to` are informational.
-- Durable `transaction_id` store (hash may be missing at save time).
+- Sponsored verifier: trusted EntryPoint `UserOperationEvent` for **this** user-op hash; Poll `PublishMessage` only counts when `linkedToUserOperation` is set (bundle co-presence is not enough). Outer `from`/`to` are informational.
+- Durable `transaction_id` lab draft (E4 restore); hash may be missing at save time.
 - `WalletAdapter` seam: injected path is real; `createPrivyAdapter()` throws until E1–E6 pass.
-- Thin `GET /w1/transactions/:id` using server-side `PRIVY_APP_ID` / `PRIVY_APP_SECRET` (never `VITE_*`).
+- Thin `GET /w1/transactions/:id` using server-side credentials (status GET failures are unavailable, not denied).
+- Lab-only `POST /w1/lab/sponsored-send` (gated by `W1_LAB_ALLOW_SPONSORED_SEND`); not wired into production voting.
 
 **Not implemented / not claimed**
 
 - No `@privy-io/react-auth` dependency and no ethers `transport.request` shim.
 - `useMaci` still uses the injected wallet and the P1 receipt verifier.
 - No live Sepolia sponsored tx, no TEE/dashboard entitlement proof, no MACI E5 run.
+- Operation↔publication linkage for real Poll publishes still requires stack-specific evidence before `linkedToUserOperation` can be set in production.
 
 ## Operator commands (no private keys in chat)
 
@@ -66,7 +68,7 @@ Local CallerProbe shape tests (needs contracts `node_modules`):
 pnpm --dir packages/contracts test tests/CallerProbe.test.ts
 ```
 
-Set on the **server** only: `PRIVY_APP_ID`, `PRIVY_APP_SECRET`. Optional: `W1_WEBHOOK_SECRET`. Frontend: `VITE_W1_BACKEND_URL`, `VITE_W1_CALL_ECHO_ADDRESS` (the probe address is not a secret).
+Set on the **server** only: `PRIVY_APP_ID`, `PRIVY_APP_SECRET`. Optional: `W1_WEBHOOK_SECRET`. For lab sponsored sends: `W1_LAB_ALLOW_SPONSORED_SEND=true` and `W1_LAB_WALLET_ID`. Frontend: `VITE_W1_BACKEND_URL`, `VITE_W1_PROBE_ADDRESS` (the probe address is not a secret).
 
 ## Next concrete action
 

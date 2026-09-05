@@ -8,6 +8,7 @@ const {
   innerFromPollLogs,
   PUBLISH_MESSAGE_TOPIC,
   USER_OPERATION_EVENT_TOPIC,
+  DEFAULT_TRUSTED_ENTRY_POINTS,
 } = await importTs("../src/lib/sponsored/verifier.ts", import.meta.url);
 
 const USER_OP = "0x" + "11".repeat(32);
@@ -16,7 +17,8 @@ const POLL = "0x" + "29".repeat(20);
 const ACCOUNT = "0x" + "a1".repeat(20);
 const OTHER = "0x" + "a2".repeat(20);
 const BUNDLER = "0x" + "bb".repeat(20);
-const ENTRY = "0x" + "5f".repeat(20);
+const ENTRY = DEFAULT_TRUSTED_ENTRY_POINTS[0];
+const FAKE = "0x" + "ee".repeat(20);
 
 function padded(addr) {
   return "0x" + addr.replace(/^0x/, "").toLowerCase().padStart(64, "0");
@@ -28,9 +30,9 @@ function successData(success) {
   return "0x" + nonce.slice(0, 64) + flag.padStart(64, "0") + "00".repeat(64);
 }
 
-function userOpLog({ hash = USER_OP, sender = ACCOUNT, success = true } = {}) {
+function userOpLog({ hash = USER_OP, sender = ACCOUNT, success = true, address = ENTRY } = {}) {
   return {
-    address: ENTRY,
+    address,
     topics: [USER_OPERATION_EVENT_TOPIC, hash, padded(sender), padded("0x" + "cc".repeat(20))],
     data: successData(success),
   };
@@ -64,26 +66,24 @@ function check(overrides = {}) {
         logs: [userOpLog(), publishLog()],
       },
       outerReceiptLookup: "ok",
-      inner: innerFromPollLogs(
-        { logs: [publishLog()] },
-        POLL,
-        ACCOUNT,
-      ),
+      inner: {
+        ...innerFromPollLogs({ logs: [publishLog()] }, POLL, ACCOUNT),
+        linkedToUserOperation: true,
+      },
+      trustedEntryPoints: DEFAULT_TRUSTED_ENTRY_POINTS,
       ...overrides,
     },
   });
 }
 
-test("sponsored confirm needs user-op success, inner PublishMessage, and the participant as sender", () => {
+test("sponsored confirm needs trusted user-op success, linked PublishMessage, and the participant as caller", () => {
   const result = check();
   assert.equal(result.status, "confirmed");
   assert.equal(result.pollMatch, true);
   assert.equal(result.accountMatch, true);
-  assert.equal(result.outerFrom.toLowerCase(), BUNDLER.toLowerCase());
-  assert.equal(result.outerTo.toLowerCase(), ENTRY.toLowerCase());
 });
 
-test("P1-shaped from/to are not used: bundler → EntryPoint can still confirm", () => {
+test("P1-shaped from/to are not used: bundler → EntryPoint can still confirm when linked", () => {
   const result = check();
   assert.notEqual(result.outerFrom.toLowerCase(), ACCOUNT.toLowerCase());
   assert.notEqual(result.outerTo.toLowerCase(), POLL.toLowerCase());
@@ -115,6 +115,10 @@ test("vendor confirmed plus a bundle receipt without this user-op event stays un
   assert.equal(result.status, "unverified");
 });
 
+test("untrusted emitter cannot supply UserOperationEvent success", () => {
+  assert.equal(findUserOperation({ logs: [userOpLog({ address: FAKE })] }, USER_OP), null);
+});
+
 test("a null RPC receipt after vendor confirmed is pending, not vendor failure", () => {
   const result = check({ outerReceipt: null, outerReceiptLookup: "null" });
   assert.equal(result.status, "pending");
@@ -135,9 +139,12 @@ test("missing vendor identifiers cannot confirm from logs alone", () => {
   assert.equal(result.status, "unverified");
 });
 
-test("PublishMessage from the poll with the wrong user-op sender stays unverified", () => {
+test("PublishMessage from the poll with the wrong observed caller stays unverified", () => {
   const result = check({
-    inner: innerFromPollLogs({ logs: [publishLog()] }, POLL, OTHER),
+    inner: {
+      ...innerFromPollLogs({ logs: [publishLog()] }, POLL, OTHER),
+      linkedToUserOperation: true,
+    },
     outerReceipt: {
       status: 1,
       from: BUNDLER,
@@ -150,12 +157,15 @@ test("PublishMessage from the poll with the wrong user-op sender stays unverifie
   assert.equal(result.accountMatch, false);
 });
 
-test("UserOperationEvent.sender can supply the caller when PublishMessage has none", () => {
+test("UserOperationEvent.sender does not substitute for linked observedCaller", () => {
   const result = check({
-    inner: innerFromPollLogs({ logs: [publishLog()] }, POLL, null),
+    inner: {
+      ...innerFromPollLogs({ logs: [publishLog()] }, POLL, null),
+      linkedToUserOperation: false,
+    },
   });
-  assert.equal(result.status, "confirmed");
-  assert.equal(result.accountMatch, true);
+  assert.equal(result.status, "unverified");
+  assert.equal(result.accountMatch, false);
 });
 
 test("findUserOperation refuses to guess when the hash is missing", () => {

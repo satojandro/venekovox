@@ -1,11 +1,25 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { BrowserProvider, Interface } from "ethers";
-import { architectureMayBeApproved, EXPERIMENT_STEPS, loadEvidenceLog, saveEvidenceLog, type ExperimentId, type ExperimentNote, type GateVerdict } from "../lib/w1/protocol";
+import {
+  architectureMayBeApproved,
+  EXPERIMENT_STEPS,
+  loadEvidenceLog,
+  saveEvidenceLog,
+  type ExperimentId,
+  type ExperimentNote,
+  type GateVerdict,
+} from "../lib/w1/protocol";
 import { CALLER_PROBE_ABI, summarizeProbeReceipt } from "../lib/sponsored/probe";
-import { checkSponsoredPublication, innerFromPollLogs, isTxHash } from "../lib/sponsored/verifier";
-import { mapPrivyTransaction, type PrivyTransactionRecord } from "../lib/sponsored/vendorStatus";
+import {
+  checkSponsoredPublication,
+  DEFAULT_TRUSTED_ENTRY_POINTS,
+  innerFromPollLogs,
+  isTxHash,
+  type OuterReceipt,
+  type VendorView,
+} from "../lib/sponsored/verifier";
 import { classifyAccountCode } from "../lib/wallet/delegation";
-import { createSponsoredStore } from "../lib/sponsored/records";
+import { loadLabDraft, upsertLabDraft } from "../lib/sponsored/labDraft";
 
 /**
  * W1 lab page. This is not the voting product.
@@ -19,8 +33,60 @@ import { createSponsoredStore } from "../lib/sponsored/records";
 const BACKEND = import.meta.env.VITE_W1_BACKEND_URL || "http://localhost:3100";
 const PROBE = import.meta.env.VITE_W1_PROBE_ADDRESS || "";
 const CHAIN_ID = BigInt(import.meta.env.VITE_CHAIN_ID ?? "11155111");
-const MACI = (import.meta.env.VITE_MACI_ADDRESS as string) || "";
-const POLL_ID = BigInt(import.meta.env.VITE_POLL_ID ?? "0");
+const ENTRY_POINTS = (import.meta.env.VITE_W1_ENTRY_POINTS as string | undefined)
+  ?.split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+interface StatusApiResponse {
+  status?: string;
+  vendorLookup?: "ok" | "missing" | "error" | "timeout";
+  vendor?: VendorView | null;
+  error_code?: string;
+  message?: string;
+  httpStatus?: number;
+  blocked?: boolean;
+}
+
+function asVendorView(value: unknown): VendorView | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Record<string, unknown>;
+  const transactionId =
+    (typeof row.transactionId === "string" && row.transactionId) ||
+    (typeof row.transaction_id === "string" && row.transaction_id) ||
+    (typeof row.id === "string" && row.id) ||
+    null;
+  if (!transactionId) return null;
+  const phaseRaw =
+    (typeof row.phase === "string" && row.phase) || (typeof row.status === "string" && row.status) || "unknown";
+  const phase = (
+    ["pending", "confirmed", "reverted", "failed", "replaced", "denied", "unknown"] as const
+  ).includes(phaseRaw as VendorView["phase"])
+    ? (phaseRaw as VendorView["phase"])
+    : "unknown";
+  const userOperationHash =
+    (typeof row.userOperationHash === "string" && row.userOperationHash) ||
+    (typeof row.user_operation_hash === "string" && row.user_operation_hash) ||
+    null;
+  const transactionHash =
+    (typeof row.transactionHash === "string" && row.transactionHash) ||
+    (typeof row.transaction_hash === "string" && row.transaction_hash) ||
+    null;
+  return {
+    transactionId,
+    phase,
+    userOperationHash,
+    transactionHash: transactionHash && transactionHash.length > 2 ? transactionHash : null,
+  };
+}
+
+async function assertConfiguredChain(wallet: NonNullable<typeof window.ethereum>): Promise<bigint> {
+  const current = BigInt(await wallet.request({ method: "eth_chainId" }));
+  if (current !== CHAIN_ID) {
+    throw new Error(`Wrong network: wallet is on chain ${current}, configured experiment chain is ${CHAIN_ID}.`);
+  }
+  return current;
+}
 
 export default function W1Experiment() {
   const [notes, setNotes] = useState(() => loadEvidenceLog());
@@ -30,7 +96,9 @@ export default function W1Experiment() {
   const [pollAddress, setPollAddress] = useState("");
   const [report, setReport] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [submittedAt, setSubmittedAt] = useState<number | null>(null);
   const approved = useMemo(() => architectureMayBeApproved(notes), [notes]);
+  const trustedEntryPoints = ENTRY_POINTS?.length ? ENTRY_POINTS : [...DEFAULT_TRUSTED_ENTRY_POINTS];
 
   useEffect(() => {
     try {
@@ -40,12 +108,67 @@ export default function W1Experiment() {
     }
   }, [notes]);
 
+  // E4: restore durable identifiers after refresh.
+  useEffect(() => {
+    const draft = loadLabDraft();
+    if (!draft) return;
+    if (draft.chainId !== CHAIN_ID.toString()) {
+      setReport(
+        JSON.stringify(
+          {
+            restored: false,
+            reason: "saved draft chain does not match VITE_CHAIN_ID",
+            draftChainId: draft.chainId,
+            configuredChainId: CHAIN_ID.toString(),
+          },
+          null,
+          2,
+        ),
+      );
+      return;
+    }
+    setTransactionId(draft.transactionId);
+    if (draft.participant) setParticipant(draft.participant);
+    if (draft.pollAddress) setPollAddress(draft.pollAddress);
+    if (draft.transactionHash) setTxHash(draft.transactionHash);
+    setSubmittedAt(draft.submittedAt);
+    setReport(
+      JSON.stringify(
+        {
+          restored: true,
+          meaning: "E4: durable identifiers survived refresh. Reconcile to resume pending/confirmed/failed/unknown.",
+          draft,
+        },
+        null,
+        2,
+      ),
+    );
+  }, []);
+
   function updateNote(id: ExperimentId, patch: Partial<ExperimentNote>) {
     setNotes((current) => ({
       ...current,
       [id]: { ...current[id], ...patch, id, updatedAt: Date.now() },
     }));
   }
+
+  const persistVendor = useCallback(
+    (vendor: VendorView, intent?: string) => {
+      const draft = upsertLabDraft({
+        transactionId: vendor.transactionId,
+        chainId: CHAIN_ID.toString(),
+        participant: participant || undefined,
+        pollAddress: pollAddress || undefined,
+        userOperationHash: vendor.userOperationHash || undefined,
+        transactionHash: vendor.transactionHash || undefined,
+        intent,
+        submittedAt: submittedAt ?? undefined,
+      });
+      setSubmittedAt(draft.submittedAt);
+      return draft;
+    },
+    [participant, pollAddress, submittedAt],
+  );
 
   async function decodeProbe(event: FormEvent) {
     event.preventDefault();
@@ -65,11 +188,21 @@ export default function W1Experiment() {
       return;
     }
     try {
+      const observedChainId = await assertConfiguredChain(wallet);
       const provider = new BrowserProvider(wallet);
       const receipt = await provider.getTransactionReceipt(txHash.trim());
       const tx = await provider.getTransaction(txHash.trim());
       if (!receipt) {
-        setReport("RPC returned no receipt yet. That is pending (propagation lag), not vendor failure.");
+        setReport(
+          JSON.stringify(
+            {
+              observedChainId: observedChainId.toString(),
+              meaning: "RPC returned no receipt yet. That is pending (propagation lag), not vendor failure.",
+            },
+            null,
+            2,
+          ),
+        );
         return;
       }
       const summary = summarizeProbeReceipt({
@@ -86,6 +219,8 @@ export default function W1Experiment() {
       setReport(
         JSON.stringify(
           {
+            observedChainId: observedChainId.toString(),
+            configuredChainId: CHAIN_ID.toString(),
             outerFrom: summary.outerFrom,
             outerTo: summary.outerTo,
             outerStatus: summary.outerStatus,
@@ -107,8 +242,8 @@ export default function W1Experiment() {
     }
   }
 
-  async function reconcileVendor(event: FormEvent) {
-    event.preventDefault();
+  async function reconcileVendor(event?: FormEvent) {
+    event?.preventDefault();
     setError("");
     setReport("");
     const id = transactionId.trim();
@@ -119,32 +254,28 @@ export default function W1Experiment() {
     try {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 20_000);
-      const response = await fetch(`${BACKEND}/w1/transactions/${encodeURIComponent(id)}`, { signal: controller.signal });
+      const response = await fetch(`${BACKEND}/w1/transactions/${encodeURIComponent(id)}`, {
+        signal: controller.signal,
+      });
       clearTimeout(timer);
-      const body = (await response.json()) as {
-        vendorLookup?: string;
-        vendor?: PrivyTransactionRecord & { phase?: string; transactionId?: string };
-        error_code?: string;
-        message?: string;
-      };
+      const body = (await response.json()) as StatusApiResponse;
       if (response.status === 503) {
-        setReport(JSON.stringify({ blocked: true, ...body, meaning: "E1 is not configured. This is not a failed vote." }, null, 2));
+        setReport(
+          JSON.stringify({ blocked: true, ...body, meaning: "E1 is not configured. This is not a failed vote." }, null, 2),
+        );
         return;
       }
-      const vendor = body.vendor
-        ? mapPrivyTransaction({
-            transaction_id: body.vendor.transactionId || body.vendor.id || id,
-            status: body.vendor.phase || body.vendor.status,
-            transaction_hash: body.vendor.transactionHash || body.vendor.transaction_hash,
-            user_operation_hash: body.vendor.userOperationHash || body.vendor.user_operation_hash,
-          })
-        : mapPrivyTransaction(body.vendor);
+      const vendor = asVendorView(body.vendor);
+      if (vendor) persistVendor(vendor);
+
       if (participant && pollAddress && vendor) {
         const wallet = window.ethereum;
-        let outerReceipt = null;
+        let outerReceipt: OuterReceipt | null = null;
         let outerReceiptLookup: "ok" | "null" | "error" = "null";
+        let observedChainId: string | null = null;
         if (wallet && vendor.transactionHash && isTxHash(vendor.transactionHash)) {
           try {
+            observedChainId = (await assertConfiguredChain(wallet)).toString();
             const provider = new BrowserProvider(wallet);
             const receipt = await provider.getTransactionReceipt(vendor.transactionHash);
             outerReceiptLookup = receipt ? "ok" : "null";
@@ -153,44 +284,64 @@ export default function W1Experiment() {
                   status: receipt.status,
                   from: receipt.from,
                   to: receipt.to,
-                  logs: receipt.logs.map((log) => ({ address: log.address, topics: [...log.topics], data: log.data })),
+                  logs: receipt.logs.map((log) => ({
+                    address: log.address,
+                    topics: [...log.topics],
+                    data: log.data,
+                  })),
                 }
               : null;
-          } catch {
+          } catch (err) {
+            if (err instanceof Error && err.message.startsWith("Wrong network")) {
+              setError(err.message);
+              return;
+            }
             outerReceiptLookup = "error";
           }
         }
+        // Lab does not yet have EntryPoint/account execution linkage for Poll
+        // publications — leave linkedToUserOperation false so co-located logs
+        // cannot false-confirm.
         const verdict = checkSponsoredPublication({
           participant,
           pollAddress,
           lookup: {
             vendor,
-            vendorLookup: body.vendorLookup === "timeout" ? "timeout" : response.ok ? "ok" : "error",
+            vendorLookup: body.vendorLookup === "timeout" ? "timeout" : response.ok ? (body.vendorLookup ?? "ok") : "error",
             outerReceipt,
             outerReceiptLookup,
-            inner: outerReceipt ? innerFromPollLogs(outerReceipt, pollAddress, null) : null,
+            inner: outerReceipt ? innerFromPollLogs(outerReceipt, pollAddress, null, false) : null,
+            trustedEntryPoints,
           },
         });
-        setReport(JSON.stringify({ vendor, verdict }, null, 2));
-      } else {
-        setReport(JSON.stringify({ vendorLookup: body.vendorLookup, vendor, raw: body }, null, 2));
-      }
-
-      const store = createSponsoredStore();
-      if (vendor && participant && MACI) {
-        try {
-          store.save(
-            { chainId: CHAIN_ID, maciAddress: MACI, pollId: POLL_ID, account: participant },
+        setReport(
+          JSON.stringify(
             {
-              transactionId: vendor.transactionId,
-              submittedAt: Date.now(),
-              userOperationHash: vendor.userOperationHash || undefined,
-              transactionHash: vendor.transactionHash || undefined,
+              observedChainId,
+              configuredChainId: CHAIN_ID.toString(),
+              submittedAt,
+              vendor,
+              verdict,
+              note: "Publication confirmation stays unverified until operation-linked inner evidence exists.",
             },
-          );
-        } catch {
-          /* persistence is best-effort for the lab notebook */
-        }
+            null,
+            2,
+          ),
+        );
+      } else {
+        setReport(
+          JSON.stringify(
+            {
+              configuredChainId: CHAIN_ID.toString(),
+              submittedAt,
+              vendorLookup: body.vendorLookup,
+              vendor,
+              raw: body,
+            },
+            null,
+            2,
+          ),
+        );
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
@@ -223,6 +374,7 @@ export default function W1Experiment() {
       return;
     }
     try {
+      const observedChainId = await assertConfiguredChain(wallet);
       const provider = new BrowserProvider(wallet);
       const signer = await provider.getSigner();
       const iface = new Interface(CALLER_PROBE_ABI);
@@ -233,6 +385,8 @@ export default function W1Experiment() {
         JSON.stringify(
           {
             warning: "This was a user-funded injected transaction. It does not prove Privy sponsorship.",
+            observedChainId: observedChainId.toString(),
+            configuredChainId: CHAIN_ID.toString(),
             hash: tx.hash,
             status: receipt?.status ?? null,
           },
@@ -242,6 +396,59 @@ export default function W1Experiment() {
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Injected probe failed.");
+    }
+  }
+
+  async function sendLabSponsored(revert: boolean) {
+    setError("");
+    setReport("");
+    if (!PROBE) {
+      setError("Set VITE_W1_PROBE_ADDRESS first.");
+      return;
+    }
+    const iface = new Interface(CALLER_PROBE_ABI);
+    const data = iface.encodeFunctionData(revert ? "alwaysRevert" : "probe");
+    const intent = revert ? "alwaysRevert" : "probe";
+    try {
+      const response = await fetch(`${BACKEND}/w1/lab/sponsored-send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: PROBE,
+          data,
+          chainId: CHAIN_ID.toString(),
+          value: "0x0",
+        }),
+      });
+      const body = (await response.json()) as StatusApiResponse;
+      if (response.status === 503) {
+        setReport(JSON.stringify({ blocked: true, ...body }, null, 2));
+        return;
+      }
+      const vendor = asVendorView(body.vendor);
+      if (vendor) {
+        // Persist immediately at broadcast — E4 recovery boundary.
+        const draft = persistVendor(vendor, intent);
+        setTransactionId(vendor.transactionId);
+        if (vendor.transactionHash) setTxHash(vendor.transactionHash);
+        setReport(
+          JSON.stringify(
+            {
+              meaning: "Lab-only sponsored send. Production voting is still gated. Identifiers saved for refresh (E4).",
+              configuredChainId: CHAIN_ID.toString(),
+              draft,
+              vendor,
+              raw: body,
+            },
+            null,
+            2,
+          ),
+        );
+        return;
+      }
+      setReport(JSON.stringify({ responseStatus: response.status, body }, null, 2));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Lab sponsored send failed.");
     }
   }
 
@@ -260,6 +467,7 @@ export default function W1Experiment() {
             ? "All six rows are marked pass on this device. Treat that as a notebook claim until public tx evidence is recorded."
             : "Architecture stays unapproved until every row below is pass with evidence."}
         </p>
+        <p className="text-xs text-gray-500">Configured chain: {CHAIN_ID.toString()}. Lab sends refuse other networks.</p>
       </header>
 
       <section className="space-y-4">
@@ -312,14 +520,21 @@ export default function W1Experiment() {
           </button>
         </form>
         <p className="text-xs text-gray-500">
-          Injected-wallet buttons below only prove the diagnostic contract. They are not a Privy adapter.
+          Injected buttons are user-funded diagnostics. Lab sponsored buttons call the backend proxy with{" "}
+          <code>sponsor: true</code> (E2–E6) and are not wired into voting.
         </p>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button type="button" className="border border-gray-600 px-3 py-2 rounded" onClick={() => void sendInjectedProbe(false)}>
             Injected probe()
           </button>
           <button type="button" className="border border-gray-600 px-3 py-2 rounded" onClick={() => void sendInjectedProbe(true)}>
             Injected alwaysRevert()
+          </button>
+          <button type="button" className="border border-amber-700 px-3 py-2 rounded text-amber-200" onClick={() => void sendLabSponsored(false)}>
+            Lab sponsored probe()
+          </button>
+          <button type="button" className="border border-amber-700 px-3 py-2 rounded text-amber-200" onClick={() => void sendLabSponsored(true)}>
+            Lab sponsored alwaysRevert()
           </button>
         </div>
       </section>
@@ -349,6 +564,9 @@ export default function W1Experiment() {
             Look up vendor status
           </button>
         </form>
+        {submittedAt ? (
+          <p className="text-xs text-gray-500">Original submission time (preserved across refresh): {new Date(submittedAt).toISOString()}</p>
+        ) : null}
       </section>
 
       {error ? <pre className="text-red-300 whitespace-pre-wrap">{error}</pre> : null}

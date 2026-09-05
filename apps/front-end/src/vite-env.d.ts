@@ -10,6 +10,7 @@ interface ImportMetaEnv {
   readonly VITE_WALLET_SOURCE?: string;
   readonly VITE_W1_BACKEND_URL?: string;
   readonly VITE_W1_PROBE_ADDRESS?: string;
+  readonly VITE_W1_ENTRY_POINTS?: string;
 }
 
 interface ImportMeta {

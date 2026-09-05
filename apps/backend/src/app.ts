@@ -43,6 +43,7 @@ app.get("/", (req, res) => {
     endpoints: {
       "POST /verify": "Verify Self.xyz ZK-proof",
       "GET /w1/transactions/:transactionId": "W1 Privy status reconciliation (server credentials; does not confirm a vote)",
+      "POST /w1/lab/sponsored-send": "W1 lab-only Privy sponsored send (gated; not production voting)",
       "POST /w1/webhooks/privy": "W1 optional Privy webhook receiver",
       "GET /health": "Service health check",
       "GET /": "This API information",
@@ -60,7 +61,14 @@ app.use("*", (req, res) => {
   res.status(404).json({
     error: "Not Found",
     message: `Route ${req.originalUrl} not found`,
-    availableRoutes: ["POST /verify", "GET /w1/transactions/:transactionId", "POST /w1/webhooks/privy", "GET /health", "GET /"],
+    availableRoutes: [
+      "POST /verify",
+      "GET /w1/transactions/:transactionId",
+      "POST /w1/lab/sponsored-send",
+      "POST /w1/webhooks/privy",
+      "GET /health",
+      "GET /",
+    ],
   });
 });
 

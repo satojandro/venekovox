@@ -3,6 +3,10 @@
 // publishMessage(Batch). Sponsored execution can keep the participating address
 // as msg.sender and still fail those checks. Do not "fix" that by returning to
 // generic log-topic matching.
+//
+// A mined bundle can contain many user operations. Alice's successful non-vote
+// user-op must never be confirmed by Bob's PublishMessage in the same receipt.
+// Confirmation requires operation-linked inner evidence, not co-presence of logs.
 
 export const PUBLISH_MESSAGE_TOPIC =
   "0x4be9ef9ae736055964ead1cf3c83a19c8b662b5df2bd4414776bb64d81f75d15";
@@ -10,6 +14,12 @@ export const PUBLISH_MESSAGE_TOPIC =
 /** keccak256("UserOperationEvent(bytes32,address,address,uint256,bool,uint256,uint256)") */
 export const USER_OPERATION_EVENT_TOPIC =
   "0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f";
+
+/** EntryPoint v0.6 / v0.7 canonical deployments (Ethereum + common L2s including Sepolia). */
+export const DEFAULT_TRUSTED_ENTRY_POINTS = [
+  "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789", // EntryPoint 0.6
+  "0x0000000071727De22E5E9d8BAf0edAc6f37da032", // EntryPoint 0.7
+] as const;
 
 export const TX_HASH_RE = /^0x[0-9a-fA-F]{64}$/;
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/i;
@@ -22,9 +32,15 @@ function sameAddress(a: string | null | undefined, b: string | null | undefined)
   return !!a && !!b && isAddress(a) && isAddress(b) && a.toLowerCase() === b.toLowerCase();
 }
 
+function addressIn(list: readonly string[], value: string | null | undefined): boolean {
+  if (!value || !isAddress(value)) return false;
+  const want = value.toLowerCase();
+  return list.some((item) => item.toLowerCase() === want);
+}
+
 export type SponsoredOutcome =
   | "pending" // broadcast, not yet able to confirm or deny
-  | "confirmed" // user-op succeeded AND inner Poll publication from the participant
+  | "confirmed" // user-op succeeded AND inner Poll publication linked to that operation
   | "reverted" // the intended call failed (even if the outer bundle mined)
   | "failed" // vendor could not include the operation
   | "denied" // sponsorship refused; must not silently become a user-paid tx
@@ -60,14 +76,25 @@ export interface OuterReceipt {
 export interface InnerPublicationEvidence {
   pollAddress: string;
   hasPublishMessage: boolean;
-  /** Who the Poll (or probe) observed as msg.sender, if we have that evidence. */
+  /**
+   * Who the Poll (or probe) observed as msg.sender, when we have that evidence
+   * from the *same* execution as the user operation — not inferred from a
+   * co-located UserOperationEvent.sender in a multi-op bundle.
+   */
   observedCaller?: string | null;
+  /**
+   * True only when the publication is tied to this specific user operation's
+   * execution (EntryPoint/account evidence for the selected stack). Co-presence
+   * of a PublishMessage log in the same bundle is not enough.
+   */
+  linkedToUserOperation?: boolean;
 }
 
 export interface UserOperationEvidence {
   userOperationHash: string;
   sender: string;
   success: boolean;
+  entryPoint: string;
 }
 
 export interface SponsoredCheckResult {
@@ -86,6 +113,8 @@ export interface SponsoredLookup {
   outerReceipt: OuterReceipt | null;
   outerReceiptLookup: "ok" | "null" | "error";
   inner: InnerPublicationEvidence | null;
+  /** Trusted EntryPoint addresses for this chain/version. Defaults to v0.6 + v0.7. */
+  trustedEntryPoints?: readonly string[];
 }
 
 function topicAddress(topic: string | undefined): string | null {
@@ -104,17 +133,21 @@ function readSuccessFlag(data: string | null | undefined): boolean | null {
 }
 
 /**
- * Find the ERC-4337 UserOperationEvent for *this* user-op hash.
- * A bundle can contain many user ops — never guess when the hash is missing.
+ * Find the ERC-4337 UserOperationEvent for *this* user-op hash, emitted only by
+ * a configured trusted EntryPoint. A matching topic from an arbitrary contract
+ * is not operation-success evidence.
  */
 export function findUserOperation(
   receipt: OuterReceipt,
-  userOperationHash?: string | null,
+  userOperationHash: string | null | undefined,
+  trustedEntryPoints: readonly string[] = DEFAULT_TRUSTED_ENTRY_POINTS,
 ): UserOperationEvidence | null {
   if (!userOperationHash || !TX_HASH_RE.test(userOperationHash)) return null;
+  if (trustedEntryPoints.length === 0) return null;
   const want = userOperationHash.toLowerCase();
   const topic = USER_OPERATION_EVENT_TOPIC.toLowerCase();
   for (const log of receipt.logs ?? []) {
+    if (!addressIn(trustedEntryPoints, log.address)) continue;
     const topics = log.topics ?? [];
     if (!topics[0] || topics[0].toLowerCase() !== topic) continue;
     const hash = topics[1];
@@ -122,7 +155,12 @@ export function findUserOperation(
     if (!hash || hash.toLowerCase() !== want || !sender) continue;
     const success = readSuccessFlag(log.data);
     if (success === null) continue;
-    return { userOperationHash: hash, sender, success };
+    return {
+      userOperationHash: hash,
+      sender,
+      success,
+      entryPoint: log.address!,
+    };
   }
   return null;
 }
@@ -143,9 +181,15 @@ export function hasPublishMessageFrom(receipt: OuterReceipt, pollAddress: string
  * Confirm a sponsored Poll publication.
  *
  * A mined outer transaction is not confirmation: the bundle can succeed while
- * the user operation reverts. Confirm only when UserOperationEvent.success is
- * true for *this* user-op hash, the resolved Poll emitted PublishMessage, and
- * the inner caller (event sender or observed msg.sender) is the participant.
+ * the user operation reverts, and it can include *other* users' publications.
+ * Confirm only when:
+ * - a trusted EntryPoint emits UserOperationEvent.success for *this* hash, and
+ * - inner evidence links a Poll PublishMessage to that same operation, and
+ * - the observed Poll caller is the participating account.
+ *
+ * UserOperationEvent.sender alone does not establish the Poll's immediate
+ * caller under arbitrary forwarding, and does not attribute a co-located
+ * PublishMessage to this operation.
  */
 export function checkSponsoredPublication(args: {
   participant: string;
@@ -155,11 +199,19 @@ export function checkSponsoredPublication(args: {
   const { participant, pollAddress, lookup } = args;
   const outerFrom = lookup.outerReceipt?.from ?? null;
   const outerTo = lookup.outerReceipt?.to ?? null;
+  const trusted = lookup.trustedEntryPoints ?? DEFAULT_TRUSTED_ENTRY_POINTS;
   const userOp = lookup.outerReceipt
-    ? findUserOperation(lookup.outerReceipt, lookup.vendor?.userOperationHash)
+    ? findUserOperation(lookup.outerReceipt, lookup.vendor?.userOperationHash, trusted)
     : null;
-  const innerCaller = lookup.inner?.observedCaller ?? userOp?.sender ?? null;
-  const pollMatch = !!(lookup.inner?.hasPublishMessage && sameAddress(lookup.inner.pollAddress, pollAddress));
+
+  // Never use userOp.sender as a stand-in for the Poll caller: Alice's successful
+  // non-vote op must not inherit Bob's PublishMessage from the same bundle.
+  const innerCaller = lookup.inner?.observedCaller ?? null;
+  const pollMatch = !!(
+    lookup.inner?.hasPublishMessage &&
+    sameAddress(lookup.inner.pollAddress, pollAddress) &&
+    lookup.inner.linkedToUserOperation === true
+  );
   const accountMatch = sameAddress(innerCaller, participant);
 
   if (lookup.vendorLookup === "error") {
@@ -213,9 +265,8 @@ export function checkSponsoredPublication(args: {
   if (userOp && userOp.success === false) {
     return { status: "reverted", pollMatch, accountMatch, outerFrom, outerTo };
   }
-  // Without a matching UserOperationEvent we cannot treat vendor "confirmed"
-  // as proof this specific operation succeeded (7702-only paths stay unverified
-  // until E2 shows a different inner-success signal).
+  // Without a matching UserOperationEvent from a trusted EntryPoint we cannot
+  // treat vendor "confirmed" as proof this specific operation succeeded.
   if (!userOp || userOp.success !== true) {
     return { status: "unverified", pollMatch, accountMatch, outerFrom, outerTo };
   }
@@ -224,7 +275,23 @@ export function checkSponsoredPublication(args: {
     return { status: "unverified", pollMatch: false, accountMatch: false, outerFrom, outerTo };
   }
   if (!sameAddress(lookup.inner.pollAddress, pollAddress) || !lookup.inner.hasPublishMessage) {
-    return { status: "unverified", pollMatch, accountMatch, outerFrom, outerTo };
+    return {
+      status: "unverified",
+      pollMatch: false,
+      accountMatch,
+      outerFrom,
+      outerTo,
+    };
+  }
+  // Bundle co-presence is not operation linkage.
+  if (lookup.inner.linkedToUserOperation !== true) {
+    return {
+      status: "unverified",
+      pollMatch: false,
+      accountMatch,
+      outerFrom,
+      outerTo,
+    };
   }
   if (!accountMatch) {
     return { status: "unverified", pollMatch: true, accountMatch: false, outerFrom, outerTo };
@@ -237,11 +304,13 @@ export function innerFromPollLogs(
   receipt: OuterReceipt,
   pollAddress: string,
   observedCaller?: string | null,
+  linkedToUserOperation = false,
 ): InnerPublicationEvidence {
   return {
     pollAddress,
     hasPublishMessage: hasPublishMessageFrom(receipt, pollAddress),
     observedCaller: observedCaller ?? null,
+    linkedToUserOperation,
   };
 }
 

@@ -66,6 +66,7 @@ export function mapPrivyWebhook(event: PrivyWebhookEvent | null | undefined): Ve
   };
 }
 
-export function isSponsorshipDeniedStatus(httpStatus: number): boolean {
-  return httpStatus === 400 || httpStatus === 402 || httpStatus === 403;
+/** Explicit sponsorship refusal on a *send* path — not a status-lookup failure. */
+export function isSponsorshipDeniedSendStatus(httpStatus: number): boolean {
+  return httpStatus === 402 || httpStatus === 403;
 }

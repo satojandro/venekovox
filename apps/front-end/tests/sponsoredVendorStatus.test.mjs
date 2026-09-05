@@ -19,7 +19,7 @@ async function loadModule(relative) {
   return import(`data:text/javascript;base64,${Buffer.from(javascript).toString("base64")}`);
 }
 
-const { mapPrivyStatus, mapPrivyTransaction, mapPrivyWebhook, isSponsorshipDeniedStatus } = await loadModule(
+const { mapPrivyStatus, mapPrivyTransaction, mapPrivyWebhook, isSponsorshipDeniedSendStatus } = await loadModule(
   "../src/lib/sponsored/vendorStatus.ts",
 );
 
@@ -57,8 +57,9 @@ test("confirmed webhook carries the outer hash without implying inner success by
   assert.equal(view.phase, "confirmed");
 });
 
-test("HTTP 402/403 map to sponsorship denied, not a prompt to pay ETH", () => {
-  assert.equal(isSponsorshipDeniedStatus(402), true);
-  assert.equal(isSponsorshipDeniedStatus(403), true);
-  assert.equal(isSponsorshipDeniedStatus(500), false);
+test("HTTP 402/403 on a *send* path map to sponsorship denied, not a prompt to pay ETH", () => {
+  assert.equal(isSponsorshipDeniedSendStatus(402), true);
+  assert.equal(isSponsorshipDeniedSendStatus(403), true);
+  assert.equal(isSponsorshipDeniedSendStatus(400), false);
+  assert.equal(isSponsorshipDeniedSendStatus(500), false);
 });

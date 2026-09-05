@@ -14,7 +14,7 @@
     "test:receipts": "node --test tests/receipts.test.mjs",
     "test:receipt-status": "node --test tests/receiptStatus.test.mjs",
     "test:hydration": "node --test tests/hydration.test.mjs",
-    "test:unit": "node --test tests/voteFlow.test.mjs tests/receipts.test.mjs tests/receiptStatus.test.mjs tests/hydration.test.mjs tests/sponsoredVerifier.test.mjs tests/sponsoredStatus.test.mjs tests/sponsoredVendorStatus.test.mjs tests/sponsoredRecords.test.mjs tests/walletAdapter.test.mjs tests/w1Seam.test.mjs"
+    "test:unit": "node --test tests/voteFlow.test.mjs tests/receipts.test.mjs tests/receiptStatus.test.mjs tests/hydration.test.mjs tests/sponsoredVerifier.test.mjs tests/sponsoredStatus.test.mjs tests/sponsoredVendorStatus.test.mjs tests/sponsoredRecords.test.mjs tests/walletAdapter.test.mjs tests/w1Seam.test.mjs tests/labDraft.test.mjs"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.0",

@@ -25,16 +25,16 @@ No implementation owner is assigned indefinitely by this document. W1 is an expe
 Dated record for this change:
 
 ```text
-Task ID / owner / date: W1 / session 2026-09-05
-Base commit and working branch: 05d8f2a3 → w1-privy-experiment
-Goal and acceptance gate: Experiment scaffold + sponsored verifier; E1–E6 evidence required before architecture approval
-Changed paths and decisions: CallerProbe, sponsored verifier/records, wallet seam, backend status proxy, D05/D06, G12
-Commands run and exact results: frontend unit tests **95 passed, 0 failed** (`pnpm --dir apps/front-end test:unit`). CallerProbe Hardhat test not run (no contracts artifacts in this worktree). `/w1` lab page not browser-verified this session.
-Live evidence (public links only): none — E1–E6 unverified
-Known failures / unverified claims: Sepolia sponsorship entitlement, TEE, Privy SDK path, ethers↔sponsorship bridge, MACI sponsored journey
-Dirty or uncommitted work: this branch until committed
-Next concrete action: Alejandro runs E1 (dashboard) then deploy-caller-probe on Sepolia
-External setup required and who controls it: Privy Dashboard + funded deploy key — Alejandro
+Task ID / owner / date: W1 review-fix / session 2026-09-05
+Base commit and working branch: 8b9085af → w1-privy-experiment
+Goal and acceptance gate: Close Astra false-confirmation / typing / E4 gaps; keep architecture unapproved
+Changed paths and decisions: sponsored verifier (EntryPoint + linkedToUserOperation), lab draft/E4, backend status vs deny, lab sponsored-send
+Commands run and exact results: frontend unit tests **102 passed, 0 failed**. Full workspace build blocked (no node_modules); isolated tsc showed missing deps + one fixed outerReceipt typing error.
+Live evidence (public links only): none — E1–E6 still unverified
+Known failures / unverified claims: Sepolia sponsorship entitlement, TEE, live Privy send, MACI E5, full frontend build
+Dirty or uncommitted work: review-fix changes on branch until committed
+Next concrete action: Alejandro E1 + deploy-caller-probe; then lab sponsored E2
+External setup required and who controls it: Privy Dashboard + W1_LAB_* server env — Alejandro
 ```
 
 Use this small record in a PR description or a dated handoff entry:

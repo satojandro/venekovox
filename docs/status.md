@@ -251,3 +251,30 @@ Enterprise lock generation remains blocked (network approval cancelled); the man
 requires lock regeneration before a frozen install or merge. Root Node 20 versus SDK
 dependencies' Node 22 requirement is an unresolved deployment boundary. See the exact
 [handoff](agents.md#p2-enterprise-handoff--2026-09-06). No live or full workspace result.
+
+## Runtime decision: Node 22 (resolved 2026-09-06)
+
+**Decision: `>=22 <23`**, recorded in root `engines.node` (was `20`). Rationale, from
+verified facts:
+
+- The SDK's transitive dependency `@selfxyz/core@1.2.0-beta.1` declares
+  `>=22 <23`; the top-level `@selfxyz/enterprise-sdk@0.4.1` declares `>=20`. The
+  narrowest satisfying range is Node 22.
+- `@selfxyz/core` ships zero `node:` built-in imports in its dist (universal
+  browser/react-native/node bundle), so the `>=22 <23` pin is provenance metadata,
+  not an API requirement — but honoring declared engines is cheaper than auditing
+  every future release of that package.
+- Node 20 reached end-of-life April 2026; Node 22 is Maintenance LTS until
+  April 2027. Upstream MACI pins node 20; this is a deliberate, documented
+  deviation from our fork base.
+- Node 24/26 were rejected: they violate the SDK's `<23` upper bound.
+
+Empirical verification on Node **22.20.0** (post-merge, this repository):
+30/30 backend P2 tests, 9/9 local EVM tests, 45/45 combined W1+P2 overlay,
+`tsc -p tsconfig.p2.json --noEmit` clean — all green on Node 22. Earlier runs on
+Node 20.19.5 were also green, confirming no Node-22-only API is actually required
+today; the pin is forward-compatibility insurance, not a current dependency.
+
+W1 must be re-validated on Node 22 before its next merge (W1 was last run on
+Node 20 under the old pin); the toolchain used for P2 verification is preserved at
+`~/Hermes-crypto-builder/p2-toolchain/` (node 20.19.5, node 22.20.0, pnpm 10.34.5).

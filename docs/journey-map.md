@@ -541,3 +541,19 @@ grep -nE "^export function handle" apps/subgraph/src/maci.ts apps/subgraph/src/p
 
 If any of these commands disagrees with this document, the document is stale.
 Update it in the same commit that changes the code.
+
+## S5 v2 governance call-path overlay — 2026-09-06
+
+Local patch on main `c12361c3ac2797f98e1238cdca669227fc43ebcc`; not live deployed.
+
+| Chain event    | Actual handler path                           | Added v2 output                                                                   |
+| -------------- | --------------------------------------------- | --------------------------------------------------------------------------------- |
+| DeployPoll     | `handleDeployPoll` → `createProposal`         | Common governance identity, proposal provenance, time window and explicit privacy |
+| PublishMessage | `handlePublishMessage` → `recordPublication`  | Direct publication count; constructor placeholder excluded                        |
+| PollJoined     | `handlePollJoined` → `recordRegistration`     | Native unique poll-key registration count; not human turnout                      |
+| IpfsHashAdded  | `handleIpfsHashAdded` → `recordOffchainBatch` | Batch announcements separately from message counts                                |
+
+See [governance.ts](../apps/subgraph/src/governance.ts). Native entities remain available.
+[The reader](../apps/subgraph/client/governance.mjs) fetches common fields and typed
+source-specific metrics from separate Graph endpoints. It is not wired into the main UI.
+No Self/ENS/private ballot data is added; no verified tally ingestion is implemented.

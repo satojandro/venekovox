@@ -1,6 +1,6 @@
 specVersion: 1.2.0
 description: Subgraph Indexer for MACI contract
-repository: https://github.com/privacy-scaling-explorations/maci
+repository: https://github.com/satojandro/venekovox
 indexerHints:
   prune: auto
 schema:
@@ -23,7 +23,8 @@ dataSources:
         - MACI
         - User
         - Account
-        - StateLeaf
+        - Proposal
+        - GovernanceFramework
         - Poll
       abis:
         - name: MACI
@@ -48,10 +49,12 @@ templates:
       language: wasm/assemblyscript
       entities:
         - MACI
-        - StateLeaf
+        - Proposal
+        - GovernanceFramework
         - Poll
         - Vote
-        - TopupCredit
+        - Registration
+        - ChainHash
       abis:
         - name: Poll
           file: ./node_modules/@maci-protocol/contracts/build/artifacts/contracts/Poll.sol/Poll.json

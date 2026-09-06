@@ -1,0 +1,32 @@
+query Governance($first: Int!) {
+  proposals(first: $first, orderBy: creationTime, orderDirection: desc) {
+    id
+    txnHash
+    description
+    creationBlock
+    creationTime
+    governanceFramework {
+      id
+      name
+      type
+      contractAddress
+    }
+    startTime
+    endTime
+    ballotPrivacy
+    coordinatorTrust
+    tallyStatus
+    registrationCount
+    publishedMessageCount
+    offchainBatchCount
+    voteOptionCapacity
+    votingMode
+  }
+  _meta {
+    block {
+      number
+      hash
+    }
+    hasIndexingErrors
+  }
+}

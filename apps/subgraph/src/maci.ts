@@ -6,6 +6,7 @@ import { Poll } from "../generated/schema";
 import { Poll as PollTemplate } from "../generated/templates";
 import { Poll as PollContract } from "../generated/templates/Poll/Poll";
 
+import { createProposal } from "./governance";
 import { ONE_BIG_INT } from "./utils/constants";
 import { createOrLoadMACI, createOrLoadUser, createOrLoadAccount } from "./utils/entity";
 
@@ -43,6 +44,7 @@ export function handleDeployPoll(event: DeployPollEvent): void {
   poll.numMessages = GraphBN.zero();
   poll.maci = maci.id;
   poll.save();
+  createProposal(poll, event);
 
   maci.numPoll = maci.numPoll.plus(ONE_BIG_INT);
   maci.latestPoll = poll.id;

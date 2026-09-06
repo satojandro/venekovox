@@ -128,3 +128,18 @@ documents in the same change.
 - External setup: Alejandro creates the approved Enterprise flow/version, test API key,
   webhook endpoint and signing secret privately; funds/controls deployed accounts.
 - Working tree: changes delivered as patch/ZIP; no remote commit, push, PR or deployment.
+
+## S5 handoff — 2026-09-06
+
+- Owner/task: Astra, S5.1/T4 plus bounded S5.2 comparative reader.
+- Base/branch: main `c12361c3ac2797f98e1238cdca669227fc43ebcc`, `feat/s5-governance-schema`.
+- Scope: subgraph schema/mappings/tests/client and narrow canonical doc updates.
+- Verified: Graph codegen, WASM build, 17 Node tests; no Matchstick/live/browser evidence.
+- Live/remaining: deploy v2 to Studio, choose a compatible live Governor endpoint, run
+  comparison, wire main-product/agent consumer, capture demo. Tally ingestion stays open.
+- Merge: no W1/P2 runtime overlap or dependency changes. Preserve P2's Enterprise D02
+  and related documentation when merging these narrow hunks. This baseline predates
+  that patch: **the old Pass-only instructions above are superseded by Alejandro's
+  Enterprise decision**, not reinstated by S5. Do not overwrite newer docs wholesale.
+- Detailed contribution and commands: [subgraph handoff](../apps/subgraph/governance-compatibility.md).
+- Delivery: local patch/ZIP; no upstream PR, remote push or deployment claimed.

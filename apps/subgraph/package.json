@@ -17,7 +17,7 @@
     "precodegen": "rm -rf ./generated && pnpm generate:schema && pnpm generate:yaml",
     "codegen": "graph codegen",
     "generate:yaml": "mustache ./config/${NETWORK:-network}.json ./templates/subgraph.template.yaml > subgraph.yaml",
-    "generate:schema": "cp ./schemas/schema.${VERSION:-v1}.graphql schema.graphql",
+    "generate:schema": "cp ./schemas/schema.${VERSION:-v2}.graphql schema.graphql",
     "prebuild": "pnpm codegen",
     "build": "graph build",
     "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ maci-subgraph",
@@ -26,6 +26,8 @@
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 maci-subgraph --network localhost",
     "deploy:mainnet": "graph deploy --node https://api.studio.thegraph.com/deploy/ maci-subgraph --network mainnet",
     "test": "graph test -v 0.6.0",
+    "test:governance": "node --test tests/governance/*.test.mjs",
+    "demo:governance": "node client/compare.mjs",
     "test:coverage": "graph test && graph test -c"
   },
   "dependencies": {

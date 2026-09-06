@@ -25,6 +25,22 @@ The new tests are synthetic backend and local EVM evidence only. Exact final com
 counts and runtime appear in the P2 handoff below; prior ledger counts are historical.
 No real document, hosted session, sponsored operation or full MACI circuit was tested.
 
+## S5 governance extension — 2026-09-06
+
+Patch base: main `c12361c3ac2797f98e1238cdca669227fc43ebcc`; branch
+`feat/s5-governance-schema`. New v2 schema and active mappings compile to WASM.
+**17 tests pass** across query/schema compatibility, mapping functions with Graph
+host doubles and client failure/normalization cases. Graph codegen and build passed
+using Graph CLI 0.97.1, graph-ts 0.38.1, published contracts 3.0.0 and Node 24.19.0.
+No new dependencies or lock edits. Full workspace/Matchstick/browser tests not run.
+
+A common query validates against v2 and the pinned Messari Governor schema. This is
+a locally implemented extension, not an accepted Messari standard. Live Studio and
+reference-Governor endpoints are not configured or verified. Main UI/agent consumption
+still needs wiring. G06/G13 (verified results) remain open; results are intentionally
+unavailable rather than inferred from counts. Detailed evidence and deployment steps:
+[subgraph handoff](../apps/subgraph/governance-compatibility.md).
+
 ## Branch and deployment status
 
 Snapshot recorded during documentation repair on 2026-09-05. Refresh these rows

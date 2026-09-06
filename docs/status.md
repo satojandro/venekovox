@@ -7,6 +7,24 @@ This is a snapshot, not live deployment monitoring.
 For the **call-by-call map** of what each technology does, read
 [journey-map.md](journey-map.md). This file records status and evidence only.
 
+## P2 Enterprise candidate evidence — 2026-09-05
+
+Main base checked: `c12361c3ac2797f98e1238cdca669227fc43ebcc`.
+Local branch: `feat/p2-eligibility-bridge`; delivered as a patch, not a remote release.
+D02 now selects Enterprise by explicit user instruction. Root and canonical contributor
+instructions were corrected. Existing Pass `/verify` and QR remain legacy migration debt.
+The new candidate Pass adapter was removed rather than shipped as a competing path.
+
+Implemented: Enterprise session/webhook coordination, actual SDK signature adapter,
+account-control verification, bounded in-memory challenge/issuance service, EIP-712
+policy and negative tests. **Not mounted, not deployed, not production-ready.**
+G01/G09/G10 remain open end to end: the old route is still present, the UI still sends
+empty gate data, and live callback/CORS behavior has not been exercised.
+
+The new tests are synthetic backend and local EVM evidence only. Exact final commands,
+counts and runtime appear in the P2 handoff below; prior ledger counts are historical.
+No real document, hosted session, sponsored operation or full MACI circuit was tested.
+
 ## Branch and deployment status
 
 Snapshot recorded during documentation repair on 2026-09-05. Refresh these rows
@@ -224,3 +242,12 @@ test was claimed at that time.
 - Self eligibility authorization is still placeholder gate data and requires P2. The page still has mocked eligibility and result data pending P3.
 - Final tally/index/UI integration requires P4. A refreshed page recovers membership on the next submission attempt; this patch did not hydrate a complete voter dashboard on page load.
 - Poll metadata, timing and option validation against the deployed poll, gas sponsorship, ENS and agent features remain separate work.
+
+## P2 verification result
+
+Node 22.18.0: 30 backend tests and 9 local EVM tests passed. W1+P2 temporary
+backend overlay: 45 tests passed. Focused TypeScript and compiled ESM import passed.
+Enterprise lock generation remains blocked (network approval cancelled); the manifest
+requires lock regeneration before a frozen install or merge. Root Node 20 versus SDK
+dependencies' Node 22 requirement is an unresolved deployment boundary. See the exact
+[handoff](agents.md#p2-enterprise-handoff--2026-09-06). No live or full workspace result.

@@ -10,8 +10,7 @@
 
 ## Context that must survive model changes
 
-The human polling journey is the product; agents are downstream. Self Pass verifies
-eligibility; ENS names people publicly; MACI handles encrypted voting; the Graph reads
+The human polling journey is the product; agents are downstream. Self Enterprise is the selected eligibility provider (migration in progress); ENS names people publicly; MACI handles encrypted voting; the Graph reads
 public protocol data; Messari standardizes its shape. None substitutes for another's
 authorization or privacy responsibilities.
 
@@ -29,7 +28,7 @@ profile-distribution chart as a demographic ballot result, and never count MACI
 encrypted-message entities as unique voters. DA0 design work never displaces the M1
 journey's acceptance gates.
 
-Do not resurrect Enterprise flowId/API-key homework. Do not deploy a new FreeForAll
+D02 was superseded by explicit user instruction on 2026-09-05: migrate to Self Enterprise. Enterprise flow/version IDs and backend API/webhook credentials are now legitimate setup requirements; Alejandro provisions them privately. Do not reuse the legacy Pass verifier for new eligibility work. Do not deploy a new FreeForAll
 poll and call it verified-human enforcement. Do not interpret default poll date numbers
 as durations. Do not treat mock results, joined count or encrypted-message count as
 finalized voter results.
@@ -87,3 +86,45 @@ documents in the same change.
 - Next: apply the patch on its base (or review changes against newer main), then
   reconcile W1 into the consolidated docs when its code is merged. Do not infer
   architecture approval from the presence of a proposed diagram.
+
+## P2 Enterprise handoff — 2026-09-06
+
+- Owner: Astra; task S2.1/P2. Local branch `feat/p2-eligibility-bridge`.
+- Patch base: main `c12361c3ac2797f98e1238cdca669227fc43ebcc`.
+- W1 comparison: `e4e0c65a4f66248bd9f5775139a064754bd01fc7` on
+  `w1-privy-experiment`; still separate from main at review time.
+- Product decision: user approved Enterprise on September 5; D02 supersedes Pass-only
+  instructions. Provider pivot accepted; issuer custody/deployment and eligibility
+  policy defaults remain candidate decisions.
+- Implemented: isolated session coordinator, native SDK adapter, EOA/ERC-1271 ownership,
+  scoped authorization service, issuer policy, tests and canonical migration guidance.
+- Reproduced on Node 22.18.0 with isolated dependencies: **30 backend tests**, **9 local
+  EVM tests**; **45 backend tests** on a temporary W1+P2 source overlay (15 W1 + 30 P2).
+  Focused `tsc -p apps/backend/tsconfig.p2.json --noEmit` passed. Compiled native ESM
+  adapter imported successfully on Node 22. Full workspace/frontend build not run.
+- Commands: `node --test apps/backend/tests/p2/*.test.mjs`;
+  `node --test packages/contracts/test-p2/eligibility.evm.test.mjs`;
+  combined overlay additionally ran W1 `labSendPolicy.test.mjs` and
+  `sponsoredSendRoute.test.mjs`. Test-only loader used `P2_TOOLCHAIN_PACKAGE_JSON` for
+  dependencies outside the repository. All signing material was synthetic local fixtures.
+- Dependency gate: SDK 0.4.1 is declared in backend package.json. Workspace pnpm lock
+  regeneration could not complete because the network approval was cancelled. The
+  supplied lock only includes the already-resolved ethers importer addition, NOT the
+  Enterprise SDK dependency graph. **This candidate patch is not frozen-lock/merge ready.**
+  Hermes must regenerate the lock using repository-approved pnpm 9/10, review dependency
+  changes, and run frozen install/build before merging. Do not fabricate integrity entries.
+- Runtime gate: root declares Node 20; resolved Enterprise core/common declare Node 22.
+  Do not silently change W1's runtime. Decide a tested Node 22 backend boundary or perform
+  a separately validated runtime upgrade; this patch contains a native ESM adapter and
+  targeted tsconfig but does not make that deployment decision.
+- Compatibility: no W1 frontend/runtime route edits. Backend package.json overlaps W1:
+  merge scripts/dependencies structurally, retaining `test:unit`, `test:p2` and
+  `typecheck:p2`. The legacy verify.ts change is a warning comment only.
+- Live evidence: none. Public routes, durable transactional session/inbox persistence,
+  UI/status recovery and SDK gate-data plumbing are unimplemented. G01/G09/G10 stay open.
+- Next action: regenerate/review the dependency lock and resolve the Node runtime boundary;
+  then mount the candidate with durable storage, integrate W1 evidence slots and execute
+  Enterprise test/live document verification plus a real votable poll.
+- External setup: Alejandro creates the approved Enterprise flow/version, test API key,
+  webhook endpoint and signing secret privately; funds/controls deployed accounts.
+- Working tree: changes delivered as patch/ZIP; no remote commit, push, PR or deployment.

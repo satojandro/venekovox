@@ -23,7 +23,7 @@ participants, not a statistically representative population.
 
 | Component                              | Product responsibility                                            | State at the reviewed commit                                                  |
 | -------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| Self Pass                              | Prove eligibility from a supported identity document              | QR and backend verifier exist; authorization into MACI is missing             |
+| Self Enterprise (migration)            | Prove eligibility from a supported identity document              | Legacy Pass UI remains; Enterprise/P2 candidate is unmounted                  |
 | MACI                                   | Encrypted voting commands and proof-verified tally infrastructure | Signup/join/publish wired; live complete tally journey unverified             |
 | Smart wallet and sponsorship           | Remove wallet installation and gas funding friction               | Planned; Privy is a candidate                                                 |
 | ENS                                    | Persistent human-readable profile and navigation                  | Planned; not personhood verification                                          |

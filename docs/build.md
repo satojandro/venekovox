@@ -193,7 +193,10 @@ Before mounting the candidate:
 5. Load the SDK as native ESM. Existing backend CommonJS is intentionally unchanged;
    `tsconfig.p2.json` checks this separate boundary. Node 22 is the deployment target because
    resolved SDK core/common dependencies declare `>=22 <23`, despite the top-level SDK's
-   broader Node 20+ claim. The repository currently declares Node 20: resolving this runtime mismatch and re-running W1 on the chosen runtime is a merge/release gate, not an implicit engine upgrade. Pin and verify the resolved lock before rollout.
+   broader Node 20+ claim. **Resolved 2026-09-06:** root `engines.node` is now `>=22 <23`
+   (was `20`, a documented deviation from upstream MACI's node-20 pin); full suite
+   re-verified on Node 22.20.0 — see [status.md](status.md) "Runtime decision". Remaining
+   gate: W1 has not yet been re-run on Node 22 since the pin change.
 6. Integrate authenticated status/recovery and the two evidence slots with W1. Counterfactual
    ERC-6492 signatures are unsupported; deploy the account first or add a reviewed adapter.
 7. Run mock and real-document journeys, two-wallet duplicate attempts, wallet switches,

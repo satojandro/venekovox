@@ -3,7 +3,9 @@ import { SelfBackendVerifier, DefaultConfigStore, AllIds } from "@selfxyz/core";
 
 const router: import("express").Router = express.Router();
 
-// --- Self.xyz backend verifier (Self Pass, open-source SDK) ---
+// LEGACY SELF PASS — retained only for the existing UI during migration.
+// New eligibility work uses Enterprise (docs/build.md A1, D02).
+// This route is NOT MACI eligibility authorization and must not be extended.
 const SCOPE = process.env.SELF_SCOPE || "venekovox-trust-ritual";
 const ENDPOINT = process.env.SELF_ENDPOINT || "http://localhost:3100/verify";
 // true = accept mock passports (testnet/staging), false = real documents (mainnet)

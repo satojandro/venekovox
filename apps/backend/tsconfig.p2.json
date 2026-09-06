@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist/p2"
+  },
+  "include": ["src/eligibility/**/*.ts", "src/eligibility/**/*.mts"],
+  "exclude": ["node_modules", "dist"]
+}

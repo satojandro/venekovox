@@ -47,7 +47,7 @@ These existing disclosures are not evidence of consent, safe storage, anonymity,
 
 ## 4. Attribute semantics and collection policy
 
-Self's official integration example supports selective disclosure controls including nationality, date of birth and a field named `gender`, as well as minimum-age requirements. Keep the Self Pass/SDK integration choice; this feature does not require switching to Enterprise. Verify the pinned SDK, proof system and supported document behavior before implementation. [Self integration example](https://github.com/selfxyz/self-integration-boilerplate)
+Self's official integration example supports selective disclosure controls including nationality, date of birth and a field named `gender`, as well as minimum-age requirements. Migration note (2026-09-05, D02): Self Pass is legacy and the user selected Enterprise. This historical SDK example is not a current integration recipe. Re-evaluate Enterprise disclosure controls, custody and supported documents before implementing analytics; do not enable demographic reveals on the minimal eligibility flow. [Self integration example](https://github.com/selfxyz/self-integration-boilerplate)
 
 | Attribute                          | Intended representation                                       | Requirements                                                                                               |
 | ---------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |

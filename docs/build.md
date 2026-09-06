@@ -17,12 +17,27 @@ Existing entry points: [Self verifier](../apps/backend/src/routes/verify.ts),
 with the caller. Current frontend gate data is empty (`0x`). A browser verification
 flag is not a credential.
 
+#### Enterprise pivot — authoritative decision, 2026-09-05
+
+Alejandro explicitly authorized the migration. **Self Pass is legacy; new identity
+integrations use Self Enterprise.** This supersedes the old D02 and every instruction
+to preserve Pass or avoid Enterprise setup. Keep historical Pass source identifiable
+until the frontend and backend cut over together. Do not remove dependencies still
+used by that route; do not copy its disclosure/logging behavior into Enterprise.
+[Official legacy notice](https://docs.self.xyz/docs/self-pass/) ·
+[Migration guide](https://docs.self.xyz/docs/self-enterprise/migration/from-self-pass-sdk/)
+
+Enterprise manages verification; our backend authenticates its result and issues a
+separate, short-lived MACI authorization. This adds trust in Self's delivery service
+and our authorization issuer. It is not direct verification of the Self proof by the
+Sepolia MACI contract. A supported provider is not an approval of every flow default.
+
 #### Required handshake
 
 1. Establish the actual participating account and configured chain. With a smart wallet, use the smart account address, not its owner/embedded signer address.
 2. Create a short-lived verification challenge bound to the intended action and domain. Prove control of the participating account with a method that supports its account type; do not assume EOA-only signature recovery works for smart accounts.
-3. Build the Self Pass request with matching frontend/backend scope, endpoint, environment and eligibility policy. The current UUID user context alone does not prove control of a wallet.
-4. Verify the proof and its authenticated context server-side or in the selected on-chain verification path. Do not accept a client-supplied account/nullifier without proving the binding.
+3. Create a Self Enterprise session server-side only after validating wallet control. Bind its opaque reference and returned ID to the challenge and pin the approved flow version and environment.
+4. Verify raw webhook bytes using the official Enterprise SDK. Validate the recorded session, flow version, environment, eligibility status and rules. Recover the account from the server record; never from a redirect or client claims.
 5. Produce or validate policy authorization scoped to chain, policy/contract, account, action and expiry. Include poll scope when required, a replay identifier, and MACI-key binding if chosen by the policy design.
 6. Enforce eligibility and uniqueness in the contract path. Consume authorization atomically with successful registration/join. Reject replay, expiry, wrong account/domain/poll, invalid proof and direct bypass.
 7. Expose eligibility state to the UI without publishing raw document attributes or stable identity linkage unnecessarily.
@@ -49,6 +64,174 @@ versioned collection policy. They do not undo the eligibility-path minimization 
 the eligibility verifier still minimizes nationality/gender disclosure and logging, and
 analytics collection never re-introduces raw disclosure payloads into eligibility
 responses or logs.
+
+#### Implemented P2 candidate — isolated, unmounted, undeployed
+
+Source in this patch:
+
+| Component                                                            | Responsibility                                                                                                 |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `apps/backend/src/eligibility/enterprise.ts`                         | Wallet-authenticated session creation, server-owned correlation, strict completion checks and minimized claims |
+| `apps/backend/src/eligibility/enterpriseSdk.mts`                     | Native ESM adapter to pinned `@selfxyz/enterprise-sdk@0.4.1`; official webhook verification                    |
+| `apps/backend/src/eligibility/authorization.ts`                      | Five-minute challenges, scoped HMAC tags, EIP-712 grants, issuance lock and idempotent recovery                |
+| `apps/backend/src/eligibility/accountControl.ts`                     | Account-control signatures: EOA/7702 recovery or deployed ERC-1271 on the configured chain                     |
+| `packages/contracts/contracts/eligibility/SelfEligibilityPolicy.sol` | Target-only, issuer-authenticated, single-use policy enforcement                                               |
+
+```sh
+  Participating wallet          Eligibility backend              Self Enterprise          MACI / Poll
+        |                              |                              |                      |
+        | Sign challenge               |                              |                      |
+        |  (account + target domain)   |                              |                      |
+        |----------------------------->|                              |                      |
+        |                              | createSession(opaque ref)    |                      |
+        |                              |  [account-control checked    |                      |
+        |                              |   BEFORE this API request]   |                      |
+        |                              |----------------------------->|                      |
+        |      hosted verification journey (wallet visits Self)       |                      |
+        |<------------------------------------------------------------|                      |
+        |                              |      signed completion webhook                      |
+        |                              |<---------------------------------------------|      |
+        |                              | match session / environment /                       |
+        |                              | version / rules; minimize claims                    |
+        | Request authorization        |                              |                      |
+        |  (repeat wallet signature)   |                              |                      |
+        |----------------------------->|                              |                      |
+        |        short-lived signed policy evidence (EIP-712)         |                      |
+        |<-----------------------------|                              |                      |
+        | signup / join with evidence  |                              |                      |
+        |------------------------------------------------------------|--------------------->|
+        |                              |          enforce policy, then complete              |
+        |                              |          operation atomically                       |
+```
+
+**This diagram maps candidate modules, not a working HTTP or browser journey.**
+No route or frontend wallet code is changed to call them. The current browser still
+passes empty policy data. A separate policy instance/grant is required for MACI
+signup and each Poll join; putting signup evidence into the join slot must fail.
+The SDK `sgData` and `sgDataArg` slots need integration after W1's caller is captured.
+
+The server stores the challenge-to-session relationship. Only the opaque challenge
+reference goes to Self; wallet address and signing message are not sent as metadata.
+A hosted redirect cannot mark eligibility. Completion must match both session ID and
+reference, configured flow and frozen version, and test/live environment. The candidate
+checks a backend-mode Age Verification result against the explicit age floor, rejects
+OFAC-on and unexpected reveal/rule keys, and keeps only bound account, internal context
+and normalized identity signal. The raw proof is discarded, never logged or returned.
+The public hook must preserve raw bytes; reconstructing JSON breaks signature checking.
+Implementation details were checked against the installed 0.4.1 JavaScript and types.
+[SDK documentation](https://docs.self.xyz/docs/self-enterprise/sdk/nodejs/) ·
+[Webhook verification](https://docs.self.xyz/docs/self-enterprise/sdk/verify-webhooks/)
+
+**Candidate policy choice:** age 18+, no OFAC, no demographic reveals, backend mode.
+It is configurable and not a silently accepted platform-wide eligibility rule. The
+Age Verification workspace can enforce an age threshold without disclosing birth date;
+its defaults must be changed deliberately to match our manifest.
+[Age Verification](https://docs.self.xyz/docs/self-enterprise/workspaces/age-verification/)
+
+#### Identity, privacy and trust boundaries
+
+Enterprise documents an organization-scoped uniqueness signal. Confirm repeated
+verification, multiple wallets, supported documents, renewals and cross-flow stability
+in staging before promising one-human-one-vote. A document-backed identifier does not
+by itself prove representative sampling or solve account recovery.
+[Verification model](https://docs.self.xyz/docs/self-enterprise/get-started/how-it-works/)
+
+Our tag is HMAC-SHA256 over a stable operator identity namespace, test/live environment,
+chain, policy address, target, config, action and canonical numeric nullifier. It excludes
+wallet and challenge so the same identity under two wallets hits the same contract
+one-use slot. A second identity under the same wallet is also rejected. The adapter
+accepts bounded decimal or hexadecimal integer nullifiers and fails closed on any
+other format; verify real SDK/service output before mounting. Do not invent a random
+replacement identifier, use session IDs for uniqueness, or equate Self's nullifier with
+MACI's join nullifier.
+
+Keep the namespace and HMAC secret stable. Changing either, redeploying the policy or
+switching Self organizations can reset effective uniqueness; these require migration
+analysis. Cross-policy tags differ, but the wallet and authorization calldata remain
+public. This does not make participation unlinkable. Self and the issuer can observe
+verification-to-wallet correlation through their respective roles; standard MACI
+coordinator privacy limitations still apply. No demographic information is added to ENS,
+the Graph or this evidence. Premium demographic analytics remains separate scope.
+
+The issuer is trusted to issue honestly and protect its signing key. The contract pins
+one EOA issuer; user wallets may be contract accounts. It has no issuer rotation,
+revocation, account migration or recovery mechanism. Those are explicit rollout gates.
+No exact MACI public-key binding is claimed: the existing `enforce(address,bytes)` ABI
+receives the caller and evidence, not the signup/join public-key argument. Adding a hash
+to evidence alone would not enforce equality with that argument.
+
+#### Authorization specification and deployment preparation
+
+EIP-712 domain: name `VenekoVox Self Eligibility`, version `1`, configured chain ID,
+and policy address as `verifyingContract`. The signed `Authorization` fields are
+`account`, `target`, `identityTag`, `configId`, `action`, `nonce`, `issuedAt`, `expiresAt`.
+The last two are uint64; hashes are bytes32. See `AUTHORIZATION_TYPES` for canonical order.
+`configId` must identify an approved immutable manifest including organization namespace,
+environment, flow/version, eligibility predicates, issuer and recovery policy. Keep that
+manifest with the release evidence; do not reuse its ID after changing rules.
+
+Deploy a distinct policy for each signup/join target with owner, issuer, config and action;
+then configure MACI/Poll to use it and bind its target once via owner-only `setTarget`.
+Binding requires deployed target code. Read all configured values back before enabling
+issuance. The policy rejects direct calls, empty/forged/expired evidence, wrong domain,
+account/target/action/config and duplicate identity/account. Consumption rolls back if
+signup/join later reverts. No funded deployment or operator credential setup was performed.
+
+Before mounting the candidate:
+
+1. Approve issuer trust, age/document/security-level choices, uniqueness and recovery.
+2. Alejandro provisions Enterprise test flow/version and API/webhook secrets privately.
+   Pin the reviewed version: a new dashboard deployment must fail closed until reviewed.
+3. Replace in-memory maps with durable transactional challenge/session/result and issuance
+   storage. Persist minimized acceptance and deduplication before acknowledging a webhook.
+   Duplicate deliveries must be idempotent; contradictory completions need investigation.
+   A completion arriving before session persistence should be retried, never accepted blindly.
+4. Mount rate-limited, size-limited endpoints with origin/authentication controls. Verify
+   raw-body signatures using the endpoint-specific secret. Recognized failed eligibility
+   should become an honest terminal UI state, not endless delivery retries. Do not expose
+   raw SDK exceptions, payloads, verification URLs or credentials in logs.
+5. Load the SDK as native ESM. Existing backend CommonJS is intentionally unchanged;
+   `tsconfig.p2.json` checks this separate boundary. Node 22 is the deployment target because
+   resolved SDK core/common dependencies declare `>=22 <23`, despite the top-level SDK's
+   broader Node 20+ claim. The repository currently declares Node 20: resolving this runtime mismatch and re-running W1 on the chosen runtime is a merge/release gate, not an implicit engine upgrade. Pin and verify the resolved lock before rollout.
+6. Integrate authenticated status/recovery and the two evidence slots with W1. Counterfactual
+   ERC-6492 signatures are unsupported; deploy the account first or add a reviewed adapter.
+7. Run mock and real-document journeys, two-wallet duplicate attempts, wallet switches,
+   restart/retry, signup/join rollback and a real votable-poll submit/refresh flow. Only then
+   retire the legacy route/QR and remove their now-unused dependencies.
+
+#### Local verification and W1 handoff
+
+**Dependency gate:** this patch declares SDK 0.4.1, but its pnpm lock update is incomplete because network approval was cancelled during regeneration. Regenerate/review the lock with repository-approved pnpm 9/10 before using the following commands in a frozen workspace. This is not a merge-ready dependency change.
+
+Backend tests use the actual Enterprise SDK for signature/schema validation with synthetic
+Svix-signed deliveries; session creation is a test double. They do not contact Self.
+Local EVM tests compile Solidity with 0.8.28 and use a target harness matching the policy
+call boundary, including a real deployed ERC-1271 fixture and rollback. They do not run
+full MACI circuits, Privy sponsorship or a real Self proof. No frontend/workspace build
+success or live acceptance is implied by these tests.
+
+```sh
+pnpm --dir apps/backend test:p2
+pnpm --dir apps/backend typecheck:p2
+```
+
+The optional local EVM suite needs `solc@0.8.28`, `ganache@7.9.2`, `ethers@6.15.0`,
+`@openzeppelin/contracts@5.4.0`, `@excubiae/contracts@0.11.0` and TypeScript. Install them
+in a separate scratch package, together with `@selfxyz/enterprise-sdk@0.4.1`, and set
+`P2_TOOLCHAIN_PACKAGE_JSON` to that package's absolute package.json path for the test
+loader. This does not add Ganache to production dependencies.
+
+```sh
+node --test packages/contracts/test-p2/eligibility.evm.test.mjs
+```
+
+W1 runtime files are untouched. The shared backend `package.json` must retain both W1
+scripts/dependencies and P2 additions; regenerate/review the lock after combining them.
+Consolidated docs require semantic reconciliation: retain Enterprise D02 and translate
+W1 updates into existing docs, never restore the superseded Pass-only decision or deleted
+documentation set. Caller identity must be captured from W1's actual participating account,
+not its owner, bundler or receipt outer sender.
 
 ### A2. Wallet and sponsorship adapter (S2.2)
 
@@ -302,12 +485,12 @@ frontend origin printed by Vite; the backend CORS list currently does not includ
 default port 3000 (G10). Align the configuration/code before expecting browser
 verification to work.
 
-Self Pass's mobile proof callback needs a publicly reachable verifier for the staging
-flow; localhost on the developer machine is not reachable from a phone. Configure a
-public HTTPS tunnel or deployment, then align the exact request/verifier endpoint. Use
-Self's supported mock-passport environment for staging, visibly labeled. It still
-exercises the mobile proof flow; a stubbed browser callback is not equivalent. A
-real-document verification remains an M1 gate.
+Enterprise migration staging needs a public HTTPS webhook endpoint, an operator-created
+flow and frozen version, a test API key and the endpoint signing secret. Keep credentials
+backend-only. Mount a raw-body handler before JSON middleware; do not log payloads.
+The candidate below is not yet mounted. The old `/verify` endpoint and its QR are legacy
+and cannot demonstrate the Enterprise path. A labeled mock-document round trip and a
+real-document verification remain separate acceptance gates.
 
 ### B3. Provision browser proving assets
 

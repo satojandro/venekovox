@@ -1,5 +1,32 @@
 # VenekoVox technical journey map
 
+## P2 Enterprise candidate overlay — 2026-09-05
+
+The legacy call map below remains historical/as-built for the existing UI. **New identity
+work uses Self Enterprise (D02); do not copy the Pass QR/verifier path into new code.**
+This patch adds unmounted modules on main `c12361c3ac2797f98e1238cdca669227fc43ebcc`.
+It does not claim the old browser flow now invokes them.
+
+| Step | Actual candidate symbol                                            | Input → output / boundary                                                                    |
+| ---- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| 1    | `EnterpriseEligibility.createChallenge`                            | Participating account → short-lived signed-message challenge                                 |
+| 2    | `EnterpriseEligibility.begin`                                      | Wallet signature → server-created hosted session; account control checked before API request |
+| 3    | `enterpriseTransport.verifyWebhook`                                | Raw bytes + delivery headers → official SDK-authenticated event                              |
+| 4    | `EnterpriseEligibility.receiveWebhook`                             | Session/version/environment/rules validation → minimized internal claims                     |
+| 5    | `EnterpriseEligibility.authorize` → `EligibilityService.authorize` | Repeat wallet-control check → scoped signed EIP-712 evidence                                 |
+| 6    | `SelfEligibilityPolicy.enforce`                                    | Actual MACI/Poll caller + evidence → atomic one-use authorization                            |
+
+Source: [Enterprise coordinator](../apps/backend/src/eligibility/enterprise.ts),
+[SDK boundary](../apps/backend/src/eligibility/enterpriseSdk.mts),
+[authorization](../apps/backend/src/eligibility/authorization.ts),
+[policy](../packages/contracts/contracts/eligibility/SelfEligibilityPolicy.sol).
+Line numbers will move with formatting; these exact symbols are the trace anchors.
+
+Missing edges: HTTP routes and durable session/inbox storage; hosted-page UI and status
+recovery; W1 signup/join evidence injection; actual MACI/Poll deployment and live Self
+verification. The Graph and ENS gain no new identity data from this patch. See
+[build.md A1](build.md) for trust, privacy, deployment and testing details.
+
 **Purpose:** a call-by-call ASCII map of what each technology does and when it enters.
 Every function name below was read from source in this repository, not from memory.
 

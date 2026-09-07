@@ -20,16 +20,16 @@
     "generate:schema": "cp ./schemas/schema.${VERSION:-v2}.graphql schema.graphql",
     "prebuild": "pnpm codegen",
     "build": "graph build",
-    "deploy": "graph deploy --studio ${SUBGRAPH_SLUG:-venekovox-governance-v2}",
-    "create-local": "graph create --node http://localhost:8020/ ${SUBGRAPH_SLUG:-venekovox-governance-v2}",
-    "remove-local": "graph remove --node http://localhost:8020/ ${SUBGRAPH_SLUG:-venekovox-governance-v2}",
-    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 ${SUBGRAPH_SLUG:-venekovox-governance-v2} --network localhost",
-    "deploy:mainnet": "graph deploy --node https://api.studio.thegraph.com/deploy/ ${SUBGRAPH_SLUG:-venekovox-governance-v2} --network mainnet",
+    "deploy": "graph deploy --studio venekovox-governance-v-2",
+    "create-local": "graph create --node http://localhost:8020/ venekovox-governance-v-2",
+    "remove-local": "graph remove --node http://localhost:8020/ venekovox-governance-v-2",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 venekovox-governance-v-2 --network localhost",
+    "deploy:mainnet": "graph deploy --node https://api.studio.thegraph.com/deploy/ venekovox-governance-v-2 --network mainnet",
     "test": "graph test -v 0.6.0",
     "test:governance": "node --test tests/governance/*.test.mjs",
     "demo:governance": "node client/compare.mjs",
     "test:coverage": "graph test && graph test -c",
-    "deploy:studio": "graph deploy --studio ${SUBGRAPH_SLUG:-venekovox-governance-v2} --version-label ${VERSION_LABEL:-governance-v2}"
+    "deploy:studio": "graph deploy --studio venekovox-governance-v-2 --version-label ${VERSION_LABEL:-governance-v2}"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "^0.97.1",

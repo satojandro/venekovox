@@ -2,26 +2,37 @@
 
 Read in this order.
 
-| You are                          | Read this                                                                                                 |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| **Anyone, first time**           | [journey-map.md](journey-map.md) — call-by-call ASCII map of what each technology does and when it enters |
-| Alejandro / product collaborator | [journey.md](journey.md) → [journey-map.md](journey-map.md) → [roadmap.md](roadmap.md)                    |
-| New implementation agent         | [agents.md](agents.md) → [status.md](status.md) → [roadmap.md](roadmap.md) → [build.md](build.md)         |
-| Judge / evaluator                | [technology.md](technology.md) → [journey-map.md](journey-map.md) → [status.md](status.md)                |
-| Operator / demo runner           | [build.md](build.md) Part B → [status.md](status.md)                                                      |
+| You are                          | Read this                                                                                                         |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Anyone, first time**           | [journey-map.md](journey-map.md) — call-by-call ASCII map of what each technology does and when it enters         |
+| Alejandro / product collaborator | [journey.md](journey.md) → [journey-map.md](journey-map.md) → [roadmap.md](roadmap.md)                            |
+| New implementation agent         | [agents.md](agents.md) → [status.md](status.md) → [roadmap.md](roadmap.md) → [build.md](build.md)                 |
+| Judge / evaluator                | [technology.md](technology.md) → [journey-map.md](journey-map.md) → [status.md](status.md)                        |
+| Operator / demo runner           | [build.md](build.md) Part B → [status.md](status.md)                                                              |
+| **Continuing ENS naming work**   | [ens-deployment-handoff.md](ens-deployment-handoff.md) **first**, then [ens-registration.md](ens-registration.md) |
 
-## The eight documents
+## The ten documents
 
-| File                                                           | What it is                                                        |
-| -------------------------------------------------------------- | ----------------------------------------------------------------- |
-| [journey-map.md](journey-map.md)                               | **Start here.** Call-by-call ASCII map of the system as built     |
-| [journey.md](journey.md)                                       | Product journey, architecture, trust boundaries, design rationale |
-| [status.md](status.md)                                         | What exists, evidence ledger, gaps G01–G13                        |
-| [roadmap.md](roadmap.md)                                       | Milestones M1–M4, task IDs S1–S5, decisions D01–D16               |
-| [technology.md](technology.md)                                 | Technology → stage → prize → evidence, plus judge guide           |
-| [build.md](build.md)                                           | Integration specs (Part A) and runbook (Part B)                   |
-| [agents.md](agents.md)                                         | Agent handoff protocol                                            |
-| [demographic-analytics-spec.md](demographic-analytics-spec.md) | Long-term product direction DA0–DA3; proposed, not built          |
+| File                                                           | What it is                                                         |
+| -------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [journey-map.md](journey-map.md)                               | **Start here.** Call-by-call ASCII map of the system as built      |
+| [journey.md](journey.md)                                       | Product journey, architecture, trust boundaries, design rationale  |
+| [status.md](status.md)                                         | What exists, evidence ledger, gaps G01–G13                         |
+| [roadmap.md](roadmap.md)                                       | Milestones M1–M4, task IDs S1–S5, decisions D01–D16                |
+| [technology.md](technology.md)                                 | Technology → stage → prize → evidence, plus judge guide            |
+| [build.md](build.md)                                           | Part A/B build and operator instructions                           |
+| [agents.md](agents.md)                                         | Agent handoff protocol                                             |
+| [ens-deployment-handoff.md](ens-deployment-handoff.md)         | **ENS pickup doc** — namespace decision, chain state, deploy steps |
+| [demographic-analytics-spec.md](demographic-analytics-spec.md) | Long-term product direction DA0–DA3; proposed, not built           |
+
+### Blog
+
+Narrative posts intended for publication. Not implementation truth.
+
+| File                                                                                              | What it is                                         |
+| ------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| [2026-09-07-maci-messari-governance-schema.md](blog/2026-09-07-maci-messari-governance-schema.md) | MACI privacy + Messari governance schema extension |
+| [2026-09-07-what-is-ensv2.md](blog/2026-09-07-what-is-ensv2.md)                                   | ENS vs ENSv2, and how VenekoVox uses role bitmaps  |
 
 ## Authority
 

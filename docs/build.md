@@ -327,6 +327,89 @@ account switch during lookup and profile recovery. Name-service failure must lea
 an already-authorized participant able to vote. Contract-level nontransferability
 and no-expiry requirements remain open feasibility/recovery decisions (D04).
 
+#### Implemented first slice: named poll discovery (2026-09-06)
+
+S1.1 begins with **poll names**, not personal pseudonyms. The app now links the poll
+explorer to `/discover`; `/p/:name` resolves and displays a named poll's checked
+on-chain reference and schedule. This is read-only and requires no connected wallet.
+The old `/polls/:id` page still contains fixed mock question/results metadata; do not
+route ENS names into it or imply it renders the resolved target. Wiring the validated
+reference into the real voting/metadata flow remains a separate integration step.
+
+Source: [pollName.ts](../apps/front-end/src/ens/pollName.ts),
+[NamedPoll.tsx](../apps/front-end/src/pages/NamedPoll.tsx), and `tests/ens/`.
+No new dependencies. Uses ethers 6.15.0 normalization, DNS encoding and ABI calls.
+The resolver does not use ethers' legacy registry lookup or request wallet signatures.
+
+**ENSv2 network boundary.** Sepolia chain `11155111` uses Universal Resolver
+`0xeEeEEEeE14D718C2B47D9923Deab1335E144EeEe`. The official deployment table says it
+routes through ENSv2; it can also mirror unmigrated names, so a successful lookup alone
+is not proof that a name was natively registered in v2. Demonstrate a real ENSv2 Beta
+name and record-writing transaction for prize evidence. On-chain text records use the
+existing `text(bytes32,string)` profile; the Universal Resolver discovers the actual
+per-account resolver and handles wildcard/CCIP reads through ethers.
+[Deployments](https://docs.ens.domains/learn/deployments/) ·
+[App developer guide](https://docs.ens.domains/ensv2/tutorial-app-developers/) ·
+[Universal Resolver](https://docs.ens.domains/resolvers/universal/)
+
+**Record contract (application-specific, not an ENS standard).** Set text key
+`xyz.venekovox.poll` to a JSON object with exactly these fields:
+
+```json
+{
+  "version": 1,
+  "chainId": "11155111",
+  "maci": "0x1111111111111111111111111111111111111111",
+  "pollId": "0",
+  "poll": "0x2222222222222222222222222222222222222222"
+}
+```
+
+The addresses above are **synthetic shape examples**, not deployments. Use the real
+MACI and the Poll returned by its `getPoll(pollId)`. IDs are canonical decimal strings,
+addresses are nonzero Ethereum addresses, and unknown fields/versions are rejected.
+The record limit is 2048 characters. `.eth` names only in this first slice.
+
+The reader checks the RPC chain, normalizes the name, reads the record through the
+Universal Resolver and validates the MACI against the app's configured deployment
+(`VITE_MACI_ADDRESS`). It then requires matching `MACI.getPoll`, deployed Poll code,
+and a readable `getStartAndEndDate`. Reads share one block number; the reader checks
+its hash again to detect a changed snapshot. A resolved name cannot redirect the app
+to an arbitrary URL or unsupported MACI. Window status is a snapshot at the displayed
+block, not a transaction preflight; the Poll contract remains authoritative. The end
+boundary is inclusive, matching `Poll.sol`'s `timestamp > endDate` rejection.
+
+Name ownership is not poll authorship, personhood, eligibility or official endorsement.
+Owners may update records; show the underlying address and re-resolve on revisit.
+No wallet/profile association, Self payloads, MACI voting keys, demographic data or
+ballot choices are written to ENS. No localStorage cache is used. Stale page requests
+are discarded on navigation/retry and provider resources are released on cleanup.
+
+**Operator demo setup:**
+
+1. In the ENS App linked by the official deployment page, select Sepolia ENSv2 Beta
+   and register or use a name controlled by Alejandro. Record registration evidence.
+2. Configure its text record above using the authorized resolver/ENS App. ENSv2 uses
+   per-account resolvers and permissions: do not blindly write to a shared v1 resolver.
+   Record the actual setter transaction and name; no registration/write was performed
+   by this patch. Alejandro signs privately; no keys are needed by agents.
+3. Set client-visible `VITE_ENS_RPC_URL` to a working Sepolia HTTP(S) endpoint and
+   `VITE_MACI_ADDRESS` to the real supported deployment. No wallet private keys or
+   backend credentials in Vite variables. Endpoint CORS and CCIP gateways must work
+   in the browser; unresolved/failed reads show an honest retry state.
+4. Start the frontend, open `/discover`, enter the real name, and inspect the checked
+   Poll address/window. Share `/p/<normalized-name>` and reopen it in a fresh tab.
+5. Demonstrate missing/invalid records and a record pointing at the wrong deployment;
+   none may silently navigate to another poll. Capture the name, record transaction,
+   contract addresses, lookup block and a functional video. Live/browser evidence is
+   still required; this patch includes no claimed registered demo name.
+
+Verify locally with `pnpm --dir apps/front-end test:ens`. The source tests use real
+ethers ABI encoding/decoding and deterministic RPC doubles; they do not establish a
+live ENS registration, CCIP gateway round trip or browser interaction. Do not count
+this discovery slice as completed participant pseudonyms, name registration UI,
+name-based voting or ENS prize signoff.
+
 ### A4. Poll metadata → contract lifecycle → UI (S3.2)
 
 Proposed descriptor fields: schema version, chain ID, MACI address, poll ID and

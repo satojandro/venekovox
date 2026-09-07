@@ -143,3 +143,21 @@ documents in the same change.
   Enterprise decision**, not reinstated by S5. Do not overwrite newer docs wholesale.
 - Detailed contribution and commands: [subgraph handoff](../apps/subgraph/governance-compatibility.md).
 - Delivery: local patch/ZIP; no upstream PR, remote push or deployment claimed.
+
+## S1.1 ENS handoff — 2026-09-06
+
+- Owner: Hermes; base `c580b245b8321e04e37164b5d8b21d3298f06f4a`; branch `feat/ens-poll-discovery`.
+- Scope: new resolver/read-only NamedPoll page, two routes, explorer link, public RPC
+  env example, tests and canonical doc additions. No dependency or lock change.
+- Preserve W1/P2/S5 changes when merging; App.tsx and package.json may overlap future
+  UI changes. Merge scripts/routes structurally. Do not overwrite newer docs wholesale.
+- Native ENSv2 registration and authorized record writing are operator setup; no write,
+  key handling, deployment, upstream PR or live success was performed here.
+- Next concrete action: apply/check, configure RPC and a real name/record, browser smoke
+  `/discover` → checked card → share/reopen; integrate real voting only after its route
+  consumes the same validated target.
+
+ENS verification addendum: focused strict TypeScript checking passed on Node 22.18.0,
+and the NamedPoll component bundled successfully for browsers. Full application build,
+React/browser race tests and live RPC/CCIP/name registration were not run. No dependency
+or lockfile changes are needed. Tests use ethers 6.15.0 and synthetic RPC responses.

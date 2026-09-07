@@ -85,7 +85,8 @@ registration/resolution, fallback behavior and how the name improves the partici
 journey. Confirm category eligibility before applying; naming does not replace Self or
 MACI authorization.
 
-**Status: no ENS code exists in this repository.** See [journey-map.md §5](journey-map.md).
+**Status (2026-09-06): ENS discovery is implemented as a read-only page.** Earlier
+“no ENS code” statements describe the pre-S1 baseline.
 
 ## 5. Bazantic
 
@@ -121,18 +122,18 @@ results describe participants rather than a representative population.
 
 ## Evidence to attach before submission
 
-| Artifact                                                          | Status at documentation review   |
-| ----------------------------------------------------------------- | -------------------------------- |
-| Demo URL and exact release commit                                 | Not recorded                     |
-| Verified public deployment manifest, selected poll and policy     | Pending fresh-poll verification  |
-| Eligible and rejected eligibility demonstrations                  | Pending                          |
-| Submission tx, refresh recovery recording                         | Complete live acceptance pending |
-| Verified tally proof/result evidence and live Graph query         | Pending                          |
-| Standardized-schema diff, reference dataset and comparative query | Pending                          |
-| ENSv2 registry/resolver/name evidence                             | Pending                          |
-| Zero-ETH journey and sponsorship evidence                         | Pending                          |
-| Agent baseline/Recipe comparison and source-grounded answer       | Pending                          |
-| Final video and event-period attribution                          | Pending                          |
+| Artifact                                                          | Status at documentation review                               |
+| ----------------------------------------------------------------- | ------------------------------------------------------------ |
+| Demo URL and exact release commit                                 | Not recorded                                                 |
+| Verified public deployment manifest, selected poll and policy     | Pending fresh-poll verification                              |
+| Eligible and rejected eligibility demonstrations                  | Pending                                                      |
+| Submission tx, refresh recovery recording                         | Complete live acceptance pending                             |
+| Verified tally proof/result evidence and live Graph query         | Pending                                                      |
+| Standardized-schema diff, reference dataset and comparative query | Pending                                                      |
+| ENSv2 registry/resolver/name evidence                             | S1.1 discovery implemented; live Sepolia record demo pending |
+| Zero-ETH journey and sponsorship evidence                         | Pending                                                      |
+| Agent baseline/Recipe comparison and source-grounded answer       | Pending                                                      |
+| Final video and event-period attribution                          | Pending                                                      |
 
 ## Continuity attribution
 
@@ -150,3 +151,7 @@ S5 update (2026-09-06): see the [governance contribution](../apps/subgraph/gover
 A locally tested schema/mapping and comparative reader exist. Studio deployment,
 reference endpoint and product/agent live use are still required; this is not prize
 qualification or upstream acceptance.
+
+S1.1 update (2026-09-06): ENSv2-routed poll discovery is implemented as a read-only
+page. Earlier “no ENS code” statements refer to the preceding baseline. No live name,
+record-writing transaction or prize signoff is claimed. See build.md A3 for setup.

@@ -153,3 +153,12 @@ affected source paths, acceptance evidence and superseded IDs. If a choice is
 reversible implementation detail, use engineering judgment and record it. If it
 changes eligibility, public linkage, key custody or deployed policy semantics, obtain
 Alejandro's decision on a concrete proposal before final deployment.
+
+### S1.1 delivery update — 2026-09-06
+
+The first ENS slice is named-poll discovery, implemented with a read-only page and
+validated record resolution. This prioritizes shareable polls without publishing a
+participant identity link. Personal pseudonyms/registration UI remain deferred. Next:
+real ENSv2 name/record demo and browser smoke, then connect the checked reference to
+real question metadata and voting. See build.md A3; existing mock PollDetail is not
+a safe destination for arbitrary ENS-resolved references.

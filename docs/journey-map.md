@@ -522,15 +522,16 @@ If Astra (or any agent) proposes a future path, it goes in `build.md` Part A (wi
 ```sh
 cd ~/Projects/venekovox
 
+# no ENS code in the runtime/backend/subgraph; front-end ENS read-only page exists now
+grep -rniE "\bens\b" apps/backend/src apps/subgraph/src
+grep -rn "NamedPoll|NamedPoll|resolvePollName" apps/front-end/src || true
+
 # no dedicated tally events — current ingestion needs another path
 grep -nE "event " packages/contracts/contracts/Tally.sol \
                   packages/contracts/contracts/interfaces/ITally.sol
 
 # no tally datasource in the subgraph
 grep -nE "Tally" apps/subgraph/templates/*.yaml
-
-# ENS does not exist in the repo
-grep -rniE "\bens\b" apps/front-end/src apps/backend/src apps/subgraph/src
 
 # the recipient of a vote is the POLL, not MACI
 sed -n '10,18p' packages/sdk/ts/vote/submit.ts
@@ -557,3 +558,17 @@ See [governance.ts](../apps/subgraph/src/governance.ts). Native entities remain 
 [The reader](../apps/subgraph/client/governance.mjs) fetches common fields and typed
 source-specific metrics from separate Graph endpoints. It is not wired into the main UI.
 No Self/ENS/private ballot data is added; no verified tally ingestion is implemented.
+
+## S1.1 ENS poll discovery — 2026-09-06
+
+Implemented on main base `c580b245b8321e04e37164b5d8b21d3298f06f4a`, branch
+`feat/ens-poll-discovery`: `/discover` and `/p/:name`, using the Sepolia Universal
+Resolver for the `xyz.venekovox.poll` text record. A configured MACI allowlist, matching
+`getPoll`, deployed code and voting dates are checked at a consistent block snapshot.
+The page is read-only. No main voting route, wallet adapter, identity logic or tally
+was changed. Prior “no ENS code” statements describe the older baseline.
+
+Call path: App/Polls link → NamedPoll effect → `resolvePollName` → Universal Resolver
+text lookup → MACI/Poll validation → chain-details card. See [build.md A3](build.md).
+Ten RPC-double tests passed; live name registration/resolution and browser smoke remain
+unverified. A native ENSv2 demo name/record transaction must be supplied by the operator.

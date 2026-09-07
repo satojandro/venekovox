@@ -294,3 +294,22 @@ today; the pin is forward-compatibility insurance, not a current dependency.
 W1 must be re-validated on Node 22 before its next merge (W1 was last run on
 Node 20 under the old pin); the toolchain used for P2 verification is preserved at
 `~/Hermes-crypto-builder/p2-toolchain/` (node 20.19.5, node 22.20.0, pnpm 10.34.5).
+
+## S1.1 ENS poll discovery — 2026-09-06
+
+Implemented on main base `c580b245b8321e04e37164b5d8b21d3298f06f4a`, branch
+`feat/s1-ens-poll-discovery`: `/discover` and `/p/:name`, using the Sepolia Universal
+Resolver for the `xyz.venekovox.poll` text record. A configured MACI allowlist, matching
+`getPoll`, deployed code and voting dates are checked at a consistent block snapshot.
+The page is read-only. No main voting route, wallet adapter, identity logic or tally
+was changed. Prior “no ENS code” statements describe the older baseline.
+
+Call path: App/Polls link → NamedPoll effect → `resolvePollName` → Universal Resolver
+text lookup → MACI/Poll validation → chain-details card. See [build.md A3](build.md).
+Ten RPC-double tests passed; live name registration/resolution and browser smoke remain
+unverified. A native ENSv2 demo name/record transaction must be supplied by the operator.
+
+ENS verification addendum: focused strict TypeScript checking passed on Node 22.18.0,
+and the NamedPoll component bundled successfully for browsers. Full application build,
+React/browser race tests and live RPC/CCIP/name registration were not run. No dependency
+or lockfile changes are needed. Tests use ethers 6.15.0 and synthetic RPC responses.

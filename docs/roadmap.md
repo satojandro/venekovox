@@ -162,3 +162,24 @@ participant identity link. Personal pseudonyms/registration UI remain deferred. 
 real ENSv2 name/record demo and browser smoke, then connect the checked reference to
 real question metadata and voting. See build.md A3; existing mock PollDetail is not
 a safe destination for arbitrary ENS-resolved references.
+
+### S1.1 second patch — 2026-09-07
+
+Alejandro requested continuation of ENS registration above the lookup patch. The
+previous deferral of personal-name implementation is superseded for this local
+candidate. [Registration, recovery and existing-poll naming](ens-registration.md)
+are implemented and locally tested on `codex/ens-registration-v2`; deployment remains open.
+
+Candidate engineering choice: dedicated profile/poll ENSv2 registries, one account
+claim per registrar, operator-only poll names, and atomic records in a narrow custom
+resolver. No Self gate is added to naming. D04's no-expiry/nontransferability direction
+is not marked achieved: the candidate requires an explicit expiry and retains the
+ancestor/registry administrator trust model. Approve those concrete semantics and
+recovery limits before deployment; do not advertise permanent ownership.
+
+Next gates: Alejandro supplies the native Sepolia parent and signs setup/deployment;
+verify against actual ENSv2 contracts; adapt W1's participating-account sender and
+sponsorship policy; mount the optional naming step in onboarding; integrate real
+S3.2 metadata and the resolved poll target into voting. Discovery stays read-only
+until the real target is consumed safely. Graph/tally and Self are not registration
+dependencies and are not marked complete by this patch.

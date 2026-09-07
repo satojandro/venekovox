@@ -76,18 +76,19 @@ new documentation-only patch. No new live evidence is claimed by this repair.
 
 ## 1. Source-to-feature map
 
-| Area                         | Source                                                                                                               | Observed state                                                                            |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Self UI                      | [Auth.tsx](../apps/front-end/src/pages/Auth.tsx)                                                                     | Self QR flow; success stores a browser flag                                               |
-| Self backend                 | [verify.ts](../apps/backend/src/routes/verify.ts)                                                                    | Proof verification, age policy, disclosed output; no durable authorization bridge         |
-| Vote transaction flow        | [voteFlow.ts](../apps/front-end/src/hooks/voteFlow.ts)                                                               | Atomic signup → lookup/join → publish with captured context and session checks            |
-| Wallet/hydration             | [useMaci.ts](../apps/front-end/src/hooks/useMaci.ts), [hydration.ts](../apps/front-end/src/lib/hydration.ts)         | Injected wallet; guarded mount/event hydration; post-submit receipt verify + recheck      |
-| Receipt cache                | [receipts.ts](../apps/front-end/src/lib/receipts.ts), [receiptStatus.ts](../apps/front-end/src/lib/receiptStatus.ts) | Context-scoped hash/time plus Poll `PublishMessage` verification                          |
-| Poll screen                  | [PollDetail.tsx](../apps/front-end/src/pages/PollDetail.tsx)                                                         | Real voting hook mixed with hardcoded poll/eligibility/result data                        |
-| Creation                     | [CreatePoll.tsx](../apps/front-end/src/pages/CreatePoll.tsx)                                                         | UI submission toast, not contract deployment                                              |
-| Contracts                    | [contracts package](../packages/contracts/README.md)                                                                 | MACI policy hooks and proof/tally machinery; Self integration not demonstrated            |
-| Indexing                     | [subgraph directory](../apps/subgraph)                                                                               | Native event schema/mappings, PollJoined support; no standardized v2 or tally data source |
-| ENS / smart wallets / agents | [build.md](build.md)                                                                                                 | Planned; not implemented                                                                  |
+| Area                   | Source                                                                                                               | Observed state                                                                            |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Self UI                | [Auth.tsx](../apps/front-end/src/pages/Auth.tsx)                                                                     | Self QR flow; success stores a browser flag                                               |
+| Self backend           | [verify.ts](../apps/backend/src/routes/verify.ts)                                                                    | Proof verification, age policy, disclosed output; no durable authorization bridge         |
+| Vote transaction flow  | [voteFlow.ts](../apps/front-end/src/hooks/voteFlow.ts)                                                               | Atomic signup → lookup/join → publish with captured context and session checks            |
+| Wallet/hydration       | [useMaci.ts](../apps/front-end/src/hooks/useMaci.ts), [hydration.ts](../apps/front-end/src/lib/hydration.ts)         | Injected wallet; guarded mount/event hydration; post-submit receipt verify + recheck      |
+| Receipt cache          | [receipts.ts](../apps/front-end/src/lib/receipts.ts), [receiptStatus.ts](../apps/front-end/src/lib/receiptStatus.ts) | Context-scoped hash/time plus Poll `PublishMessage` verification                          |
+| Poll screen            | [PollDetail.tsx](../apps/front-end/src/pages/PollDetail.tsx)                                                         | Real voting hook mixed with hardcoded poll/eligibility/result data                        |
+| Creation               | [CreatePoll.tsx](../apps/front-end/src/pages/CreatePoll.tsx)                                                         | UI submission toast, not contract deployment                                              |
+| Contracts              | [contracts package](../packages/contracts/README.md)                                                                 | MACI policy hooks and proof/tally machinery; Self integration not demonstrated            |
+| Indexing               | [subgraph directory](../apps/subgraph)                                                                               | Native event schema/mappings, PollJoined support; no standardized v2 or tally data source |
+| ENS                    | [registration handoff](ens-registration.md)                                                                          | Discovery implemented; registration candidate locally tested, not deployed                |
+| Smart wallets / agents | [build.md](build.md)                                                                                                 | Separate integration gates; ENS changes do not establish these features                   |
 
 ## 2. Documentation-review validation
 
@@ -313,3 +314,31 @@ ENS verification addendum: focused strict TypeScript checking passed on Node 22.
 and the NamedPoll component bundled successfully for browsers. Full application build,
 React/browser race tests and live RPC/CCIP/name registration were not run. No dependency
 or lockfile changes are needed. Tests use ethers 6.15.0 and synthetic RPC responses.
+
+## S1.1 ENS registration candidate — 2026-09-07
+
+Owner: Astra; branch `codex/ens-registration-v2`, based on merged discovery main
+`81950b4215a313649ab7f5d6b0b6dedc6269a96f`. Implementation and detailed policy/setup:
+[ENS registration handoff](ens-registration.md).
+
+Implemented locally: optional `/names` page, injected user-funded wallet adapter,
+atomic profile ownership/address registration, operator-only naming of existing MACI
+polls, registry/resource-aware reconnect recovery, hierarchy validation, matching-event
+and resolution checks after receipts, and unsigned deployment preparation. Profile and
+poll namespaces are separate. The registrar has an explicit expiry and no transfer,
+rename or recovery management; parent administrators retain their ENSv2 powers.
+
+Reproduced on Node 22.20.0 / pnpm 10.34.5: **73 frontend unit tests**, **3 React/jsdom
+tests**, **8 local EVM tests plus 2 preparation tests**. Strict focused ENS TypeScript
+and frontend ESLint passed. Frozen install (`--ignore-scripts`, then explicit local
+build), the SDK dependency build and production frontend build succeeded. Existing
+MACI browser-export, Lottie and bundle warnings remain; no working-vote claim follows
+from the build. Solidity lint passes with NatSpec/gas-style warnings and obsolete-rule
+warnings from the existing configuration. No dependency or lockfile change.
+
+Not live-verified: real ENSv2 registration/permission behavior, ENS parent setup,
+Universal Resolver round trip, injected-wallet browser signing, Privy sponsorship and
+onboarding, and named voting with real metadata. EVM tests use a registry double, not
+the upstream ENSv2 implementation. The parent name and expiry still require Alejandro's
+selection, deployment policy review and private signing. G01/G05/G08 and W1 gates stay open.
+Current changes are local and uncommitted; no remote branch, PR or deployment is claimed.

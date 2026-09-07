@@ -7,6 +7,7 @@ import Comments from "./pages/Comments";
 import PollDetail from "./pages/PollDetail";
 import CreatePoll from "./pages/CreatePoll";
 import NamedPoll from "./pages/NamedPoll";
+import Names from "./pages/Names";
 
 function App() {
   const { t } = useTranslation();
@@ -16,6 +17,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/discover" element={<NamedPoll />} />
+        <Route path="/names" element={<Names />} />
         <Route path="/p/:name" element={<NamedPoll />} />
         <Route path="/polls" element={<Polls />} />
         <Route path="/polls/:id" element={<PollDetail />} />

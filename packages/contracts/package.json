@@ -46,6 +46,8 @@
     "test": "hardhat test ./tests/*.test.ts ./tests/**/*.test.ts --network hardhat",
     "test:hardhat": "hardhat test --network hardhat ./e2e/hardhatTasks.test.ts",
     "test:maci": "pnpm run test ./tests/MACI.test.ts",
+    "test:ens": "node --test test-ens/*.test.mjs",
+    "prepare:ens": "node scripts/prepareEnsRegistration.mjs",
     "test:poll": "pnpm run test ./tests/Poll.test.ts",
     "test:messageProcessor": "pnpm run test ./tests/MessageProcessor.test.ts",
     "test:tally": "pnpm run test ./tests/Tally.test.ts",

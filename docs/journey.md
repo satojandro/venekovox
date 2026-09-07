@@ -10,16 +10,22 @@ A design described here is not automatically implemented.
 
 ---
 
-## 1. Purpose
+## 1. Purpose & Vision
 
-VenekoVox gives people a recurring way to express views on public issues. Its
-foundation is eligibility backed by identity proofs, private ballot submission,
-and inspectable aggregate outcomes. The motivation is civic voice and trust,
-informed by Alejandro's experience growing up in Venezuela.
+VenekoVox is the truth layer for civic sentiment. Its foundation is eligibility backed by zero-knowledge identity proofs, private anti-coercion ballot submission, and publicly inspectable aggregate outcomes.
 
-A successful product lets a person understand what they are answering, why they
-qualify, what information they disclose, and what happens after submission.
-Technology and prize integrations must support this journey.
+The project is informed by Alejandro's firsthand experience living across two opposing extremes of public expression:
+
+- **State Repression (The Venezuelan Experience):** In environments where official elections are manipulated and dissent carries severe personal risk, citizens have no safe, credible way to demonstrate collective reality. Even when regime support craters below 10%, fear of blacklists and state retaliation suppresses any honest public signal.
+- **Social Pressure & Cancellation (The Western / Australian Experience):** In open democracies, public discourse is frequently distorted by cancel culture and intense peer pressure. This creates a vast "silent majority"—citizens who withhold their genuine convictions for fear of professional ruin, social ostracization, or online mobbing.
+- **Manufactured Narratives & Polling Collapse:** Traditional polling methods have experienced severe inaccuracies over recent election cycles, distorting societal expectations and breeding cynicism. Simultaneously, social media has become an arena of synthetic manipulation, weaponized by bot swarms and AI-generated personas.
+
+VenekoVox replaces manufactured consensus with ground-truth conviction: **A neutral, un-fudgeable sentiment signal—the Polymarket of public opinion.**
+
+Long-term, VenekoVox expands beyond single votes into an ongoing societal pulse:
+
+- **The Civic Pulse:** Longitudinal tracking of recurring issues (e.g. executive approval, institutional trust, economic sentiment) to chart real shifts over time.
+- **Grounded Discourse & Resources:** Balanced context hubs for each poll—policy briefs, opposing arguments, verifiable citations, and AI-assisted debate synthesis (drawing from paradigms like Grok on X) to cut through bot propaganda and clarify the friction points of public debate.
 
 ## 2. People and their jobs
 

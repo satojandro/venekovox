@@ -14,6 +14,7 @@ import {
   Poll__hashMessageAndPublicKeyInput_encryptionPublicKeyStruct as HashMessageAndPublicKeyInputPublicKeyStruct,
 } from "../generated/templates/Poll/Poll";
 
+import { recordPublication, recordRegistration, recordOffchainBatch } from "./governance";
 import { ONE_BIG_INT } from "./utils/constants";
 
 export function handleMergeState(event: MergeStateEvent): void {
@@ -36,6 +37,7 @@ export function handleMergeState(event: MergeStateEvent): void {
 }
 
 export function handlePublishMessage(event: PublishMessageEvent): void {
+  recordPublication(event);
   const vote = new Vote(event.transaction.hash.concatI32(event.logIndex.toI32()));
   const pollContract = PollContract.bind(event.address);
   vote.data = event.params._message.data;
@@ -72,6 +74,7 @@ export function handleChainHashUpdate(event: ChainHashUpdatedEvent): void {
 }
 
 export function handleIpfsHashAdded(event: IpfsHashAddedEvent): void {
+  recordOffchainBatch(event);
   const CID_VERSION = "0x1220";
   const cid = Bytes.fromHexString(CID_VERSION).concat(event.params._ipfsHash).toBase58();
   const timestamp = event.block.timestamp.toString();
@@ -150,6 +153,7 @@ export function handlePollJoined(event: PollJoinedEvent): void {
 
     // update registration count
     poll.registrationCount = poll.registrationCount.plus(GraphBN.fromI32(1));
+    recordRegistration(poll, event);
     poll.updatedAt = event.block.timestamp;
     poll.save();
   }

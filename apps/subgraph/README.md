@@ -1,3 +1,5 @@
+> VenekoVox v2 governance extension: start with [compatibility and demo handoff](governance-compatibility.md). Default schema is now v2; the native entities remain available. This is a proposed Messari-derived contribution, not upstream acceptance or a live deployment claim.
+
 # maci-subgraph
 
 1. Make sure you have `{network}.json` file in `config` folder, where network is a CLI name supported for subgraph network [https://thegraph.com/docs/en/developing/supported-networks/](https://thegraph.com/docs/en/developing/supported-networks/).

@@ -417,6 +417,22 @@ layer across endpoints. Record endpoint, network, freshness and methodology per 
 The demonstration must show useful comparative information without implying unlike
 voting systems have equivalent populations or weights.
 
+#### S5.1 implementation update — 2026-09-06
+
+The v2 schema, active MACI mappings and comparative reader now exist in
+[apps/subgraph](../apps/subgraph/governance-compatibility.md). The pinned Messari
+reference is its OpenZeppelin Governor implementation at `2711ac91ef119f321f65b339e10a57f9aa74f9d8`;
+there is no root governance schema at that revision. The common proposal query is
+validated against both that reference and v2. This is a documented partial projection,
+not complete schema compatibility or an accepted upstream contribution.
+
+DeployPoll creates `GovernanceFramework` and `Proposal`; publication, registration and
+batch handlers update independent metrics. All native entities are retained. Private
+results are null with `UNAVAILABLE` status. Default build schema changes to v2; reindex
+from the correct MACI deployment block. The client composes two Graph endpoints; no
+federation or live endpoint is configured automatically. See the linked handoff for
+exact commands, contribution boundaries and required live evidence.
+
 ### A7. Graph → agents → controlled poll creation (S5.3 / S5.4)
 
 Start with read access to finalized public aggregates and poll metadata. The agent

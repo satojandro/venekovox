@@ -10,3 +10,6 @@ tests/.latest.json
 /config/*.json
 !/config/network.json
 
+
+# Local graph-node RPC (contains a secret - never commit)
+.env.local-graph

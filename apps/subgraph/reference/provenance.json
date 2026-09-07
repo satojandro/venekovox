@@ -1,0 +1,8 @@
+{
+  "repository": "messari/subgraphs",
+  "commit": "2711ac91ef119f321f65b339e10a57f9aa74f9d8",
+  "path": "subgraphs/openzeppelin-governor/schema.graphql",
+  "sha256": "16ee24bb7f70453e1c3584e6ae0e9431cf6157a40326341833fb0984573a81c0",
+  "note": "No root schema-governance.graphql exists at this revision. Vendored file is an implementation reference, not an upstream endorsement.",
+  "normalization": "Final blank lines normalized to one trailing newline; schema content otherwise unchanged."
+}

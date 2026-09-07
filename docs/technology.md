@@ -23,16 +23,16 @@ See [status.md](status.md) for exact implementation and evidence boundaries, and
 
 ## 2. Technology → stage → prize → evidence
 
-| Technology                        | Stage of the journey    | Product role                                      | Prize relationship                                                   | Evidence today                                                 |
-| --------------------------------- | ----------------------- | ------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------- |
-| MACI                              | 3 vote, 4 count         | Encrypted commands and verifiable aggregate tally | Core/upstream foundation; attribute reused code                      | 52 unit tests; **no live tally**                               |
-| Self Enterprise (migration)       | 2 prove eligibility     | Eligibility proof                                 | Core product foundation; no award assumed                            | Legacy route active; Enterprise candidate unmounted (G01 open) |
-| The Graph                         | 5 inspect               | Public poll/result read model                     | Standardization/composition and AI continuity opportunities          | Mappings exist; live deployment/query evidence pending         |
-| Messari schema                    | 5 inspect               | Reusable governance data conventions              | Evidence for Graph standardization, not a separate integration award | Not started                                                    |
-| ENSv2                             | 1 understand, 5 inspect | Persistent names and profile navigation           | ENS continuity opportunity                                           | **No code in repo**                                            |
-| Privy / smart account / paymaster | 2–3 onboard, vote       | Low-friction onboarding and sponsored execution   | Product requirement; provider/award not assumed                      | Separate W1 experiment branch; gates open                      |
-| MCP / agent layer                 | 5 inspect               | Natural-language access to public results         | Graph AI continuity                                                  | Not started                                                    |
-| x402 + Bazantic                   | 5 (agent creation)      | Controlled agent access/creation                  | Bazantic continuity opportunity                                      | Not started                                                    |
+| Technology                        | Stage of the journey    | Product role                                      | Prize relationship                                                   | Evidence today                                                    |
+| --------------------------------- | ----------------------- | ------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| MACI                              | 3 vote, 4 count         | Encrypted commands and verifiable aggregate tally | Core/upstream foundation; attribute reused code                      | 52 unit tests; **no live tally**                                  |
+| Self Enterprise (migration)       | 2 prove eligibility     | Eligibility proof                                 | Core product foundation; no award assumed                            | Legacy route active; Enterprise candidate unmounted (G01 open)    |
+| The Graph                         | 5 inspect               | Public poll/result read model                     | Standardization/composition and AI continuity opportunities          | Mappings exist; live deployment/query evidence pending            |
+| Messari schema                    | 5 inspect               | Reusable governance data conventions              | Evidence for Graph standardization, not a separate integration award | v2 projection implemented locally; live/upstream evidence pending |
+| ENSv2                             | 1 understand, 5 inspect | Persistent names and profile navigation           | ENS continuity opportunity                                           | **No code in repo**                                               |
+| Privy / smart account / paymaster | 2–3 onboard, vote       | Low-friction onboarding and sponsored execution   | Product requirement; provider/award not assumed                      | Separate W1 experiment branch; gates open                         |
+| MCP / agent layer                 | 5 inspect               | Natural-language access to public results         | Graph AI continuity                                                  | Not started                                                       |
+| x402 + Bazantic                   | 5 (agent creation)      | Controlled agent access/creation                  | Bazantic continuity opportunity                                      | Not started                                                       |
 
 ### The honest one-liner per technology
 
@@ -145,3 +145,8 @@ eligible-period contributions as this hackathon's work.
 
 Do not claim the MACI protocol, Messari base schema or sponsor SDKs were authored by
 this team. Explain the new product integration and extensions with commit links.
+
+S5 update (2026-09-06): see the [governance contribution](../apps/subgraph/governance-compatibility.md).
+A locally tested schema/mapping and comparative reader exist. Studio deployment,
+reference endpoint and product/agent live use are still required; this is not prize
+qualification or upstream acceptance.

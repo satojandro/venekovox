@@ -1,0 +1,59 @@
+# Local Graph Node for VenekoVox S5 governance subgraph (Studio-independent path).
+#
+# WHY THIS EXISTS
+# Subgraph Studio's login (SIWE) is failing and studio.thegraph.com currently has no
+# A record, so the hosted path is unavailable. This compose file runs the same
+# graph-node stack locally so indexing can be proven end-to-end without Studio.
+#
+# PORT CHANGES vs apps/subgraph/docker-compose.yaml (deliberate):
+#   - graph-node HTTP/WS/admin moved to 18000/18001/18020 (8000/8001/8020 collide with
+#     the Honcho stack that runs on this machine; 5432 collides with honcho-db).
+#   - metrics/JSON-RPC moved to 18030/18040.
+#   - postgres exposed on 15432 instead of 5432.
+# RPC: uses Alchemy Sepolia via GRAPH_ETHEREUM_RPC (env), so no local Ethereum node
+# is required. Never commit the key -- it comes from Bitwarden Secrets Manager.
+services:
+  graph-node:
+    image: graphprotocol/graph-node
+    ports:
+      - "18000:8000"
+      - "18001:8001"
+      - "18020:8020"
+      - "18030:8030"
+      - "18040:8040"
+    depends_on:
+      - ipfs
+      - postgres
+    environment:
+      postgres_host: postgres
+      postgres_user: graph-node
+      postgres_pass: let-me-in
+      postgres_db: graph-node
+      ipfs: "ipfs:5001"
+      ethereum: "sepolia:${GRAPH_ETHEREUM_RPC:?set GRAPH_ETHEREUM_RPC in .env.local-graph}"
+      GRAPH_LOG: info
+    env_file:
+      - .env.local-graph
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  ipfs:
+    image: ipfs/kubo:v0.14.0
+    ports:
+      - "15001:5001"
+    volumes:
+      - ./data/ipfs:/data/ipfs
+
+  postgres:
+    image: postgres:14-alpine
+    ports:
+      - "15432:5432"
+    command: ["postgres", "-cshared_preload_libraries=pg_stat_statements", "-cmax_connections=200"]
+    environment:
+      POSTGRES_USER: graph-node
+      POSTGRES_PASSWORD: let-me-in
+      POSTGRES_DB: graph-node
+      PGDATA: "/var/lib/postgresql/data"
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data

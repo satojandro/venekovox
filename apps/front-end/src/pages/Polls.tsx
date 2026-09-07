@@ -1,14 +1,84 @@
-import { useState } from 'react';
-import { Shield, Globe, Search, ChevronDown, Check, X } from 'lucide-react';
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Shield, Globe, Search, ChevronDown, Check, X } from "lucide-react";
 
 // --- MOCK DATA ---
 const mockPolls = [
-  { id: 1, title: { en: "Do you support dollarization in Venezuela?", es: "¿Apoya la dolarización en Venezuela?" }, country: "Venezuela", flag: "🇻🇪", status: "Open", totalVotes: 12589, topic: { en: "Economy", es: "Economía" }, userCanVote: true },
-  { id: 2, title: { en: "Should there be a unified opposition candidate for the next presidential election?", es: "¿Debería haber un candidato de oposición unificado para la próxima elección presidencial?" }, country: "Venezuela", flag: "🇻🇪", status: "Open", totalVotes: 8743, topic: { en: "Politics", es: "Política" }, userCanVote: true },
-  { id: 3, title: { en: "What is your confidence level in the current economic recovery plan in Argentina?", es: "¿Cuál es su nivel de confianza en el actual plan de recuperación económica en Argentina?" }, country: "Argentina", flag: "🇦🇷", status: "Open", totalVotes: 2310, topic: { en: "Economy", es: "Economía" }, userCanVote: false },
-  { id: 4, title: { en: "Public funding for cultural festivals: necessary investment or misuse of funds?", es: "Financiamiento público para festivales culturales: ¿inversión necesaria o mal uso de fondos?" }, country: "Colombia", flag: "🇨🇴", status: "Closed", totalVotes: 5420, topic: { en: "Culture", es: "Cultura" }, userCanVote: false },
-  { id: 5, title: { en: "Do you agree with the proposed judicial reforms in Mexico?", es: "¿Está de acuerdo con las reformas judiciales propuestas en México?" }, country: "Mexico", flag: "🇲🇽", status: "Open", totalVotes: 765, topic: { en: "Politics", es: "Política" }, userCanVote: false },
-  { id: 6, title: { en: "Rating the impact of new tech regulations on local startups in Brazil.", es: "Evaluando el impacto de las nuevas regulaciones tecnológicas en las startups locales en Brasil." }, country: "Brazil", flag: "🇧🇷", status: "Closed", totalVotes: 1987, topic: { en: "Economy", es: "Economía" }, userCanVote: false },
+  {
+    id: 1,
+    title: { en: "Do you support dollarization in Venezuela?", es: "¿Apoya la dolarización en Venezuela?" },
+    country: "Venezuela",
+    flag: "🇻🇪",
+    status: "Open",
+    totalVotes: 12589,
+    topic: { en: "Economy", es: "Economía" },
+    userCanVote: true,
+  },
+  {
+    id: 2,
+    title: {
+      en: "Should there be a unified opposition candidate for the next presidential election?",
+      es: "¿Debería haber un candidato de oposición unificado para la próxima elección presidencial?",
+    },
+    country: "Venezuela",
+    flag: "🇻🇪",
+    status: "Open",
+    totalVotes: 8743,
+    topic: { en: "Politics", es: "Política" },
+    userCanVote: true,
+  },
+  {
+    id: 3,
+    title: {
+      en: "What is your confidence level in the current economic recovery plan in Argentina?",
+      es: "¿Cuál es su nivel de confianza en el actual plan de recuperación económica en Argentina?",
+    },
+    country: "Argentina",
+    flag: "🇦🇷",
+    status: "Open",
+    totalVotes: 2310,
+    topic: { en: "Economy", es: "Economía" },
+    userCanVote: false,
+  },
+  {
+    id: 4,
+    title: {
+      en: "Public funding for cultural festivals: necessary investment or misuse of funds?",
+      es: "Financiamiento público para festivales culturales: ¿inversión necesaria o mal uso de fondos?",
+    },
+    country: "Colombia",
+    flag: "🇨🇴",
+    status: "Closed",
+    totalVotes: 5420,
+    topic: { en: "Culture", es: "Cultura" },
+    userCanVote: false,
+  },
+  {
+    id: 5,
+    title: {
+      en: "Do you agree with the proposed judicial reforms in Mexico?",
+      es: "¿Está de acuerdo con las reformas judiciales propuestas en México?",
+    },
+    country: "Mexico",
+    flag: "🇲🇽",
+    status: "Open",
+    totalVotes: 765,
+    topic: { en: "Politics", es: "Política" },
+    userCanVote: false,
+  },
+  {
+    id: 6,
+    title: {
+      en: "Rating the impact of new tech regulations on local startups in Brazil.",
+      es: "Evaluando el impacto de las nuevas regulaciones tecnológicas en las startups locales en Brasil.",
+    },
+    country: "Brazil",
+    flag: "🇧🇷",
+    status: "Closed",
+    totalVotes: 1987,
+    topic: { en: "Economy", es: "Economía" },
+    userCanVote: false,
+  },
 ];
 
 // --- LANGUAGE CONTENT ---
@@ -32,7 +102,7 @@ const content = {
       totalVotes: "Total Votes",
       status: "Status",
       open: "Open",
-      closed: "Closed"
+      closed: "Closed",
     },
     sectionTitle: "🔥 Trending Polls",
     footer: {
@@ -61,7 +131,7 @@ const content = {
       totalVotes: "Votos Totales",
       status: "Estado",
       open: "Abierta",
-      closed: "Cerrada"
+      closed: "Cerrada",
     },
     sectionTitle: "🔥 Encuestas Populares",
     footer: {
@@ -75,13 +145,12 @@ const content = {
 
 // --- MAIN COMPONENT ---
 export default function PollExplorer() {
-  const [language, setLanguage] = useState('es');
+  const [language, setLanguage] = useState("es");
   const currentContent = content[language];
 
   return (
     <div className="bg-gray-900 text-gray-200 min-h-screen font-sans">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-
         {/* Header */}
         <header className="flex justify-between items-center mb-8">
           <div className="flex items-center space-x-3">
@@ -97,15 +166,19 @@ export default function PollExplorer() {
               <span className="text-gray-300">{currentContent.loginStatus}</span>
             </div>
             <button
-              onClick={() => setLanguage(l => l === 'en' ? 'es' : 'en')}
+              onClick={() => setLanguage((l) => (l === "en" ? "es" : "en"))}
               className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors p-2 rounded-md"
               aria-label="Toggle language"
             >
               <Globe className="w-5 h-5" />
-              <span className="font-semibold text-sm">{language === 'en' ? 'ES' : 'EN'}</span>
+              <span className="font-semibold text-sm">{language === "en" ? "ES" : "EN"}</span>
             </button>
           </div>
         </header>
+
+        <Link to="/discover" className="block mb-6 text-lime-300 underline">
+          {language === "en" ? "Find a poll by ENS name →" : "Buscar una encuesta por nombre ENS →"}
+        </Link>
 
         {/* Search & Filters */}
         <div className="mb-10">
@@ -126,14 +199,21 @@ export default function PollExplorer() {
               </button>
               {/* Time Filter */}
               <div className="flex items-center bg-gray-800 rounded-md border border-gray-700 p-1">
-                 <button className="px-3 py-1 text-sm rounded bg-blue-600 text-white">{currentContent.filters.times[0]}</button>
-                 <button className="px-3 py-1 text-sm rounded text-gray-300 hover:bg-gray-700">{currentContent.filters.times[1]}</button>
+                <button className="px-3 py-1 text-sm rounded bg-blue-600 text-white">
+                  {currentContent.filters.times[0]}
+                </button>
+                <button className="px-3 py-1 text-sm rounded text-gray-300 hover:bg-gray-700">
+                  {currentContent.filters.times[1]}
+                </button>
               </div>
             </div>
             <div className="hidden sm:block border-l border-gray-700 h-6 mx-2"></div>
             <div className="flex items-center gap-2 flex-wrap justify-center">
-              {currentContent.filters.topics.map(topic => (
-                <button key={topic} className="px-3 py-1 text-sm border border-gray-700 rounded-full hover:bg-gray-700 hover:text-white transition">
+              {currentContent.filters.topics.map((topic) => (
+                <button
+                  key={topic}
+                  className="px-3 py-1 text-sm border border-gray-700 rounded-full hover:bg-gray-700 hover:text-white transition"
+                >
                   {topic}
                 </button>
               ))}
@@ -146,16 +226,21 @@ export default function PollExplorer() {
 
         {/* Polls Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockPolls.map(poll => (
-            <div key={poll.id} className="bg-gray-800/80 border border-gray-700 rounded-lg p-6 flex flex-col justify-between transition-all duration-300 hover:border-blue-500/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/10">
+          {mockPolls.map((poll) => (
+            <div
+              key={poll.id}
+              className="bg-gray-800/80 border border-gray-700 rounded-lg p-6 flex flex-col justify-between transition-all duration-300 hover:border-blue-500/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/10"
+            >
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center text-sm space-x-2">
                     <span>{poll.flag}</span>
                     <span className="text-gray-400">{poll.country}</span>
                   </div>
-                   <span className={`text-xs font-semibold px-2 py-1 rounded-full ${poll.status === 'Open' ? 'bg-green-500/20 text-green-300' : 'bg-gray-600/30 text-gray-400'}`}>
-                    {poll.status === 'Open' ? currentContent.pollCard.open : currentContent.pollCard.closed}
+                  <span
+                    className={`text-xs font-semibold px-2 py-1 rounded-full ${poll.status === "Open" ? "bg-green-500/20 text-green-300" : "bg-gray-600/30 text-gray-400"}`}
+                  >
+                    {poll.status === "Open" ? currentContent.pollCard.open : currentContent.pollCard.closed}
                   </span>
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-4 h-16">{poll.title[language]}</h3>
@@ -165,7 +250,9 @@ export default function PollExplorer() {
                   <span>{currentContent.pollCard.totalVotes}</span>
                   <span className="font-bold text-white">{poll.totalVotes.toLocaleString()}</span>
                 </div>
-                <button className={`w-full py-2.5 rounded-md font-semibold transition ${poll.userCanVote ? 'bg-blue-600 text-white hover:bg-blue-500' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}>
+                <button
+                  className={`w-full py-2.5 rounded-md font-semibold transition ${poll.userCanVote ? "bg-blue-600 text-white hover:bg-blue-500" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
+                >
                   {poll.userCanVote ? currentContent.pollCard.viewAndVote : currentContent.pollCard.viewResults}
                 </button>
               </div>
@@ -175,14 +262,21 @@ export default function PollExplorer() {
 
         {/* Footer */}
         <footer className="text-center mt-16 pt-8 border-t border-gray-800">
-            <div className="flex justify-center items-center gap-x-6 text-sm text-gray-400">
-                <a href="#" className="hover:text-white transition">{currentContent.footer.privacy}</a>
-                <a href="#" className="hover:text-white transition">{currentContent.footer.about}</a>
-                <a href="#" className="hover:text-white transition">{currentContent.footer.zk}</a>
-                <a href="#" className="hover:text-white transition">{currentContent.footer.protection}</a>
-            </div>
+          <div className="flex justify-center items-center gap-x-6 text-sm text-gray-400">
+            <a href="#" className="hover:text-white transition">
+              {currentContent.footer.privacy}
+            </a>
+            <a href="#" className="hover:text-white transition">
+              {currentContent.footer.about}
+            </a>
+            <a href="#" className="hover:text-white transition">
+              {currentContent.footer.zk}
+            </a>
+            <a href="#" className="hover:text-white transition">
+              {currentContent.footer.protection}
+            </a>
+          </div>
         </footer>
-
       </div>
     </div>
   );

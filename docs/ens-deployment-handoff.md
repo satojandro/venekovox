@@ -7,9 +7,14 @@ This is the pickup document for anyone — human or agent — continuing ENS nam
 It records decisions made with Alejandro and live chain state that is easy to
 re-derive badly. Read it before touching ENS code or signing anything.
 
-Source of truth for code-level detail: [ens-registration.md](ens-registration.md)
-(Astra's candidate design). This file adds **deployment decisions and verified
-chain state** only.
+Source of truth for code-level detail: `ens-registration.md` (Astra's candidate
+design, on branch `codex/ens-registration-v2` as of 2026-09-07). This file adds
+**deployment decisions and verified chain state** only.
+
+> **Branch dependency.** This document and Astra's `ens-registration.md` are
+> companions. On main today `ens-registration.md` does not exist yet — links to it
+> resolve only once `codex/ens-registration-v2` is merged. Merge that first, or
+> expect two broken links.
 
 ---
 

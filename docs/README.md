@@ -2,14 +2,14 @@
 
 Read in this order.
 
-| You are                          | Read this                                                                                                         |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| **Anyone, first time**           | [journey-map.md](journey-map.md) — call-by-call ASCII map of what each technology does and when it enters         |
-| Alejandro / product collaborator | [journey.md](journey.md) → [journey-map.md](journey-map.md) → [roadmap.md](roadmap.md)                            |
-| New implementation agent         | [agents.md](agents.md) → [status.md](status.md) → [roadmap.md](roadmap.md) → [build.md](build.md)                 |
-| Judge / evaluator                | [technology.md](technology.md) → [journey-map.md](journey-map.md) → [status.md](status.md)                        |
-| Operator / demo runner           | [build.md](build.md) Part B → [status.md](status.md)                                                              |
-| **Continuing ENS naming work**   | [ens-deployment-handoff.md](ens-deployment-handoff.md) **first**, then [ens-registration.md](ens-registration.md) |
+| You are                          | Read this                                                                                                                                                                                                                              |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Anyone, first time**           | [journey-map.md](journey-map.md) — call-by-call ASCII map of what each technology does and when it enters                                                                                                                              |
+| Alejandro / product collaborator | [journey.md](journey.md) → [journey-map.md](journey-map.md) → [roadmap.md](roadmap.md)                                                                                                                                                 |
+| New implementation agent         | [agents.md](agents.md) → [status.md](status.md) → [roadmap.md](roadmap.md) → [build.md](build.md)                                                                                                                                      |
+| Judge / evaluator                | [technology.md](technology.md) → [journey-map.md](journey-map.md) → [status.md](status.md)                                                                                                                                             |
+| Operator / demo runner           | [build.md](build.md) Part B → [status.md](status.md)                                                                                                                                                                                   |
+| **Continuing ENS naming work**   | [ens-deployment-handoff.md](ens-deployment-handoff.md) **first** — namespace decision, chain state, deploy steps. Its companion `ens-registration.md` (code-level design) is on branch `codex/ens-registration-v2` and not yet on main |
 
 ## The ten documents
 

@@ -1,5 +1,55 @@
 # Current state and evidence
 
+## Active priority — three stages accepted 2026-09-07
+
+Alejandro approved: **1. private, verifiable polling (active); 2. rich demographic
+results; 3. reduce single-operator trust and failure.** See the
+[roadmap](roadmap.md#three-delivery-stages--accepted-2026-09-07). Focus on the real
+identity → authorization → encrypted submission → recovery → verified overall results
+journey. Retain demographic and decentralization designs without making them current
+implementation dependencies. Hermes's bounded provider trial informs one identity choice.
+No provider migration, database choice or new implementation is established by this
+documentation update. Historical entries below retain their evidence and limitations;
+the new sequence supersedes earlier same-day prioritization statements.
+
+## Data/tally architecture source review — 2026-09-07
+
+Astra traced current main and wrote [data-and-tally-architecture.md](data-and-tally-architecture.md).
+Source findings: `Tally.addTallyResults` already verifies/stores option totals with
+`isSet`; SDK tally/results.ts reads them, so a direct result API need not wait for Graph
+events. Core/circuits already contain FULL voting mode; one-credit suitability needs
+tests/deployment confirmation. Final ballot index is a stable proposed demographic join
+key; current policy ABI does not bind the join public key. A smart-account binding must
+verify actual execution rather than co-occurring logs in a bundle. Enterprise currently
+accepts age-only results and rejects extra attributes. No production demographic flow
+exists. Proposed PostgreSQL/access roles, worker/input/retention boundaries and report
+API are documented; no storage deployment, code change, runtime tests or live proof in
+this review. Existing dirty files preserved. `git diff --check` and local Markdown link
+targets checked; G06 remains open until actual result publication/display works.
+
+## Political polling scope — 2026-09-07
+
+Recorded the user's priority markets and a proposed national opinion-poll pilot in
+[demographic analytics](demographic-analytics-spec.md#political-polling-pilot--product-direction-updated-2026-09-07).
+Specified passport-nationality matching as the accepted citizenship proxy, optional age
+bands, official-source residence versus licence jurisdiction, official document sex/gender,
+counted-ballot linkage and release gates. Alejandro's correction removes the proposed
+additional non-citizen-national check and self-described demographic alternatives.
+Source review only: no demographic implementation, provider experiment, live identity
+collection or report generated. Existing four dirty continuity/trial docs preserved.
+
+## S2.1 comparison scope recorded — 2026-09-07
+
+On clean main `81950b4215a313649ab7f5d6b0b6dedc6269a96f`, Astra recorded Alejandro's
+approved Self Enterprise/ZKPassport trial and proposed myVicRoads zkTLS feasibility
+slice in [build.md](build.md#s21-provider-comparison-trial--approved-scope-2026-09-07).
+Public documentation reviewed: VicRoads supports licence services but allows accounts
+without licences; ZKPassport SDK documents local/API verification modes; TLSNotary
+documents verifier/notary distinctions and browser examples. Authenticated VicRoads
+response shape, compatible TLS session, proof construction, provider pricing and actual
+document/recovery comparisons remain untested. This is a research/specification update,
+not an executed trial, production migration or closed eligibility gap.
+
 **Reviewed:** 2026-09-05. **Code baseline:** `05d8f2a35` (P1 receipt/hydration follow-ups
 on top of `875b399e`; earlier P1 truth work at `60b61b444`, docs snapshot `c6e1fa874`).
 This is a snapshot, not live deployment monitoring.

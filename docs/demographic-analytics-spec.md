@@ -5,9 +5,16 @@
 **Status:** Accepted product direction; proposed technical design. No implementation or live verification is established by this document.  
 **Product owner:** Alejandro. Implementation owner: assign at pickup.
 
+**Current priority, approved 2026-09-07:** this is Stage 2 of the
+[three-stage roadmap](roadmap.md#three-delivery-stages--accepted-2026-09-07), after
+Stage 1 private, verifiable polling. Stage 3 reduces single-operator trust and failure.
+Keep this design and the official-document policies; do not start live demographic
+collection or make its implementation a gate for Stage 1. This supersedes earlier
+same-day wording about immediate demographic execution.
+
 ## 1. Decision and purpose
 
-VenekoVox should support privacy-preserving demographic research alongside private civic voting. The long-term product may offer paid access to approved aggregate reports, comparisons, trends and APIs. Nationality, age bands and carefully defined document-derived or self-reported attributes are initial candidates.
+VenekoVox should support privacy-preserving demographic research alongside private civic voting. The long-term product may offer paid access to approved aggregate reports, comparisons, trends and APIs. Nationality, age bands and official document sex/gender are initial candidates. The political pilot uses verified official sources, not self-reported demographic substitutes.
 
 This capability is **outside the seven-day release's required implementation scope**, but **inside the long-term product scope**. Work this week should preserve a feasible extension path without committing to an unreviewed cryptographic design or collecting unnecessary data “just in case”.
 
@@ -20,6 +27,102 @@ This supersedes any interpretation of `decisions.md` or `product-vision.md` that
 When integrating, link this document from `docs/README.md`, `roadmap.md`, `integration-spec.md`, `decisions.md` and `agent-handoff.md`. Update their scope language to distinguish “deferred implementation” from “excluded capability”. Do not mark any roadmap feature implemented merely because this spec exists.
 
 ## 2. Product outputs and their different requirements
+
+### Political polling pilot — product direction updated 2026-09-07
+
+Alejandro prioritizes privacy-preserving, data-rich political opinion polling across
+the US, Australia and European countries: national candidate preferences and regional
+contests, with useful age, geography and potentially gender breakdowns. This informs
+the retained Stage 2 design; it does not establish a safe demographic
+tally implementation or remove the M1 result/recovery gates. Astra owns this specification
+update on main `81950b4215a313649ab7f5d6b0b6dedc6269a96f`.
+
+**Proposed first slice:** one national candidate-preference poll, with an explicit adult
+population, a verified overall result, and one optional age-band breakdown after its
+authenticated tally/release gate passes. State/region and gender follow as separately
+versioned dimensions. Use fictional candidates in synthetic work; verify real contests,
+options, wording, jurisdiction and dates before a live poll. Do not infer a current
+election or candidate slate from these market examples.
+
+| Dimension | Proposed first policy | Source/evidence gate |
+| --- | --- | --- |
+| Citizenship eligibility | Accept verified passport nationality matching the country as the practical citizenship proxy | Verify the authentic supported passport and nationality predicate; no separate non-citizen-national exception check required for the pilot |
+| Adult eligibility | 18+ at poll opening for this proposed opinion-poll population | Predicate proof; this is a product population definition, not a complete legal voter-eligibility rule |
+| Age breakdown | Optional 18–24, 25–34, 35–44, 45–54, 55–64, 65+; fixed at poll opening | Authenticated lower/upper bounds with consistent reference date; not inferred from 18+; no raw DOB reveal by default |
+| State/region | Optional for national analysis; required when it defines a regional population | Current residence from an approved official source; no self-reported substitute. Licence issuing state and birthplace are not residence |
+| Gender | Use the official sex/gender field from the verified document when analytics is contributed | No self-described value or user override. Preserve source categories, including unknown/unspecified; missing data remains missing |
+
+**Alejandro's policy correction, 2026-09-07:** keep the pilot simple and use official
+documents. Accept passport nationality as the citizenship proxy without engineering a
+separate non-citizen-national exception path. This supersedes the earlier requirement
+to prove that distinction before proceeding. Record the actual passport-nationality
+method in methodology; do not claim a measured zero error rate or quantify the effect
+of exceptions without evidence. Residence, registration and likely-voter status remain
+separate predicates. No complete legal-electorate policy is selected by this spec.
+
+Use the official document sex/gender value for demographic analysis, with a clear source
+label in methodology and no self-described replacement. The earlier proposed
+self-described gender field is rejected. Optional analytics consent remains separate
+from the authenticity of contributed attributes: an omitted field is missing, not a
+user-chosen alternative value. The same official-source principle excludes self-reported
+residence from this pilot.
+
+Localize contest types: Australian federal elections concern the House and Senate;
+a preferred-leader question is a separately worded opinion question, not a direct
+prime-minister ballot. European contests require country-specific configuration.
+[AEC election structure](https://aec.gov.au/learn/election-timetable.htm).
+
+#### Participant and report experience
+
+1. Read the question, named population and evidence requirements before login.
+2. Prove eligibility using the selected, tested provider; return to this exact poll.
+3. See a separate optional analytics explanation specifying who can see what, purpose,
+   retention and any aggregate commercial use. Declining optional attributes still
+   permits an otherwise eligible vote; require geography only if eligibility needs it.
+4. Submit privately. Never put demographic fields into ENS, public user profiles or
+   ordinary analytics telemetry. No account-linked political preference history.
+5. After close, show overall results and only approved breakdowns. Each breakdown
+   identifies valid counted-ballot denominator, attribute coverage/missingness, source
+   quality, snapshot, suppression and operator-computed/proof-verified status.
+
+Initial reports allow predefined single-dimension views, not arbitrary age × state ×
+gender intersections or individual drill-down. Fixed post-close snapshots, complementary
+suppression, homogeneous-group review and joint review of all released tables are
+required; single-dimension tables can still leak when combined. Thresholds are not yet
+approved. Public, paid and agent readers use the same release policy. An exact public
+demographic proof/output cannot later be made private by suppressing it in the UI.
+
+Current MACI tally verification does not verify a new demographic join. The first
+engineering gate is to bind authenticated attribute evidence to final counted ballots
+and state who can see that relationship. Operator-private analytics remains a target,
+not a claim supplied by MACI or a ZK identity provider. Do not collect live demographic
+ballots until that design and retention/release behavior are concrete.
+
+#### Immediate trial additions and acceptance evidence
+
+- Extend the [S2.1 comparison](build.md#s21-provider-comparison-trial--approved-scope-2026-09-07)
+  with passport-nationality matching, official sex/gender evidence, age-range proofs and reference-date
+  support. Pin actual SDKs/flows; capability not established is recorded as unsupported
+  or untested, never bypassed with a browser flag.
+- Exercise age boundaries (18/25/35/45/55/65), invalid/replayed credentials, a birthday
+  during the poll, missing consent and duplicate identity across accounts/providers.
+- Keep the VicRoads TLSNotary/vlayer feasibility slice focused on authenticated licence
+  facts. Evaluate residence only when a source actually supports that claim. Compare
+  both notary and remote prover exposure, not just public proof outputs.
+- Produce one synthetic national report with missing data and suppressed cohorts before
+  any live demographic release; label all synthetic results. No unused live attribute
+  collection, broad profile database or public demographic subgraph is required.
+
+Verified participants do not automatically form a representative electorate. First
+reports are explicitly opt-in participant sentiment, with recruitment/coverage/methodology
+disclosed. Population estimates or election forecasts need separately validated sampling
+and weighting; no conventional sampling margin of error is implied for opt-in data.
+[AAPOR best practices](https://aapor.org/standards-and-ethics/best-practices/).
+
+For European deployment, political-opinion personal data requires specific handling;
+the [EDPB election statement](https://www.edpb.europa.eu/sites/default/files/files/file1/edpb-2019-03-13-statement-on-elections_en.pdf)
+identifies it as special-category data. Resolve applicable collection/processing grounds
+before real political-demographic collection; removing names alone is insufficient.
 
 | Output                         | Example                                                | Required evidence                                                                       |
 | ------------------------------ | ------------------------------------------------------ | --------------------------------------------------------------------------------------- |
@@ -53,8 +156,8 @@ Self's official integration example supports selective disclosure controls inclu
 | ---------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | Nationality                        | Normalized document-verified value plus source/version        | Not current residence, ethnicity or an exhaustive list of citizenships; support unknown/unsupported values |
 | Age                                | Band defined by a versioned policy at a stated reference date | Prefer a supported range proof; never infer an age band from an 18+ result alone                           |
-| Document sex/gender field          | Precisely labelled source-derived category                    | Do not silently equate document values with self-described gender; preserve unknown/unsupported categories |
-| Self-described gender or residence | Optional survey answer, if introduced                         | Mark self-reported; do not describe it as document verified                                                |
+| Document sex/gender field          | Official value from the verified document; selected for the political pilot | No user override or self-described fallback; preserve source categories and unknown/unsupported values |
+| Residence                         | Value supported by an approved official source                | No self-reported fallback in the political pilot; absent evidence remains unavailable                     |
 | Name, document number              | Not requested for analytics                                   | Do not retain raw document images or full disclosure payloads for this purpose                             |
 
 An age-band proof is a capability to verify, not an assumed feature. If the verifier receives date of birth to compute a band, the verifier sees it even if it discards it immediately. That fallback requires an explicit trust/consent decision. Never upload a full date of birth to the public chain merely to simplify bucketing.
@@ -86,6 +189,13 @@ Service separation reduces exposure but does not prove unlinkability when operat
 **Required distinction:** connect authenticated attributes to a counted ballot within the chosen trusted/proven computation; do not publish individual attribute-choice connections.
 
 ## 6. Implementation options
+
+The [2026-09-07 architecture review](data-and-tally-architecture.md) makes option A
+concrete: private official-attribute snapshots, execution-verified binding to poll state
+indices, restricted aggregation over final processed ballots and independently labeled
+report release. It also defines the proof statement needed for B. Alejandro's latest
+accepted delivery sequence now places demographic implementation after Stage 1.
+The work is retained rather than excluded from the product.
 
 | Option                                           | Mechanism                                                                                                     | What can be claimed                                                         | Indicative effort                                                                                     |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -201,7 +311,7 @@ Budget a bounded design/schema effort, approximately one to two days, around exi
 
 Optional demo: synthetic report with a prominent synthetic label. A real consenting test cohort requires an explicit trusted-analytics design and release review first; a chart mockup is not acceptance evidence.
 
-### DA1 — Post-hackathon feasibility spike
+### DA1 — Feasibility spike
 
 - Confirm exact Self age-range/disclosure behavior and multi-document/nullifier limitations.
 - Compare A/B/C against who must be unable to see individual attribute-choice linkage.
@@ -224,7 +334,7 @@ Require review of the implemented proof/trust model, release policy, access cont
 | Who must not see attribute-choice linkage: public, customer, operator, or all? | Unresolved; product owner with security design input    |
 | Analytics participation optionality and consent wording                        | Preferred optional; finalize before collection          |
 | Exact age bands, reference date and supported range proof                      | Unresolved; SDK/proof spike                             |
-| Nationality, document field and self-reported attribute definitions            | Proposed in section 4; verify source semantics          |
+| Nationality and official document sex/gender policy                           | Accepted by Alejandro 2026-09-07; provider support to verify |
 | Credential, uniqueness and account-recovery mechanism                          | Unresolved; coordinate with P2/W1                       |
 | Trusted versus proof-backed demographic computation                            | Unresolved; no protocol selection implied               |
 | Release thresholds, intersections and differential-privacy policy              | Unresolved; no arbitrary default is production-approved |

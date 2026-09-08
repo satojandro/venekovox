@@ -9,6 +9,103 @@ behavior; names are illustrative unless explicitly tied to source.
 
 ## Part A — Integration specifications
 
+**Active scope, approved 2026-09-07:** Stage 1 private, verifiable polling under the
+[three-stage roadmap](roadmap.md#three-delivery-stages--accepted-2026-09-07). Complete
+one identity/account/authorization/submission/recovery/verified-results path. The provider
+comparison informs that choice; both providers need not ship. Demographic implementation
+is Stage 2; reducing single-operator trust/failure is Stage 3. Later architecture and
+VicRoads/distributed-infrastructure research below are preserved, not current release gates.
+
+### Data storage and result processing — architecture review 2026-09-07
+
+Read [data and tally architecture](data-and-tally-architecture.md) for proposed database
+records/access roles, authenticated join-to-ballot binding, existing direct Tally result
+reads, voting mode findings and the operator-computed versus proof-backed demographic
+paths. This defines implementation boundaries; no database or private analytics service
+has been deployed. Demographic scope remains in Stage 2 of the accepted delivery sequence.
+
+### S2.1 provider comparison trial — approved scope, 2026-09-07
+
+Alejandro approved a bounded Self Enterprise versus ZKPassport trial and proposed
+myVicRoads as an Australian licence eligibility source through zkTLS. This approves
+evaluation, not a provider migration or accepting multiple independent identity
+methods in one poll. D02 remains the implementation baseline pending trial results.
+
+**Deliverable:** a reproducible comparison with pinned versions, public configuration,
+synthetic negative tests, privately operated real-document sessions and a recommendation.
+Keep provider experiments outside the active login/voting route. Dependencies: S2.2
+actual caller/account model, D12 uniqueness and recovery policy. No new cryptographic
+primitives or circuit forks are needed for the initial comparison.
+
+| Test | Evidence required for both providers |
+| --- | --- |
+| First visit | Actual target document/device, elapsed time, prompts, completion/failure; no identity payload in evidence |
+| Return visit | Repeat proof from registered document versus fresh scan; refresh and new-device recovery measured separately |
+| Verification boundary | Local cryptographic verification, hosted API, webhook and contract roles identified; test remote fallback explicitly |
+| Authorization | Bind approved policy, account, chain, target, action, expiry and nonce; wrong-account, wrong-poll, replay and expired evidence rejected |
+| Uniqueness | Repeat same document across accounts; determine renewal, second-document and changed-scope behavior; unknown cases stay unknown |
+| Privacy | Enumerate recipients of attributes, proofs and metadata, retained state and public identifiers; no raw documents or low-entropy ID hashes on chain |
+| Operations/cost | Confirm pricing, limits and licence terms; measure per-success cost including retries, infrastructure, gas, support and maintenance at 1k/10k/100k verifications |
+| Recovery | Lost wallet, lost device and independent MACI-key recovery; no silent second membership |
+
+Run source/API review first, then synthetic integration tests, then Alejandro-operated
+real sessions, then a recommendation. Stop expanding after one complete representative
+path per provider; unsupported documents and untested cases are explicit limitations.
+Do not label an SDK callback or fixture result as a verified document. No price advantage
+is established yet. AI-assisted implementation reduces some engineering effort; it does
+not replace security review, supported certificate coverage or ongoing operations.
+
+ZKPassport's current [SDK README](https://github.com/zkpassport/zkpassport-packages/tree/main/packages/zkpassport-sdk)
+documents local verification with API fallback, selectable verifier mode, and identifiers
+stable for the same ID/domain/scope. It also states that external auditing is outstanding.
+Pin and recheck these properties in the trial. Removing our eligibility issuer requires
+an actual contract-verification design; swapping backend SDKs alone does not remove it.
+
+#### VicRoads zkTLS feasibility slice
+
+Proposed user outcome: prove a current Victorian driver-licence record without sending
+VenekoVox the licence number, name, date of birth, address, password or session cookies.
+This is not implemented. An illustrative verified output is `issuer=VicRoads`,
+`credential=driver-licence`, `jurisdiction=AU-VIC`, `status=current`, proof freshness and
+account/action binding. These are our desired semantics, not observed API field names.
+
+[VicRoads account help](https://www.vicroads.vic.gov.au/help-centre/myvicroads-personal/account-help)
+confirms licence services but explicitly permits account creation without licence or
+registration documents. Login success and customer number alone are insufficient.
+Issuing jurisdiction is not proof of current residence, citizenship or electoral
+eligibility. A recorded address requires a separate source/freshness policy.
+
+1. Identify a read-only, authenticated licence response in an owner-operated session;
+   verify the authoritative hostname, record type, status/expiry and holder relationship.
+   Do not infer endpoints or inspect/export credentials. Alejandro handles login/MFA
+   privately; do not upload HAR files, raw responses or document screenshots.
+2. Check TLS compatibility, browser/mobile support, redirects and practical proof time.
+   TLSNotary currently documents TLS 1.2; actual endpoint compatibility remains unknown.
+3. Build parser/predicate tests against synthetic responses: no licence, learner/marine
+   record, expired/suspended record, absent status, wrong host, stale proof, edited data,
+   account switch and replay. Missing authoritative evidence fails closed.
+4. Prove the predicate from authenticated response data. Browser-derived booleans are
+   not evidence. Redaction must also cover cookies and unrelated response fields;
+   distinguish selective disclosure from computing hidden predicates with ZK.
+5. Specify a stable source identifier and privacy-preserving scoped duplicate check.
+   A plain public hash of a licence/customer number is not an acceptable design.
+   Test replacements/account changes before claiming unique licence-holder enforcement.
+6. Capture an owner-operated proof with only minimized outcomes/timing recorded. No
+   production acceptance until the source, proof, parser and account binding all pass.
+
+[TLSNotary FAQ](https://tlsnotary.org/docs/faq/) explains direct verifier participation,
+optional delegated notarization and the off-chain verifier path for on-chain use.
+[Quick start](https://tlsnotary.org/docs/quick_start/) includes browser plugins and a
+Noir age-predicate example. These support feasibility research, not a working VicRoads
+connector claim. Choose and document the trust mode rather than saying zkTLS is trustless.
+
+A VicRoads path may eventually support licence-holder polls without passports, but
+must not be accepted alongside document providers as equivalent unique-person evidence
+until cross-provider duplicate prevention is solved. Initial source-specific cohorts
+must be clearly named. Suitable upstream contributions are a minimized example,
+synthetic failure fixtures or a reproduced SDK bug fix; contribution acceptance and
+provider replacement are separate outcomes.
+
 ### A1. Self → eligibility policy → MACI (S2.1)
 
 Existing entry points: [Self verifier](../apps/backend/src/routes/verify.ts),

@@ -2,6 +2,19 @@
 
 ## Start every work session
 
+**Latest accepted priority, 2026-09-07:** execute Stage 1 private, verifiable polling.
+Stage 2 is rich demographic results; Stage 3 reduces single-operator trust and failure.
+See [roadmap](roadmap.md#three-delivery-stages--accepted-2026-09-07). Preserve the larger
+design, but do not turn demographic workers or distributed databases into Stage 1 gates.
+This supersedes earlier same-day urgency about demographic implementation. Existing S-task
+IDs remain unchanged; the three product stages are a delivery sequence, not a renumbering.
+
+Latest S2.1 direction (2026-09-07): Alejandro approved a bounded Self Enterprise versus
+ZKPassport trial and suggested VicRoads licence evidence through zkTLS. See the
+[trial specification](build.md#s21-provider-comparison-trial--approved-scope-2026-09-07).
+Self Enterprise remains the baseline until an explicit migration decision; evaluation
+of alternatives is authorized. Do not interpret D02 as prohibiting this comparison.
+
 1. Read root [AGENTS.md](../AGENTS.md), [journey-map.md](journey-map.md), [status.md](status.md) and [roadmap.md](roadmap.md). Read the relevant part of [build.md](build.md) before changing a boundary.
 2. Inspect branch, working tree and latest main. Preserve uncommitted work; use an isolated branch/worktree where useful. Review commits since the documented baseline rather than assuming this snapshot is current.
 3. State the selected task ID (S1–S5), dependency, intended acceptance evidence and touched areas. Check whether another agent owns those files before editing.
@@ -34,6 +47,72 @@ as durations. Do not treat mock results, joined count or encrypted-message count
 finalized voter results.
 
 ## Task ownership and interruption record
+
+### Three-stage prioritization handoff — 2026-09-07
+
+- Owner: Astra; base/branch main `81950b4215a313649ab7f5d6b0b6dedc6269a96f`.
+- User-approved outcome: three explicit delivery stages; private, verifiable polling active.
+- Changed this turn: roadmap, journey, build, demographic spec, data/tally architecture,
+  status and agents. Preserved all earlier dirty docs, including README.
+- Validation: `git diff --check` and local Markdown link targets in touched docs.
+- No runtime code, tests, deployments or live claims. Documentation remains uncommitted.
+- Next: Stage 1 actual-account eligibility enforcement, real poll/proving configuration,
+  submission/recovery and verified overall result delivery; use Hermes's provider evidence.
+- External setup: Alejandro controls provider configuration, document verification and
+  funded signing. No new technology selection or secrets requested by this update.
+
+### S2.1 / S3 / S4 / DA architecture handoff — 2026-09-07
+
+- Owner: Astra; base/branch main `81950b4215a313649ab7f5d6b0b6dedc6269a96f`.
+- User steering: do concrete architecture work; do not infer a basic-demo-only scope
+  or exclude demographics from the deadline discussion. Hermes owns the provider trial
+  through the user's handoff; no message sent to Hermes by this task.
+- Deliverable: data-and-tally-architecture.md, with source-grounded storage/access roles,
+  exact processing path, result ingestion alternative, binding mechanism and A/B/C tradeoffs.
+- Findings: existing verified Tally result storage, FULL circuit mode, stable ballot-index
+  join and age-only Enterprise adapter. All source-reviewed, not newly runtime-tested.
+- Validation: `git diff --check`, relative Markdown target check. Default shell reports
+  Node 26.7.0/pnpm 11.19.0, outside repo toolchain; no runtime test attempted with it.
+- Dirty work: prior five docs plus new architecture document and docs/README.md. No
+  code/deployment/migration, commit, push or live-chain claim.
+- Next: implement canonical result snapshot reader; exercise FULL/one-credit parity;
+  build synthetic authenticated-binding/aggregation harness. Actual operator visibility
+  and release policy require a concrete decision before real demographic collection.
+- External setup: Alejandro controls document/account sessions and signer/issuer secrets.
+
+### S2.1 / DA0 political pilot handoff — 2026-09-07
+
+- Owner: Astra; main base `81950b4215a313649ab7f5d6b0b6dedc6269a96f`.
+- Goal: translate Alejandro's political-polling priority into bounded evidence and
+  demographic release requirements; proposal in demographic-analytics-spec.md.
+- Touched: demographic-analytics-spec.md, roadmap.md, status.md and this file; preserved
+  prior uncommitted build.md/provider-trial edits. Five documentation files now dirty.
+- Validation: public State Department/AEC/AAPOR/EDPB source review and `git diff --check`;
+  no runtime tests, proof generation, account access or deployment.
+- Decision correction: Alejandro accepts passport nationality as citizenship proxy with
+  no additional non-citizen-national check; official document sex/gender only, no
+  self-described override. Official-source demographic policy is in the pilot spec.
+- Next: execute isolated provider comparison for nationality, document sex/gender and age ranges;
+  investigate authenticated counted-ballot/attribute binding before live collection.
+- Unresolved: actual provider support, uniqueness, operator visibility, release thresholds,
+  pricing, real sources and recovery. Alejandro controls documents and private accounts.
+- Delivery: uncommitted documentation only; no push/PR or implemented analytics claim.
+
+### S2.1 trial definition handoff — 2026-09-07
+
+- Owner: Astra. Base/working branch: `81950b4215a313649ab7f5d6b0b6dedc6269a96f`, main.
+- Goal: record the approved bounded provider comparison and VicRoads feasibility gates.
+- Changed: `docs/build.md`, `docs/roadmap.md`, `docs/status.md`, `docs/agents.md`.
+- Checks: `git status --short --branch` initially clean; `git worktree list` showed
+  only main; `git diff --check` passed. No application code changed or runtime tests run.
+- Evidence: primary-source links in build.md; no live document, account or chain proof.
+- Unverified: provider costs, actual VicRoads response/TLS compatibility, document
+  coverage, recovery and cross-provider uniqueness. Trial execution remains outstanding.
+- Dirty work: the four documentation files above are uncommitted; no push or PR.
+- Next: pin provider versions and build isolated synthetic verification/authorization
+  harnesses following build.md, then run owner-operated document comparisons.
+- External setup: Alejandro controls Self configuration, personal documents and any
+  private VicRoads login/MFA. Credentials and identity payloads stay out of agent context.
 
 No implementation owner is assigned indefinitely by this document. At pickup, record a
 fresh owner and branch; do not assume a prior model is still running.

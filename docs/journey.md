@@ -8,6 +8,13 @@ boundaries, and the reasoning behind the design.
 
 A design described here is not automatically implemented.
 
+**Delivery sequence approved by Alejandro, 2026-09-07:** (1) private, verifiable polling,
+now; (2) rich demographic results; (3) reduce single-operator trust and failure. The
+[roadmap](roadmap.md#three-delivery-stages--accepted-2026-09-07) defines acceptance.
+The full vision below remains intact. The immediate product outcome is a real participant
+journey through verified overall results; demographic and distributed-computation work
+is not a prerequisite. Existing issuer/coordinator trust remains explicit.
+
 ---
 
 ## 1. Purpose & Vision

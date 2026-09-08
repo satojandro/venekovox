@@ -48,6 +48,35 @@ finalized voter results.
 
 ## Task ownership and interruption record
 
+### S3.2 review follow-up — 2026-09-08
+
+- Owner: Astra; branch `cursor/s32-honest-poll-wiring`, extending Cursor's uncommitted fixes.
+- Completed: actual RPC network verification in both readers; one HTTP deadline through
+  JSON body loading with abort; backend provider cleanup; regression tests.
+- Validation: frontend `test:unit` **84 passed**, backend `test:polls` **2 passed**;
+  frontend/backend `build` passed; `git diff --check` passed. Existing frontend build
+  warnings remain; no live vote or browser lifecycle smoke.
+- Files: backend poll route/test/script; frontend schedule, health, timeout helper and
+  regression tests; status and continuity docs.
+- Remaining: browser interval/click smoke and Stage 1 deployment/identity/results gates.
+  Changes are uncommitted; preserve the pre-existing Cursor edits when continuing.
+
+### S3.2 poll identity, refresh and timeouts — 2026-09-08
+
+- Owner: Cursor; branch `cursor/s32-honest-poll-wiring` (review fixes on the honest-wiring work).
+- Goal: reject a backend schedule that names a different chain/MACI/poll; refresh the
+  voting window on an interval and again before submit; bound hung `/health` and
+  `/polls/configured` so RPC fallback can start.
+- Changed: frontend schedule identity + `withTimeout`, parallel health/schedule loads,
+  15s refresh + vote-time recheck, backend `chainId` on `/polls/configured`, unit tests,
+  status/roadmap/agents.
+- Not changed: Self Pass QR, Enterprise mount, Privy, subgraph results, poll deployment.
+- Validation: `pnpm --dir apps/front-end test:unit` **81 passed**. Frontend and backend
+  `build` passed. Live `GET /polls/configured` includes `chainId` and Poll-0 identity;
+  window still `3600`/`3600` → `INVALID_WINDOW`. No live vote; browser interval/click
+  recheck not exercised this turn.
+- Next: deploy a votable poll with explicit dates; then mount Enterprise and a result reader.
+
 ### S3.2 / G10 honest poll wiring — 2026-09-07
 
 - Owner: Cursor; branch `cursor/s32-honest-poll-wiring` from main `53975080683aa919b2595a87f80118622f9157de`.

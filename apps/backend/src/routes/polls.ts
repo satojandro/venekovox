@@ -26,14 +26,24 @@ router.get("/configured", async (_req: Request, res: Response) => {
     "0x44F31f3823ceFE00C2FA5acEB2576F119143Fe3a"
   ).trim();
   const pollId = (process.env.POLL_ID || process.env.VITE_POLL_ID || "0").trim();
-  if (!isAddress(maciAddress) || !/^(0|[1-9][0-9]{0,77})$/.test(pollId)) {
+  const chainId = (process.env.CHAIN_ID || process.env.VITE_CHAIN_ID || "11155111").trim();
+  if (
+    !isAddress(maciAddress) ||
+    !/^(0|[1-9][0-9]{0,77})$/.test(pollId) ||
+    !/^(0|[1-9][0-9]{0,77})$/.test(chainId)
+  ) {
     return res.status(503).json({ error: "NOT_CONFIGURED" });
   }
 
+  let provider: JsonRpcProvider | undefined;
   try {
     const request = new FetchRequest(publicRpcUrl());
     request.timeout = 15000;
-    const provider = new JsonRpcProvider(request);
+    provider = new JsonRpcProvider(request);
+    const network = await provider.getNetwork();
+    if (network.chainId !== BigInt(chainId)) {
+      return res.status(502).json({ error: "POLL_MISMATCH" });
+    }
     const block = await provider.getBlock("latest");
     if (!block?.hash) return res.status(502).json({ error: "LOOKUP_FAILED" });
     const contracts = maciAbi.decodeFunctionResult(
@@ -57,6 +67,7 @@ router.get("/configured", async (_req: Request, res: Response) => {
       }),
     );
     return res.json({
+      chainId: network.chainId.toString(),
       maciAddress: getAddress(maciAddress),
       pollId,
       pollAddress,
@@ -69,6 +80,8 @@ router.get("/configured", async (_req: Request, res: Response) => {
   } catch (error) {
     console.error("Configured poll lookup failed:", error instanceof Error ? error.message : "unknown");
     return res.status(502).json({ error: "LOOKUP_FAILED" });
+  } finally {
+    provider?.destroy();
   }
 });
 

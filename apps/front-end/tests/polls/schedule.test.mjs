@@ -32,6 +32,7 @@ const poll = "0x2222222222222222222222222222222222222222";
 
 function makeProvider({ start = 0n, end = 0n, code = "0x6000", registered = poll } = {}) {
   return {
+    getNetwork: async () => ({ chainId: 11155111n }),
     getBlock: async () => ({ number: 99, hash: "0xabc", timestamp: 100 }),
     getCode: async () => code,
     call: async ({ data }) => {
@@ -47,21 +48,38 @@ function makeProvider({ start = 0n, end = 0n, code = "0x6000", registered = poll
 }
 
 test("zero dates are an invalid voting window, not an open poll", async () => {
-  const schedule = await readPollSchedule(makeProvider({ start: 0n, end: 0n }), maci, "0");
+  const schedule = await readPollSchedule(makeProvider({ start: 0n, end: 0n }), maci, "0", "11155111");
   assert.equal(schedule.status, "INVALID_WINDOW");
   assert.equal(schedule.startTime, "0");
   assert.equal(schedule.endTime, "0");
   assert.equal(schedule.pollAddress, poll);
+  assert.equal(schedule.chainId, "11155111");
+  assert.equal(schedule.pollId, "0");
+  assert.equal(schedule.maciAddress, maci);
 });
 
 test("a live window is open at the snapshot timestamp", async () => {
-  const schedule = await readPollSchedule(makeProvider({ start: 90n, end: 120n }), maci, "0");
+  const schedule = await readPollSchedule(makeProvider({ start: 90n, end: 120n }), maci, "0", "11155111");
   assert.equal(schedule.status, "OPEN");
 });
 
 test("missing poll code is a mismatch, not an empty list", async () => {
   await assert.rejects(
-    () => readPollSchedule(makeProvider({ code: "0x" }), maci, "0"),
+    () => readPollSchedule(makeProvider({ code: "0x" }), maci, "0", "11155111"),
     (error) => error instanceof ScheduleError && error.code === "POLL_MISMATCH",
   );
+});
+
+test("rejects the wrong RPC network before reading poll state", async () => {
+  let reads = 0;
+  const provider = {
+    ...makeProvider({ start: 90n, end: 120n }),
+    getNetwork: async () => ({ chainId: 1n }),
+    getBlock: async () => { reads++; throw new Error("must not read wrong chain"); },
+  };
+  await assert.rejects(
+    () => readPollSchedule(provider, maci, "0", "11155111"),
+    error => error instanceof ScheduleError && error.code === "POLL_MISMATCH",
+  );
+  assert.equal(reads, 0);
 });

@@ -2,6 +2,9 @@ import { getAddress, isAddress, ZeroAddress } from "ethers";
 import { maciAbi, pollAbi, votingWindow, type NamedPoll } from "../ens/pollName";
 
 export type PollSchedule = {
+  chainId: string;
+  maciAddress: string;
+  pollId: string;
   pollAddress: string;
   startTime: string;
   endTime: string;
@@ -11,6 +14,7 @@ export type PollSchedule = {
 };
 
 export type ScheduleProvider = {
+  getNetwork: () => Promise<{ chainId: bigint }>;
   getBlock: (tag: string | number) => Promise<{ number: number; hash: string | null; timestamp: number } | null>;
   getCode: (address: string, blockTag?: number) => Promise<string>;
   call: (tx: { to: string; data: string; blockTag?: number }) => Promise<string>;
@@ -26,13 +30,18 @@ export async function readPollSchedule(
   provider: ScheduleProvider,
   maciAddress: string,
   pollId: string,
+  chainId: string,
 ): Promise<PollSchedule> {
   if (!isAddress(maciAddress) || getAddress(maciAddress) === ZeroAddress) {
     throw new ScheduleError("NOT_CONFIGURED");
   }
-  if (!/^(0|[1-9][0-9]{0,77})$/.test(pollId)) throw new ScheduleError("NOT_CONFIGURED");
+  if (!/^(0|[1-9][0-9]{0,77})$/.test(pollId) || !/^(0|[1-9][0-9]{0,77})$/.test(chainId)) {
+    throw new ScheduleError("NOT_CONFIGURED");
+  }
 
   try {
+    const network = await provider.getNetwork();
+    if (network.chainId !== BigInt(chainId)) throw new ScheduleError("POLL_MISMATCH");
     const block = await provider.getBlock("latest");
     if (!block?.hash) throw new ScheduleError("LOOKUP_FAILED");
     const call = (to: string, data: string) => provider.call({ to, data, blockTag: block.number });
@@ -52,6 +61,9 @@ export async function readPollSchedule(
       throw new ScheduleError("LOOKUP_FAILED");
     }
     return {
+      chainId: network.chainId.toString(),
+      maciAddress: getAddress(maciAddress),
+      pollId,
       pollAddress,
       startTime: start.toString(),
       endTime: end.toString(),

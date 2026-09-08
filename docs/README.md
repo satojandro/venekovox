@@ -22,6 +22,7 @@ Read in this order.
 | [build.md](build.md)                                           | Integration specs (Part A) and runbook (Part B)                   |
 | [agents.md](agents.md)                                         | Agent handoff protocol                                            |
 | [demographic-analytics-spec.md](demographic-analytics-spec.md) | Long-term product direction DA0–DA3; proposed, not built          |
+| [data-and-tally-architecture.md](data-and-tally-architecture.md) | Concrete storage, processing, demographic binding and result-delivery architecture |
 
 ## Authority
 

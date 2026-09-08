@@ -5,6 +5,25 @@ Dependencies below prevent parallel implementations from making incompatible
 identity, wallet or schema assumptions. Milestones are outcome gates, not claims of
 scheduled delivery.
 
+## Three delivery stages — accepted 2026-09-07
+
+Alejandro approved the following sequence. This is the active prioritization, superseding
+earlier same-day instructions to advance demographic implementation alongside core polling.
+These product stages do not renumber the existing S-task IDs or M1–M4 milestones.
+
+| Stage | Outcome | Acceptance and scope |
+| --- | --- | --- |
+| 1 — Private, verifiable polling **(active)** | One complete real polling journey using the existing MACI foundation and one selected identity path | Real-document eligibility, actual-account enforcement and negative tests; real poll metadata/mode/dates and proving assets; encrypted submission, receipt verification, refresh/reconnect, and proof-verified overall results with provenance. State coordinator/issuer trust honestly. Maps to M1 and the supporting S2.1/S2.2/S3.1/S3.2/S4.1 work. |
+| 2 — Rich demographic results | Useful age, official document sex/gender and verified geography breakdowns | Authenticate attributes against final counted ballots; define operator visibility, consent, retention, missingness and aggregate release protection. Distinguish operator-computed from proof-verified reports. Existing DA design is retained; implementation follows Stage 1. |
+| 3 — Reduce single-operator trust and failure | Stronger independence from our eligibility issuer, coordinator and private-data infrastructure | Evaluate contract-verifiable eligibility, participant-held credentials, distributed storage/private computation, independent operators and recovery. Demonstrate outage/collusion assumptions. A database replacement alone is not completion. |
+
+Stages 2 and 3 remain product commitments in direction, not dependencies for Stage 1
+or claims of solved architecture. Stage 1 is a usable product milestone, not a mock demo.
+Preserve extension boundaries without collecting speculative demographic data or adding
+distributed infrastructure now. Hermes's bounded Self/ZKPassport comparison informs
+the Stage 1 identity choice; it is not a requirement to ship two providers. VicRoads,
+vlayer/TLSNotary and private-database exploration remain documented follow-up options.
+
 ## Task IDs
 
 Every task is `S<stage>.<n>` — the stage number from [journey-map.md](journey-map.md).
@@ -88,6 +107,19 @@ and datasets grow.
 
 ## Demographic analytics (product direction)
 
+2026-09-07: Alejandro prioritizes political polling in the US, Australia and European
+countries, with citizenship eligibility and age/geography/optional gender analysis.
+Alejandro's same-day correction selects verified passport nationality as the practical
+citizenship proxy (no separate non-citizen-national check), and official document
+sex/gender with no self-described override. Use official sources for pilot demographic
+evidence; missing attributes remain unavailable. This supersedes the earlier proposed
+self-reported gender/residence fallback and additional citizenship-evidence gate.
+The [political pilot](demographic-analytics-spec.md#political-polling-pilot--product-direction-updated-2026-09-07)
+is retained as Stage 2 design, following private, verifiable polling. Proposed first
+dimension: age bands for one national opinion poll; regional evidence follows.
+No demographic proof, production collection or provider switch is approved by the
+existence of this scope. M1 and authenticated counted-ballot/release gates remain.
+
 Privacy-preserving demographic research is in long-term product scope per
 [demographic-analytics-spec.md](demographic-analytics-spec.md). DA0 (bounded design,
 optional synthetic demo) may run alongside the critical path; DA1–DA3 follow M1. A
@@ -97,11 +129,25 @@ authenticated attribute-to-counted-ballot linkage and release protection exist.
 
 ## Next implementation order
 
+Latest decision, 2026-09-07: execute Stage 1 first under the accepted three-stage sequence
+above. [Data and tally architecture](data-and-tally-architecture.md) retains the deeper
+design for subsequent stages; PostgreSQL and distributed alternatives are proposals,
+not selected product dependencies. Direct verified Tally reads can precede Graph ingestion.
+
+2026-09-07 update: Alejandro approved the bounded S2.1 Self Enterprise/ZKPassport
+comparison and proposed a VicRoads zkTLS licence-source feasibility slice. Execute the
+[trial specification](build.md#s21-provider-comparison-trial--approved-scope-2026-09-07)
+before freezing further provider-specific eligibility assumptions. D02 remains the
+current baseline; this approval does not select a replacement or approve cross-provider
+identity equivalence. M1 gates remain unchanged. Compare total operating cost and trust,
+not only AI-assisted integration effort. Open-source contribution is a supported avenue
+when the trial produces a concrete reusable improvement; no upstream acceptance claimed.
+
 1. Repair hydration/receipt truth and define MACI-key migration behavior (S3.1 gaps). Poll-publication verification and a unit race harness are in; live submit→refresh smoke and the React mount harness remain.
 2. Run the bounded S2.2 caller/SDK/sponsorship compatibility spike; record the proposed account model.
 3. Resolve S2.1 policy/uniqueness/ballot-mode decisions; implement enforcement and negative tests.
 4. Provision assets and deploy a correctly configured poll; replace M1 mock metadata.
-5. Complete tally → index → UI and capture the full M1 evidence.
+5. Complete tally → publish verified overall results → UI and capture full M1 evidence. Use consistent-block direct Tally reads before Graph ingestion if that completes the journey sooner; retain the subgraph as the public read layer.
 6. Expand ENS, standardized queries and agents against this working journey; prepare prize-specific evidence.
 
 Update this sequence if the team chooses a different critical path. Record the reason

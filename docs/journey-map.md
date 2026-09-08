@@ -413,6 +413,8 @@ the proof, or the tally.
         X
   ┌──────────────┐
   │ UI results   │  PollDetail.tsx no longer renders fake totals
+  │              │  Schedule is accepted only when chain + MACI + poll
+  │              │  match the frontend descriptor (G05 partial)
   └──────────────┘
 ```
 

@@ -1,3 +1,5 @@
+import { HEALTH_TIMEOUT_MS, fetchJsonWithTimeout } from "../polls/timeout";
+
 export type BackendHealth = {
   status: "ok" | "down" | "invalid";
   service?: string;
@@ -17,13 +19,12 @@ function healthUrl(verifyEndpoint: string): string | null {
 export async function readBackendHealth(
   verifyEndpoint: string,
   fetchImpl: typeof fetch = fetch,
+  timeoutMs = HEALTH_TIMEOUT_MS,
 ): Promise<BackendHealth> {
   const url = healthUrl(verifyEndpoint);
   if (!url) return { status: "invalid" };
   try {
-    const response = await fetchImpl(url, { method: "GET" });
-    if (!response.ok) return { status: "down" };
-    const body = (await response.json()) as { status?: string; service?: string };
+    const body = (await fetchJsonWithTimeout(url, fetchImpl, timeoutMs)) as { status?: string; service?: string };
     if (body.status !== "healthy") return { status: "down" };
     return { status: "ok", service: body.service };
   } catch {

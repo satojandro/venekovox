@@ -8,6 +8,7 @@
     "dev": "ts-node-dev src/index.ts",
     "build": "tsc",
     "serve": "node dist/index.js",
+    "test:polls": "node --test tests/polls.test.mjs",
     "test:p2": "node --test tests/p2/*.test.mjs",
     "typecheck:p2": "tsc -p tsconfig.p2.json --noEmit"
   },

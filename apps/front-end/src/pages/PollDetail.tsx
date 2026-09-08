@@ -154,11 +154,22 @@ export default function PollDetailPage() {
   // vote options mapped to MACI vote option indices
   const VOTE_OPTIONS: Record<string, number> = { yes: 0, no: 1, abstain: 2 };
 
+  // Re-read the chain window at click time. A tab opened before the poll
+  // opens (or left open after it closes) must not use the first paint.
   const handleVote = async (vote: string) => {
-    if (submitting.current || votesLocked || !windowOpen) return;
+    if (submitting.current || (!!ownedReceipt && receiptState !== "reverted")) return;
     submitting.current = true;
     setError(null);
     try {
+      const latest = await configured.refresh();
+      if (!latest) {
+        setError(currentContent.lookupFailed);
+        return;
+      }
+      if (!isVoteOpen(latest.status)) {
+        setError(currentContent.windowClosed);
+        return;
+      }
       const result = await maci.vote(VOTE_OPTIONS[vote]);
       // Display the confirmation only if the wallet that completed the submission
       // is still the live one. A mid-flight switch (A -> B) must never render A's

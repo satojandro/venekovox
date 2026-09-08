@@ -409,10 +409,10 @@ the proof, or the tally.
         │    ✗ This subgraph has no configured result ingestion
         │    ✗ No datasource for Tally in apps/subgraph/templates/*.yaml
         │    ✗ No result entity in schemas/schema.v1.graphql
-        │    ✗ UI cannot show verified results  →  shows MOCK data (G05)
+        │    ✗ UI cannot show verified results  →  shows UNAVAILABLE (G05 partial)
         X
   ┌──────────────┐
-  │ UI results   │  hardcoded numbers in PollDetail.tsx
+  │ UI results   │  PollDetail.tsx no longer renders fake totals
   └──────────────┘
 ```
 
@@ -481,7 +481,7 @@ published. Check publication completeness separately before displaying totals.
   ────  ─────────────────────  ──────────────────────────────────  ────
    1    Self → MACI policy     sgData = "0x"; policy = FreeForAll   G01
    2    Tally → Graph          Tally.sol emits zero events          G06
-   3    Graph → UI results     no result entity; UI shows mocks     G05
+   3    Graph → UI results     no result entity; UI shows unavailable G05
    4    zkeys → browser        proving assets not in public/        G08
 ```
 

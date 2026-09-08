@@ -48,6 +48,17 @@ finalized voter results.
 
 ## Task ownership and interruption record
 
+### S3.2 / G10 honest poll wiring — 2026-09-07
+
+- Owner: Cursor; branch `cursor/s32-honest-poll-wiring` from main `53975080683aa919b2595a87f80118622f9157de`.
+- Goal: replace fake poll list/results with one configured descriptor plus on-chain window; let the Vite origin reach `/health`.
+- Changed: front-end poll descriptor/schedule/health reader, Polls/PollDetail, backend CORS 3000/3001, unit tests, status/journey/roadmap.
+- Not changed: Self Pass QR, Enterprise mount, Privy, subgraph results, poll deployment.
+- Validation: `pnpm --dir apps/front-end test:unit` **71 passed**. Browser `/polls` and
+  `/polls/0` showed backend `/health` plus `GET /polls/configured` (`3600`/`3600` →
+  INVALID_WINDOW, vote buttons disabled, no fake totals).
+- Next: deploy a votable poll with explicit dates; then mount Enterprise and a result reader.
+
 ### Three-stage prioritization handoff — 2026-09-07
 
 - Owner: Astra; base/branch main `81950b4215a313649ab7f5d6b0b6dedc6269a96f`.

@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import verifyRoute from "./routes/verify";
+import pollsRoute from "./routes/polls";
 
 const app: import("express").Express = express();
 
@@ -14,7 +15,12 @@ app.use(
     origin:
       process.env.NODE_ENV === "production"
         ? ["https://venekovox.com", "https://www.venekovox.com"]
-        : ["http://localhost:5173", "http://localhost:3002"],
+        : [
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "http://localhost:3002",
+          ],
     credentials: true,
   }),
 );
@@ -42,6 +48,7 @@ app.get("/", (req, res) => {
     endpoints: {
       "POST /verify": "Verify Self.xyz ZK-proof",
       "GET /health": "Service health check",
+      "GET /polls/configured": "Configured poll on-chain voting window",
       "GET /": "This API information",
     },
     documentation: "See README.md for setup and testing instructions",
@@ -50,13 +57,14 @@ app.get("/", (req, res) => {
 
 // Routes
 app.use("/verify", verifyRoute);
+app.use("/polls", pollsRoute);
 
 // 404 handler
 app.use("*", (req, res) => {
   res.status(404).json({
     error: "Not Found",
     message: `Route ${req.originalUrl} not found`,
-    availableRoutes: ["POST /verify", "GET /health", "GET /"],
+    availableRoutes: ["POST /verify", "GET /health", "GET /polls/configured", "GET /"],
   });
 });
 

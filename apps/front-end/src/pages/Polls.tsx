@@ -1,85 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Shield, Globe, Search, ChevronDown, Check, X } from "lucide-react";
-
-// --- MOCK DATA ---
-const mockPolls = [
-  {
-    id: 1,
-    title: { en: "Do you support dollarization in Venezuela?", es: "¿Apoya la dolarización en Venezuela?" },
-    country: "Venezuela",
-    flag: "🇻🇪",
-    status: "Open",
-    totalVotes: 12589,
-    topic: { en: "Economy", es: "Economía" },
-    userCanVote: true,
-  },
-  {
-    id: 2,
-    title: {
-      en: "Should there be a unified opposition candidate for the next presidential election?",
-      es: "¿Debería haber un candidato de oposición unificado para la próxima elección presidencial?",
-    },
-    country: "Venezuela",
-    flag: "🇻🇪",
-    status: "Open",
-    totalVotes: 8743,
-    topic: { en: "Politics", es: "Política" },
-    userCanVote: true,
-  },
-  {
-    id: 3,
-    title: {
-      en: "What is your confidence level in the current economic recovery plan in Argentina?",
-      es: "¿Cuál es su nivel de confianza en el actual plan de recuperación económica en Argentina?",
-    },
-    country: "Argentina",
-    flag: "🇦🇷",
-    status: "Open",
-    totalVotes: 2310,
-    topic: { en: "Economy", es: "Economía" },
-    userCanVote: false,
-  },
-  {
-    id: 4,
-    title: {
-      en: "Public funding for cultural festivals: necessary investment or misuse of funds?",
-      es: "Financiamiento público para festivales culturales: ¿inversión necesaria o mal uso de fondos?",
-    },
-    country: "Colombia",
-    flag: "🇨🇴",
-    status: "Closed",
-    totalVotes: 5420,
-    topic: { en: "Culture", es: "Cultura" },
-    userCanVote: false,
-  },
-  {
-    id: 5,
-    title: {
-      en: "Do you agree with the proposed judicial reforms in Mexico?",
-      es: "¿Está de acuerdo con las reformas judiciales propuestas en México?",
-    },
-    country: "Mexico",
-    flag: "🇲🇽",
-    status: "Open",
-    totalVotes: 765,
-    topic: { en: "Politics", es: "Política" },
-    userCanVote: false,
-  },
-  {
-    id: 6,
-    title: {
-      en: "Rating the impact of new tech regulations on local startups in Brazil.",
-      es: "Evaluando el impacto de las nuevas regulaciones tecnológicas en las startups locales en Brasil.",
-    },
-    country: "Brazil",
-    flag: "🇧🇷",
-    status: "Closed",
-    totalVotes: 1987,
-    topic: { en: "Economy", es: "Economía" },
-    userCanVote: false,
-  },
-];
+import { Shield, Globe, Search, ChevronDown } from "lucide-react";
+import { isVoteOpen, pollStatusLabel } from "../polls/labels";
+import { useConfiguredPoll } from "../polls/useConfiguredPoll";
 
 // --- LANGUAGE CONTENT ---
 const content = {
@@ -97,14 +20,18 @@ const content = {
       times: ["Active", "Archived"],
     },
     pollCard: {
-      viewAndVote: "View & Vote",
-      viewResults: "View Results",
-      totalVotes: "Total Votes",
+      viewAndVote: "View poll",
+      viewResults: "View poll",
       status: "Status",
-      open: "Open",
-      closed: "Closed",
     },
-    sectionTitle: "🔥 Trending Polls",
+    sectionTitle: "Configured poll",
+    honesty:
+      "Question text is operator metadata, not on-chain. Vote totals are hidden until a verified tally exists. The backend health dot only means /health answered.",
+    backendUp: "Backend reachable",
+    backendDown: "Backend not running",
+    noPoll: "No MACI poll is configured in this app environment.",
+    scheduleUnknown: "Could not read the voting window from the chain.",
+    loading: "Reading the configured poll…",
     footer: {
       privacy: "Privacy Policy",
       about: "About",
@@ -126,14 +53,18 @@ const content = {
       times: ["Activas", "Archivadas"],
     },
     pollCard: {
-      viewAndVote: "Ver y Votar",
-      viewResults: "Ver Resultados",
-      totalVotes: "Votos Totales",
+      viewAndVote: "Ver encuesta",
+      viewResults: "Ver encuesta",
       status: "Estado",
-      open: "Abierta",
-      closed: "Cerrada",
     },
-    sectionTitle: "🔥 Encuestas Populares",
+    sectionTitle: "Encuesta configurada",
+    honesty:
+      "El texto de la pregunta es metadato del operador, no está en la cadena. Los totales se ocultan hasta un escrutinio verificado. El punto del backend solo significa que /health respondió.",
+    backendUp: "Backend disponible",
+    backendDown: "Backend no está en marcha",
+    noPoll: "No hay una encuesta MACI configurada en este entorno.",
+    scheduleUnknown: "No se pudo leer la ventana de votación en la cadena.",
+    loading: "Leyendo la encuesta configurada…",
     footer: {
       privacy: "Política de Privacidad",
       about: "Acerca de",
@@ -147,6 +78,12 @@ const content = {
 export default function PollExplorer() {
   const [language, setLanguage] = useState("es");
   const currentContent = content[language];
+  const configured = useConfiguredPoll();
+  const lang = language as "en" | "es";
+  const healthOk =
+    configured.phase === "ready" || configured.phase === "partial" || configured.phase === "loading"
+      ? configured.health?.status === "ok"
+      : false;
 
   return (
     <div className="bg-gray-900 text-gray-200 min-h-screen font-sans">
@@ -159,11 +96,8 @@ export default function PollExplorer() {
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2 text-sm">
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-              </span>
-              <span className="text-gray-300">{currentContent.loginStatus}</span>
+              <span className={`relative inline-flex rounded-full h-3 w-3 ${healthOk ? "bg-green-500" : "bg-gray-500"}`} />
+              <span className="text-gray-300">{healthOk ? currentContent.backendUp : currentContent.backendDown}</span>
             </div>
             <button
               onClick={() => setLanguage((l) => (l === "en" ? "es" : "en"))}
@@ -221,44 +155,41 @@ export default function PollExplorer() {
           </div>
         </div>
 
-        {/* Section Header */}
+        <p className="text-sm text-gray-400 mb-6">{currentContent.honesty}</p>
+
         <h2 className="text-3xl font-bold mb-6 text-white">{currentContent.sectionTitle}</h2>
 
-        {/* Polls Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockPolls.map((poll) => (
-            <div
-              key={poll.id}
+        {configured.phase === "loading" && <p className="text-gray-300">{currentContent.loading}</p>}
+        {configured.phase === "unconfigured" && <p className="text-yellow-300">{currentContent.noPoll}</p>}
+        {(configured.phase === "ready" || configured.phase === "partial") && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Link
+              to={`/polls/${configured.descriptor.pollId}`}
               className="bg-gray-800/80 border border-gray-700 rounded-lg p-6 flex flex-col justify-between transition-all duration-300 hover:border-blue-500/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/10"
             >
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center text-sm space-x-2">
-                    <span>{poll.flag}</span>
-                    <span className="text-gray-400">{poll.country}</span>
-                  </div>
+                  <span className="text-sm text-gray-400">Sepolia · Poll {configured.descriptor.pollId}</span>
                   <span
-                    className={`text-xs font-semibold px-2 py-1 rounded-full ${poll.status === "Open" ? "bg-green-500/20 text-green-300" : "bg-gray-600/30 text-gray-400"}`}
+                    className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                      configured.phase === "ready" && isVoteOpen(configured.schedule.status)
+                        ? "bg-green-500/20 text-green-300"
+                        : "bg-gray-600/30 text-gray-400"
+                    }`}
                   >
-                    {poll.status === "Open" ? currentContent.pollCard.open : currentContent.pollCard.closed}
+                    {configured.phase === "ready"
+                      ? pollStatusLabel(configured.schedule.status, lang)
+                      : currentContent.scheduleUnknown}
                   </span>
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-4 h-16">{poll.title[language]}</h3>
+                <h3 className="text-lg font-semibold text-white mb-4">{configured.descriptor.question[lang]}</h3>
               </div>
-              <div>
-                <div className="flex items-center justify-between text-sm text-gray-400 mb-5">
-                  <span>{currentContent.pollCard.totalVotes}</span>
-                  <span className="font-bold text-white">{poll.totalVotes.toLocaleString()}</span>
-                </div>
-                <button
-                  className={`w-full py-2.5 rounded-md font-semibold transition ${poll.userCanVote ? "bg-blue-600 text-white hover:bg-blue-500" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
-                >
-                  {poll.userCanVote ? currentContent.pollCard.viewAndVote : currentContent.pollCard.viewResults}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+              <span className="w-full py-2.5 rounded-md font-semibold text-center bg-blue-600 text-white">
+                {currentContent.pollCard.viewAndVote}
+              </span>
+            </Link>
+          </div>
+        )}
 
         {/* Footer */}
         <footer className="text-center mt-16 pt-8 border-t border-gray-800">

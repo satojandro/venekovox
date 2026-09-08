@@ -14,7 +14,7 @@
     "test:receipts": "node --test tests/receipts.test.mjs",
     "test:receipt-status": "node --test tests/receiptStatus.test.mjs",
     "test:hydration": "node --test tests/hydration.test.mjs",
-    "test:unit": "node --test tests/voteFlow.test.mjs tests/receipts.test.mjs tests/receiptStatus.test.mjs tests/hydration.test.mjs tests/ens/*.test.mjs",
+    "test:unit": "node --test tests/voteFlow.test.mjs tests/receipts.test.mjs tests/receiptStatus.test.mjs tests/hydration.test.mjs tests/ens/*.test.mjs tests/polls/*.test.mjs tests/backendHealth.test.mjs",
     "test:ens": "node --test tests/ens/*.test.mjs"
   },
   "dependencies": {

@@ -217,6 +217,16 @@ export class ZkPassportEligibility {
         uniqueIdentifierType: this.type === "salted" ? "SALTED" : "NON_SALTED",
         ...(this.config.oprfKeyId ? { oprfKeyId: this.config.oprfKeyId } : {}),
         query: this.canonicalQuery,
+        // Builder hints so a browser client can chain .disclose/.gte/.range/
+        // .in/.facematch to reproduce the exact canonical query (the raw query
+        // object alone cannot be fed back into the SDK's request() builder).
+        queryBuild: {
+          ...(this.config.query.discloseGender ? { discloseGender: true } : {}),
+          ...(this.config.query.minimumAge !== undefined ? { minimumAge: this.config.query.minimumAge } : {}),
+          ...(this.config.query.ageBand ? { ageBand: this.config.query.ageBand } : {}),
+          ...(this.config.query.nationalityIn?.length ? { nationalityIn: this.config.query.nationalityIn } : {}),
+          ...(this.config.query.facematch ? { facematch: this.config.query.facematch } : {}),
+        },
       };
     } finally {
       entry.busy = false;

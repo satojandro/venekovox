@@ -82,6 +82,73 @@ test("empty gate arguments are valid even-length hex bytes", async () => {
   assert.equal(join.startBlock, 11567000);
 });
 
+test("joinPoll.sgDataArg carries eligibility evidence after a successful dry-run", async () => {
+  const dryRuns = [];
+  const calls = [];
+  const session = {
+    account: "0xabc",
+    signer: {},
+    publicKey: "public",
+    privateKey: "private",
+    assertCurrent: async () => {},
+  };
+  const vote = createVoteFlow({
+    sdk: {
+      getSignedupUserData: async () => ({ isRegistered: true, stateIndex: "5" }),
+      getJoinedUserData: async () => ({ isJoined: false }),
+      joinPoll: async (args) => {
+        calls.push(args);
+        return { pollStateIndex: "17" };
+      },
+      publish: async () => ({ hash: "0xreceipt", privateKey: "ephemeral-secret" }),
+    },
+    getSession: async () => session,
+    getConfig: () => ({ maciAddress: "0xmaci", pollId: 0n, startBlock: 11567000, chainId: 11155111n }),
+    onProgress: () => {},
+    getSignUpPolicyData: async (account) => {
+      assert.equal(account, "0xabc");
+      return "0xgate";
+    },
+    dryRunJoin: async (args) => {
+      dryRuns.push(args);
+    },
+  });
+  await vote(0);
+  assert.equal(dryRuns.length, 1);
+  assert.equal(dryRuns[0].sgDataArg, "0xgate");
+  assert.equal(calls[0].sgDataArg, "0xgate");
+});
+
+test("failed join dry-run never calls joinPoll", async () => {
+  const calls = [];
+  const vote = createVoteFlow({
+    sdk: {
+      getSignedupUserData: async () => ({ isRegistered: true, stateIndex: "5" }),
+      getJoinedUserData: async () => ({ isJoined: false }),
+      joinPoll: async (args) => {
+        calls.push(args);
+        return { pollStateIndex: "17" };
+      },
+      publish: async () => ({ hash: "0xreceipt" }),
+    },
+    getSession: async () => ({
+      account: "0xabc",
+      signer: {},
+      publicKey: "public",
+      privateKey: "private",
+      assertCurrent: async () => {},
+    }),
+    getConfig: () => ({ maciAddress: "0xmaci", pollId: 0n, startBlock: 11567000, chainId: 11155111n }),
+    onProgress: () => {},
+    getSignUpPolicyData: async () => "0xgate",
+    dryRunJoin: async () => {
+      throw new Error("JOIN_DRY_RUN_FAILED: InvalidAuthorization");
+    },
+  });
+  await assert.rejects(vote(0), /JOIN_DRY_RUN_FAILED/);
+  assert.equal(calls.length, 0);
+});
+
 test("returning user recovers membership on chain without signup or join transactions", async () => {
   const f = fixture({
     getSignedupUserData: async () => ({ isRegistered: true, stateIndex: "5" }),

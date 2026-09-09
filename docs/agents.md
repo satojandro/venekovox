@@ -1,5 +1,22 @@
 # Agent handoff and continuity protocol
 
+## C product mount — 2026-09-09
+
+- Owner: Cursor; reviewer/committer: Hermes. Branch `exp/provider-trial-self-vs-zkpassport`.
+- Goal: mount ZKPassport into `app.ts` + replace Auth + plumb join `sgDataArg`.
+- Changed: backend eligibility router/product factory/session store; Auth ZKPassport
+  flow; voteFlow/useMaci `sgDataArg` + policy.enforce dry-run; tests; status/roadmap/journey.
+- SDK join param: `joinPoll({ sgDataArg })` → `Poll.joinPoll(..., _signUpPolicyData)`.
+  Signup still `sgData: "0x"`.
+- Gaps: in-memory sessions (G01), WP0 real policy, no live product-UI passport this turn.
+  FE sessionStorage is tab-scoped only; dry-run unit-tested, not live against a
+  deployed policy. Extra `venekovox-c-mount` worktree/branches were removed; work
+  lives only in this checkout.
+- Local proof this turn: backend typecheck:p2 + build; p2 64/64; EVM 9/9;
+  FE unit 91/91 + build; live curl of `/eligibility/*` + `/verify`; browser
+  `/trust-ritual` unverified + no-wallet error. Uncommitted until Hermes reviews.
+  Do not merge to main before the C gate.
+
 ## Start every work session
 
 **Latest accepted priority, 2026-09-07:** execute Stage 1 private, verifiable polling.
@@ -32,7 +49,10 @@ Hard facts about this codebase, verified against source:
 - **A vote's recipient is the POLL contract, not MACI.** `PollFactory.connect(pollAddress).publishMessage(...)` in `packages/sdk/ts/vote/submit.ts:13`.
 - **No tally-result ingestion is implemented.** `Tally.sol` has no dedicated result events; a supported ingestion strategy is still required.
 - **ENS has no code in this repository.**
-- **Self verification stops at a browser flag.** `sgData` is `0x`; the recorded configuration uses `FreeForAll`. Verify selected deployment state before live claims.
+- **Self / ZKPassport:** legacy `/verify` still exists. Product Auth uses ZKPassport.
+  Join sends evidence as `joinPoll.sgDataArg` after an `eth_call` dry-run of
+  `policy.enforce`. Signup `sgData` is still `0x`. WP0 must deploy and bind
+  `SelfEligibilityPolicy` before a live join can succeed.
 - Wallet recovery and MACI-key recovery are separate. Receipt cache recovery is not transaction verification. Standard MACI coordinator trust must remain visible in privacy claims.
 
 Demographic analytics is long-term product scope

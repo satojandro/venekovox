@@ -6,6 +6,8 @@ import * as domainobjs from "@maci-protocol/domainobjs";
 import { createVoteFlow, type SubmitResult, type VoteProgress, type VoteStatus } from "./voteFlow";
 import { createReceiptStore, applySubmittedReceipt, type VoteReceipt } from "../lib/receipts";
 import { checkReceiptStatus, isRecheckable, type ReceiptCheckStatus, type ReceiptProvider } from "../lib/receiptStatus";
+import { loadEligibilityForAccount } from "../eligibility/storage";
+import { dryRunJoinGate } from "../eligibility/dryRunJoin";
 import {
   createFlightAnchor,
   hydrationContextKey,
@@ -430,6 +432,18 @@ export function useMaci() {
           privateKey: keypair.privateKey.serialize(),
           assertCurrent,
         };
+      },
+      getSignUpPolicyData: (account) => loadEligibilityForAccount(account).evidence,
+      dryRunJoin: async ({ account, sgDataArg, signer, maciAddress, pollId }) => {
+        await dryRunJoinGate({
+          signer,
+          maciAddress,
+          pollId,
+          account,
+          evidence: sgDataArg,
+          expectedPolicy: import.meta.env.VITE_POLICY_ADDRESS as string | undefined,
+          expectedTarget: import.meta.env.VITE_TARGET_ADDRESS as string | undefined,
+        });
       },
       onProgress: (progress) => {
         if (mounted.current && activeGeneration.current === generation.current) setProgress(progress);

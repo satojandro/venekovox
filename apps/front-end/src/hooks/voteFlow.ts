@@ -43,10 +43,32 @@ interface VoteFlowOptions {
   onProgress: (progress: VoteProgress) => void;
   /** Called once the publish transaction is confirmed, BEFORE success is reported. */
   onReceipt?: (context: SubmitContext, receipt: VoteReceipt) => void;
+  /**
+   * Join gate bytes for Poll.joinPoll(..., _signUpPolicyData).
+   * The MACI SDK names this `sgDataArg`. Signup `sgData` stays 0x until WP0
+   * binds SelfEligibilityPolicy on MACI.signup as well.
+   */
+  getSignUpPolicyData?: (account: string) => string | Promise<string>;
+  /** eth_call the policy.enforce path BEFORE the wallet is asked to sign join. */
+  dryRunJoin?: (args: {
+    account: string;
+    sgDataArg: string;
+    signer: JsonRpcSigner;
+    maciAddress: string;
+    pollId: bigint;
+  }) => Promise<void>;
 }
 
 /** One invocation owns signup, join and publish. React state is display-only. */
-export function createVoteFlow({ sdk, getSession, getConfig, onProgress, onReceipt }: VoteFlowOptions) {
+export function createVoteFlow({
+  sdk,
+  getSession,
+  getConfig,
+  onProgress,
+  onReceipt,
+  getSignUpPolicyData,
+  dryRunJoin,
+}: VoteFlowOptions) {
   let busy = false;
 
   return async (voteOptionIndex: number, newVoteWeight = 1n): Promise<SubmitResult> => {
@@ -99,6 +121,12 @@ export function createVoteFlow({ sdk, getSession, getConfig, onProgress, onRecei
       if (!joined.isJoined) {
         await assertCurrent();
         report({ status: "joining" });
+        // Poll.sol:388 — policy.enforce(msg.sender, _signUpPolicyData).
+        // SDK argument name: sgDataArg.
+        const sgDataArg = getSignUpPolicyData ? await getSignUpPolicyData(account) : "0x";
+        if (dryRunJoin) {
+          await dryRunJoin({ account, sgDataArg, signer, maciAddress, pollId });
+        }
         const result = await sdk.joinPoll({
           maciAddress,
           pollId,
@@ -107,7 +135,7 @@ export function createVoteFlow({ sdk, getSession, getConfig, onProgress, onRecei
           startBlock,
           pollJoiningZkey: "/zkeys/PollJoining_10_test/PollJoining_10_test.0.zkey",
           pollWasm: "/zkeys/PollJoining_10_test/PollJoining_10_test.wasm",
-          sgDataArg: "0x",
+          sgDataArg,
           ivcpDataArg: "0x",
         });
         pollStateIndex = result.pollStateIndex;

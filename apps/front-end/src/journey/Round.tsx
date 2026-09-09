@@ -323,8 +323,8 @@ export function RoundScreen({ id }: { id: ScreenId }) {
         <>
           <Card title="Verification and eligibility">
             <p>
-              Self Enterprise is the selected provider. Log in first, then prove control of the participating account
-              and open a hosted verification session.
+              ZKPassport is the selected Stage 1 provider. Log in first, then prove control of the participating account
+              and start the document verification flow with strict face matching.
             </p>
             <p>
               The poll’s document support, age/nationality rules and data-handling notice must be available before you
@@ -332,13 +332,13 @@ export function RoundScreen({ id }: { id: ScreenId }) {
             </p>
             <Unavailable
               label="Start identity verification"
-              reason="Verification is not connected. No document is requested. The approved policy, hosted-session endpoint and authenticated status reader are required."
+              reason="Verification is not connected. No document is requested. The approved ZKPassport policy, proof-verification endpoint and authenticated status reader are required."
             />
           </Card>
           <Card title="Returning from verification">
             <p>
-              We must check server status before displaying verified, rejected or expired. Closing the hosted page or
-              receiving a redirect does not prove eligibility.
+              We must check server status before displaying verified, rejected or expired. Closing the verification flow
+              or receiving a redirect does not prove eligibility.
             </p>
             <Link className="text-lime-300 underline" to="/account">
               Return to account →

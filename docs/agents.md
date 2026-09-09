@@ -1,5 +1,20 @@
 # Agent handoff and continuity protocol
 
+## Latest main and ENS integration — 2026-09-08
+
+Pulled origin/main `3b2d083b` into the local frontend/ENS work after ENS merge
+`10688aa1`. Preserved the ZKPassport D17 decision and updated the new identity screen
+and its wiring notes accordingly. D17 supersedes earlier Enterprise-selection text
+in these historical frontend handoffs. `/account/name` now mounts the merged Names
+implementation (injected wallet); deployment and Privy integration still need evidence.
+
+Fetched experimental provider branch at `40815f2c`, but did not merge it: its own
+handoff records an unresolved SDK dependency-lock gate. No live signing or deployment.
+ENS integration checks: 95 unit, 3 React and 10 local contract/plan tests passed;
+frontend build passed with existing warnings. Next: configure naming deployment and
+complete Privy actual-account/ZKPassport integration; retain D17 scope and face-match rules.
+
+
 ## ENS merge integration — 2026-09-08
 
 Merged `codex/ens-registration-v2` (`3fd87a2e`) into the frontend round. The actual

@@ -1,5 +1,20 @@
 # Current state and evidence
 
+## Latest main and ENS integration — 2026-09-08
+
+Pulled origin/main `3b2d083b` into the local frontend/ENS work after ENS merge
+`10688aa1`. Preserved the ZKPassport D17 decision and updated the new identity screen
+and its wiring notes accordingly. D17 supersedes earlier Enterprise-selection text
+in these historical frontend handoffs. `/account/name` now mounts the merged Names
+implementation (injected wallet); deployment and Privy integration still need evidence.
+
+Fetched experimental provider branch at `40815f2c`, but did not merge it: its own
+handoff records an unresolved SDK dependency-lock gate. No live signing or deployment.
+ENS integration checks: 95 unit, 3 React and 10 local contract/plan tests passed;
+frontend build passed with existing warnings. Next: configure naming deployment and
+complete Privy actual-account/ZKPassport integration; retain D17 scope and face-match rules.
+
+
 ## ENS merge integration — 2026-09-08
 
 Merged `codex/ens-registration-v2` (`3fd87a2e`) into the frontend round. The actual
@@ -115,7 +130,10 @@ For the **call-by-call map** of what each technology does, read
 
 Main base checked: `c12361c3ac2797f98e1238cdca669227fc43ebcc`.
 Local branch: `feat/p2-eligibility-bridge`; delivered as a patch, not a remote release.
-D02 now selects Enterprise by explicit user instruction. Root and canonical contributor
+D02 now selects Enterprise by explicit user instruction (2026-09-05); **D17
+(2026-09-08) supersedes D02's provider selection for new Stage 1 identity work —
+ZKPassport is locked (salted + facematch-strict), Enterprise remains unmounted.**
+Root and canonical contributor
 instructions were corrected. Existing Pass `/verify` and QR remain legacy migration debt.
 The new candidate Pass adapter was removed rather than shipped as a competing path.
 

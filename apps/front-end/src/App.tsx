@@ -23,7 +23,11 @@ function App() {
           <Route path="/about" element={<Landing />} />
           <Route path="/journey" element={<ScreenMap />} />
           {screens.map((screen) => (
-            <Route key={screen.id} path={screen.path} element={screen.id === "name" ? <Names /> : <RoundScreen key={screen.id} id={screen.id} />} />
+            <Route
+              key={screen.id}
+              path={screen.path}
+              element={screen.id === "name" ? <Names /> : <RoundScreen key={screen.id} id={screen.id} />}
+            />
           ))}
           <Route path="/names" element={<Navigate to="/account/name" replace />} />
           <Route path="/discover" element={<NamedPoll />} />

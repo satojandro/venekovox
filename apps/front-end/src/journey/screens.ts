@@ -37,9 +37,9 @@ export const screens = [
     title: "Verify your identity",
     area: "voter",
     components:
-      "Eligibility policy · privacy notice · consent · hosted verification · return/status · expired/rejected/retry",
+      "Eligibility policy · privacy notice · consent · ZKPassport verification · return/status · expired/rejected/retry",
     wiring:
-      "S2.1: mount EnterpriseEligibility.createChallenge/begin/receiveWebhook/authorize with authenticated HTTP routes and durable inbox/session storage. Redirects and localStorage flags cannot authorize voting.",
+      "S2.1 D17: integrate ZKPassport salted uniqueness + strict facematch, frozen scope/config and shared account-bound authorization. Candidate is on exp/provider-trial-self-vs-zkpassport; dependency lock and production mounting remain pending. Redirects and localStorage flags cannot authorize voting.",
   },
   {
     id: "keys",

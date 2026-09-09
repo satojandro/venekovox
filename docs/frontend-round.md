@@ -28,7 +28,7 @@ flowchart TD
   Home --> Polls[Browse polls or resolve ENS name]
   Login --> Account[Participant account]
   Account --> Name[Optional ENS claim]
-  Name --> ID[Enterprise identity / eligibility]
+  Name --> ID[ZKPassport identity / eligibility]
   Account --> ID
   ID --> Keys[Voting key readiness / recovery]
   Keys --> Polls
@@ -76,7 +76,7 @@ both routing and the screen map. Expanded developer notes render the exact same 
 | Coordinator `/admin/coordinator`  | Close check, merge/process/prove/submit/publish checklist, job status/retry/tx slots                                                         | CLI/protocol machinery exists; durable authenticated job API, checkpoints and result publication missing                                                                                           |
 | Help `/help/privacy`              | Coordinator/provider/issuer trust, ENS linkage, wallet versus MACI recovery, errors/support                                                  | Real retention/support policy still required before document use                                                                                                                                   |
 
-`/create-poll` redirects to the draft; `/trust-ritual` redirects to Enterprise readiness.
+`/create-poll` redirects to the draft; `/trust-ritual` redirects to ZKPassport readiness.
 Legacy source is retained without mounting the old fake creation toast or Pass page.
 Original marketing remains at `/` (also `/about`); discussion at `/comments` is outside this round;
 those pages need a separate claims/moderation review before public launch.
@@ -122,8 +122,8 @@ those pages need a separate claims/moderation review before public launch.
 1. Mount reviewed Privy login/session provider and actual-account adapter; recover poll
    destination and handle logout/session expiry. Reconcile W1 rather than assuming it
    already contains a working Privy SDK adapter.
-2. Reconcile newer naming branch; mount personal/admin naming with same caller.
-3. Mount Enterprise sessions, authenticated status, durable storage and evidence slots.
+2. Supply the Privy participating caller to the merged naming interface.
+3. Mount the D17 ZKPassport adapter, authenticated proof/status handling, durable storage and shared authorization evidence slots.
 4. Select policy/mode/credits and a valid deployment; serve matching proving assets;
    make actual configured detail use the connected readiness state.
 5. Add draft persistence/deployment orchestration and coordinator job API as needed.
@@ -134,3 +134,5 @@ Owner setup: [Privy dashboard checklist](privy-setup.md). No new secrets or docu
 payloads are needed for the UI walkthrough.
 
 User steering: preserve the original landing copy at `/`. Added a development-status notice and login/account/admin/map entry points; the compact round overview is at `/round`. Existing product claims need review before a live launch, not deletion as part of a navigation pass.
+
+Latest-main reconciliation: D17 (`3b2d083b`) supersedes the earlier Enterprise handoffs in this document. New identity work uses ZKPassport salted uniqueness and strict facematch with frozen scope/config. Enterprise remains unmounted. The implementation candidate is fetched on `origin/exp/provider-trial-self-vs-zkpassport` (`40815f2c`); its dependency lock is still an explicit merge gate, so that experimental branch is not merged by pulling main.

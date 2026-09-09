@@ -176,8 +176,10 @@ export default function Names({ wallet: suppliedWallet }: { wallet?: NamingWalle
           eligibility.
         </p>
         <nav aria-label="Round navigation" className="flex flex-wrap gap-5 text-lime-300 underline">
-          <Link to="/account">Account</Link><Link to="/account/identity">Skip naming / continue to identity →</Link>
-          <Link to="/admin">Admin</Link><Link to="/journey">Screen map</Link>
+          <Link to="/account">Account</Link>
+          <Link to="/account/identity">Skip naming / continue to identity →</Link>
+          <Link to="/admin">Admin</Link>
+          <Link to="/journey">Screen map</Link>
         </nav>
         {loading && <p role="status">Checking naming configuration and your account…</p>}
         {!loading && !config && !error && (

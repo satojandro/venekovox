@@ -1,5 +1,20 @@
 # VenekoVox technical journey map
 
+## Latest main and ENS integration — 2026-09-08
+
+Pulled origin/main `3b2d083b` into the local frontend/ENS work after ENS merge
+`10688aa1`. Preserved the ZKPassport D17 decision and updated the new identity screen
+and its wiring notes accordingly. D17 supersedes earlier Enterprise-selection text
+in these historical frontend handoffs. `/account/name` now mounts the merged Names
+implementation (injected wallet); deployment and Privy integration still need evidence.
+
+Fetched experimental provider branch at `40815f2c`, but did not merge it: its own
+handoff records an unresolved SDK dependency-lock gate. No live signing or deployment.
+ENS integration checks: 95 unit, 3 React and 10 local contract/plan tests passed;
+frontend build passed with existing warnings. Next: configure naming deployment and
+complete Privy actual-account/ZKPassport integration; retain D17 scope and face-match rules.
+
+
 ## ENS merge integration — 2026-09-08
 
 Merged `codex/ens-registration-v2` (`3fd87a2e`) into the frontend round. The actual
@@ -35,9 +50,11 @@ claims that the new boundaries are connected. No live-chain acceptance in this u
 ## P2 Enterprise candidate overlay — 2026-09-05
 
 The legacy call map below remains historical/as-built for the existing UI. **New identity
-work uses Self Enterprise (D02); do not copy the Pass QR/verifier path into new code.**
+work uses ZKPassport (D17, 2026-09-08); do not copy the Pass QR/verifier path into new code.**
 This patch adds unmounted modules on main `c12361c3ac2797f98e1238cdca669227fc43ebcc`.
-It does not claim the old browser flow now invokes them.
+It does not claim the old browser flow now invokes them. The Enterprise candidate
+(D02, unmounted) and the ZKPassport adapter (provider lock) share the same
+authorization boundary: challenge → EIP-712 grant → `SelfEligibilityPolicy.enforce`.
 
 | Step | Actual candidate symbol                                            | Input → output / boundary                                                                    |
 | ---- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |

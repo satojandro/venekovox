@@ -580,6 +580,9 @@ export enum EPolicies {
   AnonAadhaar = "@excubiae/contracts/contracts/extensions/anonAadhaar/AnonAadhaarPolicy.sol:AnonAadhaarPolicy",
   ERC20Votes = "@excubiae/contracts/contracts/extensions/erc20votes/ERC20VotesPolicy.sol:ERC20VotesPolicy",
   ERC20 = "@excubiae/contracts/contracts/extensions/erc20/ERC20Policy.sol:ERC20Policy",
+  // VenekoVox: standalone issuer-backed policy (not an excubiae proxy extension).
+  // id mirrors the artifact name so ContractStorage/getContract resolve it directly.
+  SelfEligibility = "SelfEligibilityPolicy",
 }
 
 /**
@@ -669,6 +672,8 @@ export enum EContracts {
   ZupassGroth16Verifier = "ZupassGroth16Verifier",
   SemaphorePolicy = "SemaphorePolicy",
   MerkleProofPolicy = "MerkleProofPolicy",
+  // VenekoVox: issuer-backed ZKPassport eligibility policy (standalone, not excubiae)
+  SelfEligibilityPolicy = "SelfEligibilityPolicy",
   Verifier = "Verifier",
   MACI = "MACI",
   PollFactory = "PollFactory",

@@ -140,7 +140,8 @@ export const FULL_POLICY_NAMES: Record<
   | EContracts.MerkleProofPolicy
   | EContracts.AnonAadhaarPolicy
   | EContracts.ERC20VotesPolicy
-  | EContracts.ERC20Policy,
+  | EContracts.ERC20Policy
+  | EContracts.SelfEligibilityPolicy,
   EPolicies
 > = {
   [EContracts.FreeForAllPolicy]: EPolicies.FreeForAll,
@@ -154,4 +155,5 @@ export const FULL_POLICY_NAMES: Record<
   [EContracts.AnonAadhaarPolicy]: EPolicies.AnonAadhaar,
   [EContracts.ERC20VotesPolicy]: EPolicies.ERC20Votes,
   [EContracts.ERC20Policy]: EPolicies.ERC20,
+  [EContracts.SelfEligibilityPolicy]: EPolicies.SelfEligibility,
 };

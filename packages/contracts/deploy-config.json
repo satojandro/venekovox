@@ -192,15 +192,19 @@
       }
     },
     "Poll": {
-      "pollStartDate": 3600,
-      "pollEndDate": 3600,
+      "pollStartDate": 1788999251,
+      "pollEndDate": 1789600451,
       "coordinatorPublicKey": "macipk.9a59264310d95cfd8eb7083aebeba221b5c26e77427f12b7c0f50bc1cc35e621",
-      "mode": 1,
-      "policy": "FreeForAllPolicy",
+      "mode": 2,
+      "policy": "SelfEligibilityPolicy",
       "relayers": "0x0000000000000000000000000000000000000000",
       "initialVoiceCreditProxy": "ConstantInitialVoiceCreditProxy",
-      "voteOptions": 2,
+      "voteOptions": 6,
       "stateTreeDepth": 10
+    },
+    "SelfEligibilityPolicy": {
+      "configId": "venekovox-stage1-salted-v1",
+      "action": "signup"
     }
   },
   "scroll_sepolia": {
@@ -1451,7 +1455,9 @@
     },
     "HatsPolicy": {
       "deploy": false,
-      "criterionHats": ["26960358043289970096177553829315270011263390106506980876069447401472"],
+      "criterionHats": [
+        "26960358043289970096177553829315270011263390106506980876069447401472"
+      ],
       "hatsProtocolAddress": "0x3bc1A0Ad72417f2d411118085256fC53CBdDd137"
     },
     "EASPolicy": {
@@ -1558,7 +1564,9 @@
     },
     "HatsPolicy": {
       "deploy": false,
-      "criterionHats": ["26960358043289970096177553829315270011263390106506980876069447401472"],
+      "criterionHats": [
+        "26960358043289970096177553829315270011263390106506980876069447401472"
+      ],
       "hatsProtocolAddress": "0x3bc1A0Ad72417f2d411118085256fC53CBdDd137"
     },
     "EASPolicy": {
@@ -1665,7 +1673,9 @@
     },
     "HatsPolicy": {
       "deploy": false,
-      "criterionHats": ["26960358043289970096177553829315270011263390106506980876069447401472"],
+      "criterionHats": [
+        "26960358043289970096177553829315270011263390106506980876069447401472"
+      ],
       "hatsProtocolAddress": "0x3bc1A0Ad72417f2d411118085256fC53CBdDd137"
     },
     "EASPolicy": {
@@ -1772,7 +1782,9 @@
     },
     "HatsPolicy": {
       "deploy": false,
-      "criterionHats": ["26960358043289970096177553829315270011263390106506980876069447401472"],
+      "criterionHats": [
+        "26960358043289970096177553829315270011263390106506980876069447401472"
+      ],
       "hatsProtocolAddress": "0x3bc1A0Ad72417f2d411118085256fC53CBdDd137"
     },
     "EASPolicy": {
@@ -1879,7 +1891,9 @@
     },
     "HatsPolicy": {
       "deploy": false,
-      "criterionHats": ["26960358043289970096177553829315270011263390106506980876069447401472"],
+      "criterionHats": [
+        "26960358043289970096177553829315270011263390106506980876069447401472"
+      ],
       "hatsProtocolAddress": "0x3bc1A0Ad72417f2d411118085256fC53CBdDd137"
     },
     "EASPolicy": {

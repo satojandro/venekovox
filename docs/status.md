@@ -28,6 +28,21 @@ ISSUER_PRIVATE_KEY + TAG_SECRET are provisioned — on-chain issuer is the throw
 2026-09-10T00:14Z). Challenge endpoint confirmed issuing configId-matched challenges bound to
 the deployed policy/target pair.
 
+**enforce() dry-run PASSED** (`packages/contracts/scripts/wp0-enforce-dryrun.mjs`,
+commit `c3bed7bda`): issuer-signed EIP-712 grant in product ABI format, called by
+the impersonated Poll on an anvil fork of Sepolia —
+
+- ✅ positive: valid grant accepted (the exact bytes the product backend will send)
+- ✅ replay of consumed identityTag reverts (AlreadyEnforced)
+- ✅ second wallet with wallet A's grant reverts (architect gate H, minus passport)
+
+Fork findings worth knowing for WP2: grant timestamps must anchor to the fork's
+block clock (wall-clock drift trips InvalidLifetime — the product backend is
+immune, it reads the live chain clock), and replay/second-wallet probes must be
+real transactions with snapshot/revert isolation because eth_call rolls back
+enforce()'s consumed-state writes. Only untested link in the eligibility chain:
+the ZK proof itself (needs a real passport).
+
 Re-verification after the descriptor change (Node 22.23.2, mounted main):
 FE unit suite **91/91** (descriptor test updated to assert the France poll 1
 shape — 6 options, pollId 1, 18+ note; commit `8b71d6427`); backend `test:p2`

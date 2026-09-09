@@ -1,5 +1,30 @@
 # Current state and evidence
 
+## Frontend-first Stage 1 round — 2026-09-08
+
+On main base `869f8bcc`, added a navigable frontend shell and screen/component inventory
+for participant and admin/coordinator paths. Original landing copy remains at `/`, with
+Privy login/account/admin/map links; `/round` is the compact overview and `/journey`
+the clickable inventory. New pages use the ENS black/lime styling. Draft/ENS-label
+validation works locally; unavailable services never show invented success. Original
+poll readers/vote orchestration remain, with navigation and trust-copy corrections.
+Legacy `/trust-ritual` and `/create-poll` now redirect to the new readiness/draft pages.
+
+**Integration is still pending:** real Privy provider/account execution, newer ENS branch
+reconciliation, Enterprise HTTP/durable status, authorized draft/deployment/job APIs,
+key recovery and verified result snapshots. New admin screens are public walkthroughs,
+not an authentication boundary; they cannot send admin transactions. New shell is English;
+existing EN/ES pages retain their copy. No live login, verification, vote, deployment or
+result evidence from this pass. See [screen handoffs](frontend-round.md) and
+[Privy setup](privy-setup.md). Stage 1 acceptance gates remain open.
+
+Local validation: 84 existing frontend unit tests passed; final frontend build passed
+with existing SDK export/Browserslist/chunk-size warnings; `git diff --check` passed.
+Browser smoke covered all 13 new screen routes, the restored home and map, login
+unavailability, naming consent, duplicate options, valid review and reversed UTC dates.
+Mobile/device-specific and live provider/chain interactions were not verified.
+
+
 ## S3.2 review follow-up — 2026-09-08
 
 Backend `/polls/configured` and the direct browser reader now check the RPC's

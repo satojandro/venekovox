@@ -13,8 +13,7 @@ const content = {
     verifiedToVote: "You are verified to vote in this poll",
     notEligible: "Eligibility is not enforced in this UI. The voting window below comes from the Poll contract.",
     unknownPoll: "This URL is not the poll configured in the app.",
-    resultsUnavailable:
-      "Verified results are not published yet. Encrypted message counts are not vote totals.",
+    resultsUnavailable: "Verified results are not published yet. Encrypted message counts are not vote totals.",
     windowClosed: "This poll is not open for voting on the configured chain.",
     metadataNote: "Question text is operator metadata, not stored on the Poll contract.",
     voteOptions: { yes: "Yes", no: "No", abstain: "Abstain" },
@@ -36,7 +35,8 @@ const content = {
     resultsTitle: "Verified results",
     totalVotes: "Total Votes",
     privacyTitle: "Anonymous & Secure",
-    privacyDescription: "Votes are verified via zk-proofs and stored on-chain. Your identity is never revealed.",
+    privacyDescription:
+      "Ballot commands are encrypted on-chain. The MACI coordinator can decrypt commands; public account metadata may remain linkable.",
     poweredBy: "Powered by",
     relatedPollsTitle: "Related Polls in Venezuela",
     tags: "Tags",
@@ -49,8 +49,7 @@ const content = {
     verifiedToVote: "Estás verificado para votar en esta encuesta",
     notEligible: "Esta pantalla no aplica elegibilidad. La ventana de votación sale del contrato Poll.",
     unknownPoll: "Esta URL no es la encuesta configurada en la aplicación.",
-    resultsUnavailable:
-      "Aún no hay resultados verificados. El recuento de mensajes cifrados no es un total de votos.",
+    resultsUnavailable: "Aún no hay resultados verificados. El recuento de mensajes cifrados no es un total de votos.",
     windowClosed: "Esta encuesta no está abierta para votar en la cadena configurada.",
     metadataNote: "El texto de la pregunta es metadato del operador; no está en el contrato Poll.",
     voteOptions: { yes: "Sí", no: "No", abstain: "Abstenerse" },
@@ -74,7 +73,7 @@ const content = {
     totalVotes: "Votos Totales",
     privacyTitle: "Anónimo y Seguro",
     privacyDescription:
-      "Los votos se verifican mediante pruebas zk y se almacenan on-chain. Tu identidad nunca se revela.",
+      "Los comandos de voto se cifran on-chain. El coordinador MACI puede descifrarlos; los metadatos públicos de la cuenta pueden vincularse.",
     poweredBy: "Impulsado por",
     relatedPollsTitle: "Encuestas Relacionadas en Venezuela",
     tags: "Etiquetas",
@@ -191,13 +190,13 @@ export default function PollDetailPage() {
   }, [maci.account]);
 
   return (
-    <div className="bg-gray-900 text-gray-200 min-h-screen font-sans">
+    <div className="bg-black text-gray-200 min-h-screen font-sans">
       {/* Header */}
       <header className="sticky top-0 bg-gray-900/80 backdrop-blur-md z-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
-              <Shield className="w-8 h-8 text-blue-400" />
+              <Shield className="w-8 h-8 text-lime-300" />
               <span className="text-2xl font-bold tracking-wider text-white">{currentContent.brand}</span>
             </div>
             <div className="flex items-center space-x-4">
@@ -224,6 +223,12 @@ export default function PollDetailPage() {
           {!isConfiguredPoll && configured.phase !== "loading" && (
             <p className="mb-6 text-yellow-300">{currentContent.unknownPoll}</p>
           )}
+          <nav aria-label="Round navigation" className="flex flex-wrap gap-5 mb-6 text-lime-300 underline">
+            <Link to="/">Home</Link>
+            <Link to="/account">Account / eligibility</Link>
+            <Link to="/round/ballot">Voting prerequisites</Link>
+            <Link to="/round/results">Results readiness</Link>
+          </nav>
           {/* 1. Poll Header */}
           <section className="mb-8">
             <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-3">
@@ -243,9 +248,7 @@ export default function PollDetailPage() {
               )}
             </div>
             <p className="text-sm text-gray-400">{currentContent.metadataNote}</p>
-            {!windowOpen && (
-              <p className="text-sm text-yellow-300 mt-3">{currentContent.windowClosed}</p>
-            )}
+            {!windowOpen && <p className="text-sm text-yellow-300 mt-3">{currentContent.windowClosed}</p>}
           </section>
 
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
@@ -296,7 +299,7 @@ export default function PollDetailPage() {
                           <button
                             disabled={maci.isBusy}
                             onClick={() => maci.connect().catch((e) => setError(e.message))}
-                            className="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                            className="bg-lime-300 text-black hover:bg-lime-200 font-semibold py-2 px-4 rounded-lg transition-colors"
                           >
                             Connect Wallet
                           </button>
@@ -375,7 +378,7 @@ export default function PollDetailPage() {
 
           {/* 5. Privacy + Trust Info */}
           <section className="my-12 bg-gray-800/30 p-6 rounded-lg border border-gray-700/50 flex flex-col sm:flex-row items-center gap-6">
-            <Shield className="w-10 h-10 text-blue-400 flex-shrink-0" />
+            <Shield className="w-10 h-10 text-lime-300 flex-shrink-0" />
             <div>
               <h3 className="font-bold text-white">{currentContent.privacyTitle}</h3>
               <p className="text-sm text-gray-300 mb-2">{currentContent.privacyDescription}</p>

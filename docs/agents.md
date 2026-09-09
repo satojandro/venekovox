@@ -1,5 +1,28 @@
 # Agent handoff and continuity protocol
 
+## Frontend-first Stage 1 handoff — 2026-09-08
+
+- Owner: Astra; S1.1/S2.1/S2.2/S3.1/S3.2/S4.1 frontend review; main base `869f8bcc`.
+- User scope: enumerate and surface participant/admin/coordinator screens, ENS-style
+  consistency, code wiring notes and Privy dashboard instructions. Later steering:
+  preserve original landing copy at `/`; it is restored, with added navigation/login.
+- Changes: App, Landing, Polls, PollDetail; new `src/journey/{Round.tsx,screens.ts}`;
+  frontend-round/privy-setup docs and canonical status/roadmap/journey/continuity.
+- No dependency, backend, contract, key-storage or wallet-execution changes. W1's
+  Privy adapter is a throwing stub; newer naming exists on `codex/ens-registration-v2`
+  at `3fd87a2e`, inspected but not merged. Do not confuse readiness screens with services.
+- Validation: frontend 84 unit tests passed, build passed with existing SDK export,
+  bundle-size and Browserslist warnings. Browser checked home/login-unavailable,
+  naming consent/unavailable and draft duplicate-option/date/review interactions;
+  found and fixed date input handling and non-finite-date validation. All 13 new
+  screen routes and restored homepage rendered; final build/diff check passed.
+- No live login/document/chain/write evidence; English shell, recovery/session/admin
+  enforcement and backend integrations remain. Browser preview runs at port 3000.
+- Working changes remain uncommitted; no push/PR/deployment. Next: review the screen map,
+  then follow frontend-round.md integration order. Alejandro owns dashboard provisioning,
+  provider sessions, funded signing and secrets; agent supplies integration code.
+
+
 ## Start every work session
 
 **Latest accepted priority, 2026-09-07:** execute Stage 1 private, verifiable polling.

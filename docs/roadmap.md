@@ -1,5 +1,18 @@
 # Roadmap, acceptance gates and decisions
 
+## Frontend-first execution update — 2026-09-08
+
+Alejandro requested visual review of all Stage 1 participant and admin/coordinator screens
+before the next backend integration round, preserving the existing landing-page copy.
+The [screen inventory and service handoffs](frontend-round.md) now specify both paths;
+`/journey` renders them as a clickable map. Login starts from `/` with Privy; ENS remains
+optional and distinct from ID eligibility. Poll creation/coordinator UI is now in the
+frontend review scope, while D08's operator-created M1 fallback remains valid.
+This UI-first sequencing does not close wallet/identity/proving/results gates or move
+Stages 2/3 ahead of Stage 1. Next: connect actual Privy session/caller, reconcile naming,
+mount Enterprise evidence, then deployment/submission/recovery and verified results.
+
+
 Status authority: [status.md](status.md). Call-by-call map: [journey-map.md](journey-map.md).
 Dependencies below prevent parallel implementations from making incompatible
 identity, wallet or schema assumptions. Milestones are outcome gates, not claims of

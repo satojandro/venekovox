@@ -297,6 +297,21 @@ export default function VenekoVoxLandingPage() {
         </div>
       </header>
 
+      <nav
+        aria-label="Private polling round"
+        className="flex flex-wrap justify-center gap-5 px-6 py-3 border-b border-slate-800 text-sm text-lime-300"
+      >
+        <Link to="/account">{language === "en" ? "My account" : "Mi cuenta"}</Link>
+        <Link to="/admin">Admin</Link>
+        <Link to="/journey">{language === "en" ? "Screen map & wiring" : "Mapa de pantallas y conexiones"}</Link>
+      </nav>
+
+      <p className="text-center text-sm text-amber-200 px-6 pt-5">
+        {language === "en"
+          ? "Development round: Privy and verified-human voting are not connected yet. The content below describes the intended product."
+          : "Ronda de desarrollo: Privy y el voto con identidad verificada aún no están conectados. El contenido describe el producto previsto."}
+      </p>
+
       {/* Hero Section */}
       <section className="relative pt-24 pb-20 md:pt-32 md:pb-28 overflow-hidden">
         {/* Subtle Ambient Glow */}
@@ -317,6 +332,13 @@ export default function VenekoVoxLandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            {/* S2.2: /login is the explicit unconfigured Privy boundary; never simulate a session. */}
+            <Link
+              to="/login"
+              className="w-full sm:w-auto inline-flex items-center justify-center bg-lime-300 hover:bg-lime-200 text-black font-semibold py-3.5 px-8 rounded-xl"
+            >
+              {language === "en" ? "Log in with Privy" : "Iniciar sesión con Privy"}
+            </Link>
             <Link
               to="/polls"
               className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3.5 px-8 rounded-xl shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-0.5"

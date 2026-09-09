@@ -1,5 +1,24 @@
 # VenekoVox technical journey map
 
+## Frontend shell call-path update — 2026-09-08
+
+Baseline `869f8bcc` (main). `[OK: UI only]` App routes → original Landing `/` with
+Privy/account/admin/map links; `/round` → `RoundHome`; `/journey` → `ScreenMap`.
+`App.tsx:24` maps the shared screen inventory into `RoundScreen` routes. Source anchors:
+[App](../apps/front-end/src/App.tsx), [shell](../apps/front-end/src/journey/Round.tsx),
+[inventory](../apps/front-end/src/journey/screens.ts). `Round.tsx:188` (`Draft`) validates
+an in-memory question/options/UTC window; it never calls a deployment API.
+
+`[GAP]` `/login` → unavailable Privy action; `/account/name` → local label/consent form,
+not the separate naming branch; `/account/identity` → Enterprise readiness, not legacy
+Pass; `/admin/*` → public walkthrough, no authenticated mutations. `[GAP]` ballot/receipt/
+results walkthroughs have no selected poll or fake receipt/totals. Existing `/polls/:id`
+continues through useMaci; the new login/identity shell does not authorize that hook.
+`[OK: routing]` old `/trust-ritual` and `/create-poll` redirect to the new pages.
+See [full screen/backend map](frontend-round.md); historical call chains below are not
+claims that the new boundaries are connected. No live-chain acceptance in this update.
+
+
 ## P2 Enterprise candidate overlay — 2026-09-05
 
 The legacy call map below remains historical/as-built for the existing UI. **New identity

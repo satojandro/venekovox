@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Shield, Globe, Search, ChevronDown } from "lucide-react";
+import { Shield, Globe } from "lucide-react";
 import { isVoteOpen, pollStatusLabel } from "../polls/labels";
 import { useConfiguredPoll } from "../polls/useConfiguredPoll";
 
@@ -86,17 +86,19 @@ export default function PollExplorer() {
       : false;
 
   return (
-    <div className="bg-gray-900 text-gray-200 min-h-screen font-sans">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="bg-black text-gray-200 min-h-screen font-sans">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
         <header className="flex justify-between items-center mb-8">
           <div className="flex items-center space-x-3">
-            <Shield className="w-8 h-8 text-blue-400" />
+            <Shield className="w-8 h-8 text-lime-300" />
             <span className="text-2xl font-bold tracking-wider text-white">{currentContent.brand}</span>
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2 text-sm">
-              <span className={`relative inline-flex rounded-full h-3 w-3 ${healthOk ? "bg-green-500" : "bg-gray-500"}`} />
+              <span
+                className={`relative inline-flex rounded-full h-3 w-3 ${healthOk ? "bg-green-500" : "bg-gray-500"}`}
+              />
               <span className="text-gray-300">{healthOk ? currentContent.backendUp : currentContent.backendDown}</span>
             </div>
             <button
@@ -114,58 +116,23 @@ export default function PollExplorer() {
           {language === "en" ? "Find a poll by ENS name →" : "Buscar una encuesta por nombre ENS →"}
         </Link>
 
-        {/* Search & Filters */}
-        <div className="mb-10">
-          <div className="relative mb-6">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder={currentContent.searchPlaceholder}
-              className="w-full bg-gray-800 border border-gray-700 rounded-full py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="flex items-center gap-4">
-              {/* Country Filter - In a real app this would be a dropdown */}
-              <button className="flex items-center space-x-2 bg-gray-800 px-4 py-2 rounded-md border border-gray-700 hover:border-blue-500 transition">
-                <span>{currentContent.filters.allCountries}</span>
-                <ChevronDown className="w-4 h-4" />
-              </button>
-              {/* Time Filter */}
-              <div className="flex items-center bg-gray-800 rounded-md border border-gray-700 p-1">
-                <button className="px-3 py-1 text-sm rounded bg-blue-600 text-white">
-                  {currentContent.filters.times[0]}
-                </button>
-                <button className="px-3 py-1 text-sm rounded text-gray-300 hover:bg-gray-700">
-                  {currentContent.filters.times[1]}
-                </button>
-              </div>
-            </div>
-            <div className="hidden sm:block border-l border-gray-700 h-6 mx-2"></div>
-            <div className="flex items-center gap-2 flex-wrap justify-center">
-              {currentContent.filters.topics.map((topic) => (
-                <button
-                  key={topic}
-                  className="px-3 py-1 text-sm border border-gray-700 rounded-full hover:bg-gray-700 hover:text-white transition"
-                >
-                  {topic}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <p className="text-sm text-gray-400 mb-6">{currentContent.honesty}</p>
+        <nav aria-label="Round navigation" className="flex flex-wrap gap-5 mb-8 text-lime-300 underline">
+          <Link to="/">Home</Link>
+          <Link to="/login">Log in with Privy</Link>
+          <Link to="/account">Prepare your account</Link>
+          <Link to="/admin">Admin</Link>
+          <Link to="/journey">Screen map</Link>
+        </nav>
 
         <h2 className="text-3xl font-bold mb-6 text-white">{currentContent.sectionTitle}</h2>
 
         {configured.phase === "loading" && <p className="text-gray-300">{currentContent.loading}</p>}
         {configured.phase === "unconfigured" && <p className="text-yellow-300">{currentContent.noPoll}</p>}
         {(configured.phase === "ready" || configured.phase === "partial") && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2  gap-6">
             <Link
               to={`/polls/${configured.descriptor.pollId}`}
-              className="bg-gray-800/80 border border-gray-700 rounded-lg p-6 flex flex-col justify-between transition-all duration-300 hover:border-blue-500/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/10"
+              className="bg-black border border-gray-700 rounded-lg p-6 flex flex-col justify-between transition-all duration-300 hover:border-blue-500/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/10"
             >
               <div>
                 <div className="flex items-center justify-between mb-4">
@@ -184,29 +151,17 @@ export default function PollExplorer() {
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-4">{configured.descriptor.question[lang]}</h3>
               </div>
-              <span className="w-full py-2.5 rounded-md font-semibold text-center bg-blue-600 text-white">
+              <span className="w-full py-2.5 rounded-md font-semibold text-center bg-lime-300 text-black">
                 {currentContent.pollCard.viewAndVote}
               </span>
             </Link>
           </div>
         )}
 
-        {/* Footer */}
-        <footer className="text-center mt-16 pt-8 border-t border-gray-800">
-          <div className="flex justify-center items-center gap-x-6 text-sm text-gray-400">
-            <a href="#" className="hover:text-white transition">
-              {currentContent.footer.privacy}
-            </a>
-            <a href="#" className="hover:text-white transition">
-              {currentContent.footer.about}
-            </a>
-            <a href="#" className="hover:text-white transition">
-              {currentContent.footer.zk}
-            </a>
-            <a href="#" className="hover:text-white transition">
-              {currentContent.footer.protection}
-            </a>
-          </div>
+        <footer className="mt-10 text-gray-400">
+          <Link to="/help/privacy" className="underline">
+            Privacy, trust and recovery
+          </Link>
         </footer>
       </div>
     </div>

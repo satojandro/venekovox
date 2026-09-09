@@ -188,6 +188,29 @@
       $("buildqr").onclick = async () => {
         try {
           const zk = new ZKPassport(params.domain);
+          // BROWSER-VERIFY BYPASS: the SDK's onResult only fires after the browser
+          // re-verifies the proof with @aztec/bb.js — but esm.sh cannot serve bb.js's
+          // Worker asset (404 + cross-origin Worker block), so onResult never fires.
+          // The AUTHORITATIVE verification happens server-side; the browser is only
+          // a relay. The proof chunks and query result already land on the instance
+          // before href="handleResult" runs, so override it to skip verify() and
+          // expose proofs/result to our own relay (native stuff untouched).
+          zk.handleResult = async (topic) => {
+            const proofs = zk.topicToProofs?.[topic] || [];
+            const result = zk.topicToResults?.[topic];
+            // Keep the factory defaults for everything else; just don't run
+            // verify()/onResult — those are the bb.js-dependent parts.
+            if (!proofs.length || !result) {
+              set(
+                "qrstatus",
+                '<span class="err">Relay: proof payload incomplete (no proofs/result on instance)</span>',
+              );
+              return;
+            }
+            lastResult = { proofs, result, verified: undefined, uniqueIdentifier: undefined };
+            set("qrstatus", "Proofs relayed to server — verifying server-side… (browser verify skipped)");
+            $("authorize").disabled = false;
+          };
           // request() is ASYNC (creates the WebSocket bridge + beacon before
           // returning the builder); await it or qb is a Promise with no .disclose().
           const qb = await zk.request({

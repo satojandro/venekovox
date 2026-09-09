@@ -507,6 +507,20 @@ live ENS registration, CCIP gateway round trip or browser interaction. Do not co
 this discovery slice as completed participant pseudonyms, name registration UI,
 name-based voting or ENS prize signoff.
 
+#### Second slice: registration candidate (2026-09-07)
+
+The [registration specification and operator handoff](ens-registration.md) describes
+`VenekoVoxNames`, `/names`, the W1-compatible execution boundary and all deployment gates.
+Participant claims assign ownership to the caller and create an address record atomically;
+operator-only poll naming derives a deployed Poll from MACI and publishes the existing
+record format. Recovery requires current registry state plus verified forward resolution.
+
+This uses dedicated profile/poll ENSv2 registries and a narrow custom resolver. It is
+an undeployed candidate with explicit expiry and retained parent-administrator powers;
+it does not establish D04's permanent/nontransferable guarantees. Injected user-funded
+execution is wired; Privy onboarding/sponsorship and real named voting remain integration
+gates. No Self eligibility, wallet keys, MACI keys or poll-metadata boundary changed.
+
 ### A4. Poll metadata → contract lifecycle → UI (S3.2)
 
 Proposed descriptor fields: schema version, chain ID, MACI address, poll ID and

@@ -127,64 +127,6 @@ export function ScreenMap() {
     </Shell>
   );
 }
-function NameForm() {
-  const [label, setLabel] = useState("");
-  const [consent, setConsent] = useState(false);
-  const [checked, setChecked] = useState(false);
-  return (
-    <Card title="Your public pseudonym">
-      <p>
-        An ENS name is optional. It can expose the account’s public transaction history and recurring participation. It
-        does not verify your identity.
-      </p>
-      <form
-        className="space-y-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          setChecked(true);
-        }}
-      >
-        <label className="block">
-          Choose a name
-          <input
-            className={input}
-            value={label}
-            onChange={(e) => {
-              setLabel(e.target.value);
-              setChecked(false);
-            }}
-            required
-            minLength={3}
-            maxLength={32}
-            pattern={"[a-z0-9][a-z0-9\\-]{1,30}[a-z0-9]"}
-            autoCapitalize="none"
-            spellCheck={false}
-          />
-        </label>
-        <p className="text-sm text-gray-400">
-          3–32 lowercase letters, numbers or hyphens. The parent name and registration terms will come from the checked
-          deployment.
-        </p>
-        <label className="flex gap-3">
-          <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />I want this name
-          publicly linked to my participating account.
-        </label>
-        <button className={action} disabled={!consent}>
-          Check name availability
-        </button>
-        {checked && (
-          <Pending>
-            Label format accepted. Availability, price and registration are unavailable until the naming deployment and
-            account adapter are connected. No name has been reserved.
-          </Pending>
-        )}
-      </form>
-      <Link className="text-lime-300 underline" to="/account/identity">
-        Skip naming / continue to identity →
-      </Link>
-    </Card>
-  );
-}
 function Draft() {
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState(["", ""]);
@@ -376,7 +318,7 @@ export function RoundScreen({ id }: { id: ScreenId }) {
           </Card>
         </>
       )}
-      {id === "name" && <NameForm />}
+      {id === "name" && <Link to="/account/name">Open ENS registration →</Link>}
       {id === "identity" && (
         <>
           <Card title="Verification and eligibility">

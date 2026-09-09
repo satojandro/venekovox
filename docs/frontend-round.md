@@ -1,5 +1,18 @@
 # Stage 1 frontend round — 2026-09-08
 
+## ENS merge integration — 2026-09-08
+
+Merged `codex/ens-registration-v2` (`3fd87a2e`) into the frontend round. The actual
+`Names` component now serves `/account/name`; `/names` redirects there. Added account,
+identity-skip, admin and screen-map navigation. Original homepage copy and lazy MACI
+loading are preserved. Removed the duplicate local-only naming form.
+
+Validation: 95 frontend unit tests, 3 ENS React tests and 10 local ENS contract/plan
+tests passed; frontend build passed with existing warnings. Contract tests use the
+isolated scratch toolchain and synthetic registry, not Sepolia. Privy injection and
+registrar deployment/configuration remain separate gates; no live claim or signing.
+
+
 Scope: frontend-first review requested by Alejandro. Baseline main `869f8bcc`.
 Open `/` for the original landing copy with new login/admin navigation, `/round` for
 the concise round overview, and `/journey` for the clickable screen/component map.

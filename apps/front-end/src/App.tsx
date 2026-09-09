@@ -7,6 +7,7 @@ import Landing from "./pages/Landing";
 import Polls from "./pages/Polls";
 import Comments from "./pages/Comments";
 import NamedPoll from "./pages/NamedPoll";
+import Names from "./pages/Names";
 
 // Load the voting page only when that route is opened. It imports the MACI
 // SDK, which used to crash the entire site during startup.
@@ -22,8 +23,9 @@ function App() {
           <Route path="/about" element={<Landing />} />
           <Route path="/journey" element={<ScreenMap />} />
           {screens.map((screen) => (
-            <Route key={screen.id} path={screen.path} element={<RoundScreen key={screen.id} id={screen.id} />} />
+            <Route key={screen.id} path={screen.path} element={screen.id === "name" ? <Names /> : <RoundScreen key={screen.id} id={screen.id} />} />
           ))}
+          <Route path="/names" element={<Navigate to="/account/name" replace />} />
           <Route path="/discover" element={<NamedPoll />} />
           <Route path="/p/:name" element={<NamedPoll />} />
           <Route path="/polls" element={<Polls />} />

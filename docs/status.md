@@ -1,5 +1,18 @@
 # Current state and evidence
 
+## ENS merge integration — 2026-09-08
+
+Merged `codex/ens-registration-v2` (`3fd87a2e`) into the frontend round. The actual
+`Names` component now serves `/account/name`; `/names` redirects there. Added account,
+identity-skip, admin and screen-map navigation. Original homepage copy and lazy MACI
+loading are preserved. Removed the duplicate local-only naming form.
+
+Validation: 95 frontend unit tests, 3 ENS React tests and 10 local ENS contract/plan
+tests passed; frontend build passed with existing warnings. Contract tests use the
+isolated scratch toolchain and synthetic registry, not Sepolia. Privy injection and
+registrar deployment/configuration remain separate gates; no live claim or signing.
+
+
 ## Frontend-first Stage 1 round — 2026-09-08
 
 On main base `869f8bcc`, added a navigable frontend shell and screen/component inventory
@@ -408,3 +421,31 @@ ENS verification addendum: focused strict TypeScript checking passed on Node 22.
 and the NamedPoll component bundled successfully for browsers. Full application build,
 React/browser race tests and live RPC/CCIP/name registration were not run. No dependency
 or lockfile changes are needed. Tests use ethers 6.15.0 and synthetic RPC responses.
+
+## S1.1 ENS registration candidate — 2026-09-07
+
+Owner: Astra; branch `codex/ens-registration-v2`, based on merged discovery main
+`81950b4215a313649ab7f5d6b0b6dedc6269a96f`. Implementation and detailed policy/setup:
+[ENS registration handoff](ens-registration.md).
+
+Implemented locally: optional `/names` page, injected user-funded wallet adapter,
+atomic profile ownership/address registration, operator-only naming of existing MACI
+polls, registry/resource-aware reconnect recovery, hierarchy validation, matching-event
+and resolution checks after receipts, and unsigned deployment preparation. Profile and
+poll namespaces are separate. The registrar has an explicit expiry and no transfer,
+rename or recovery management; parent administrators retain their ENSv2 powers.
+
+Reproduced on Node 22.20.0 / pnpm 10.34.5: **73 frontend unit tests**, **3 React/jsdom
+tests**, **8 local EVM tests plus 2 preparation tests**. Strict focused ENS TypeScript
+and frontend ESLint passed. Frozen install (`--ignore-scripts`, then explicit local
+build), the SDK dependency build and production frontend build succeeded. Existing
+MACI browser-export, Lottie and bundle warnings remain; no working-vote claim follows
+from the build. Solidity lint passes with NatSpec/gas-style warnings and obsolete-rule
+warnings from the existing configuration. No dependency or lockfile change.
+
+Not live-verified: real ENSv2 registration/permission behavior, ENS parent setup,
+Universal Resolver round trip, injected-wallet browser signing, Privy sponsorship and
+onboarding, and named voting with real metadata. EVM tests use a registry double, not
+the upstream ENSv2 implementation. The parent name and expiry still require Alejandro's
+selection, deployment policy review and private signing. G01/G05/G08 and W1 gates stay open.
+Current changes are local and uncommitted; no remote branch, PR or deployment is claimed.

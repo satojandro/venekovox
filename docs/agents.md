@@ -1,5 +1,18 @@
 # Agent handoff and continuity protocol
 
+## ENS merge integration — 2026-09-08
+
+Merged `codex/ens-registration-v2` (`3fd87a2e`) into the frontend round. The actual
+`Names` component now serves `/account/name`; `/names` redirects there. Added account,
+identity-skip, admin and screen-map navigation. Original homepage copy and lazy MACI
+loading are preserved. Removed the duplicate local-only naming form.
+
+Validation: 95 frontend unit tests, 3 ENS React tests and 10 local ENS contract/plan
+tests passed; frontend build passed with existing warnings. Contract tests use the
+isolated scratch toolchain and synthetic registry, not Sepolia. Privy injection and
+registrar deployment/configuration remain separate gates; no live claim or signing.
+
+
 ## Frontend-first Stage 1 handoff — 2026-09-08
 
 - Owner: Astra; S1.1/S2.1/S2.2/S3.1/S3.2/S4.1 frontend review; main base `869f8bcc`.
@@ -54,7 +67,8 @@ Hard facts about this codebase, verified against source:
 
 - **A vote's recipient is the POLL contract, not MACI.** `PollFactory.connect(pollAddress).publishMessage(...)` in `packages/sdk/ts/vote/submit.ts:13`.
 - **No tally-result ingestion is implemented.** `Tally.sol` has no dedicated result events; a supported ingestion strategy is still required.
-- **ENS has no code in this repository.**
+- **ENS discovery is implemented; an undeployed registration candidate is documented in
+  [ens-registration.md](ens-registration.md).** Neither is live verification evidence.
 - **Self verification stops at a browser flag.** `sgData` is `0x`; the recorded configuration uses `FreeForAll`. Verify selected deployment state before live claims.
 - Wallet recovery and MACI-key recovery are separate. Receipt cache recovery is not transaction verification. Standard MACI coordinator trust must remain visible in privacy claims.
 
@@ -303,3 +317,43 @@ ENS verification addendum: focused strict TypeScript checking passed on Node 22.
 and the NamedPoll component bundled successfully for browsers. Full application build,
 React/browser race tests and live RPC/CCIP/name registration were not run. No dependency
 or lockfile changes are needed. Tests use ethers 6.15.0 and synthetic RPC responses.
+
+## S1.1 registration interruption record — 2026-09-07
+
+- Task/owner/date: S1.1 second patch / Astra / 2026-09-07.
+- Base/branch: `81950b4215a313649ab7f5d6b0b6dedc6269a96f`, `codex/ens-registration-v2`.
+  Started from a clean checkout; W1 remains separate. No subagents used.
+- Goal/gate: optional account claims and reconnect recovery, operator naming of existing
+  polls, compatible with the merged discovery reader. Local candidate implemented;
+  actual ENSv2 registration, W1 onboarding/sponsorship and real named voting still open.
+- Changes/decisions: narrow custom registrar/resolver, dedicated profile/poll registries,
+  no owner transfer/resolver roles, explicit deployment expiry and retained parent powers.
+  These are candidate deployment semantics, not D04 permanence signoff. See
+  [detailed operator handoff](ens-registration.md).
+- Evidence: Node 22.20.0 / pnpm 10.34.5; 73 frontend unit, 3 React/jsdom, 8 EVM-double
+  and 2 preparation tests passed. Strict focused TypeScript, frontend ESLint, formatting,
+  SDK dependency build and frontend production build passed. Solidity lint has zero
+  errors but NatSpec/gas/configuration warnings. Commands and dependency limitations are
+  in the detailed handoff; no running install/deployment is left pending at delivery.
+- Failures/limitations: initial install was blocked by sandbox DNS; approved frozen
+  install then succeeded with scripts disabled. Initial build lacked workspace SDK
+  outputs; an approved explicit dependency build resolved that. Existing MACI browser
+  export warnings remain. EVM tests use a registry double, not upstream ENSv2 bytecode.
+  No live links, native-wallet browser signing or eligibility/vote evidence.
+- Delivery: files written directly in the repository, **uncommitted**. No push/PR or
+  deployment. Dirty paths: frontend `.env.example`, `package.json`, `src/App.tsx`,
+  `src/pages/NamedPoll.tsx`, new `src/pages/Names.tsx`, new `src/ens/registration.ts`,
+  new `src/ens/injectedNamingWallet.ts`, `tests/ens/pollName.test.mjs`, new
+  `tests/ens/load.mjs`, `tests/ens/registration.test.mjs`, `tests/ens/Names.ui.test.tsx`;
+  contracts `package.json`, new `contracts/ens/VenekoVoxNames.sol`,
+  `scripts/prepareEnsRegistration.mjs`, `test-ens/names.evm.test.mjs`,
+  `test-ens/prepare.test.mjs`; docs `agents.md`, `build.md`, `journey-map.md`,
+  `roadmap.md`, `status.md` and new `ens-registration.md`. No lock change.
+- Next concrete action: review this candidate, supply the actual Sepolia parent and
+  approve expiry/recovery policy, prepare unsigned setup using the documented command,
+  then execute an operator-signed real ENSv2 compatibility smoke. Do not merge W1 wholesale
+  or route a named poll into mock PollDetail to make the gate appear complete.
+- External setup: Alejandro selects/controls the native ENSv2 parent, creates/links its
+  registries, chooses the operator/expiry and signs deployment/role grants privately.
+  Hermes/W1 integration must supply the participating-account sender and sponsorship
+  rules. S3.2 must provide bound real metadata and a voting route consuming the target.

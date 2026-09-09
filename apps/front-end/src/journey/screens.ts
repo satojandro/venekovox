@@ -29,7 +29,7 @@ export const screens = [
     components:
       "Existing name · label input · public-link consent · availability · fees · pending transaction · confirmed resolution · skip",
     wiring:
-      "S1.1: reconcile codex/ens-registration-v2 (3fd87a2e), Names.tsx and NamingWallet with the actual Privy caller. Check registrar/network/parent, ownership and resolution. ENS is optional, never eligibility.",
+      "S1.1: Names.tsx and NamingWallet are merged from 3fd87a2e. Injected-wallet claims/recovery are implemented; supply the actual Privy caller adapter next. Check registrar/network/parent, ownership and resolution. ENS is optional, never eligibility.",
   },
   {
     id: "identity",

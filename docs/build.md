@@ -114,15 +114,22 @@ Existing entry points: [Self verifier](../apps/backend/src/routes/verify.ts),
 with the caller. Current frontend gate data is empty (`0x`). A browser verification
 flag is not a credential.
 
-#### Enterprise pivot — authoritative decision, 2026-09-05
+#### Provider pivot — historical, superseded by D17 (2026-09-08)
 
-Alejandro explicitly authorized the migration. **Self Pass is legacy; new identity
-integrations use Self Enterprise.** This supersedes the old D02 and every instruction
-to preserve Pass or avoid Enterprise setup. Keep historical Pass source identifiable
-until the frontend and backend cut over together. Do not remove dependencies still
-used by that route; do not copy its disclosure/logging behavior into Enterprise.
+Alejandro explicitly authorized the migration to Self Enterprise on 2026-09-05, and it
+remains a valid unmounted candidate. **D17 (2026-09-08) locks Stage 1 identity to
+ZKPassport** (`@zkpassport/sdk@0.16.2`, salted + `facematch("strict")`, scope frozen in
+the eligibility manifest). Self Pass stays legacy; the handshake below is
+provider-agnostic in shape and the ZKPassport adapter implements the same boundary
+(challenge → verify → authorize → `SelfEligibilityPolicy.enforce`). Enterprise flow/API
+keys are no longer required for Stage 1; they matter only if the D17 FaceMatch/device
+fallback is triggered (PM decision + new record — never a silent mid-poll flip). Do not
+copy the Pass QR/verifier path into new code. Keep historical Pass source identifiable
+until the frontend and backend cut over together; do not remove dependencies still used
+by that route; do not copy its disclosure/logging behavior.
 [Official legacy notice](https://docs.self.xyz/docs/self-pass/) ·
-[Migration guide](https://docs.self.xyz/docs/self-enterprise/migration/from-self-pass-sdk/)
+[Migration guide](https://docs.self.xyz/docs/self-enterprise/migration/from-self-pass-sdk/) ·
+[ZKPassport docs](https://docs.zkpassport.id)
 
 Enterprise manages verification; our backend authenticates its result and issues a
 separate, short-lived MACI authorization. This adds trust in Self's delivery service

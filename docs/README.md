@@ -12,17 +12,18 @@ Read in this order.
 
 ## The eight documents
 
-| File                                                           | What it is                                                        |
-| -------------------------------------------------------------- | ----------------------------------------------------------------- |
-| [journey-map.md](journey-map.md)                               | **Start here.** Call-by-call ASCII map of the system as built     |
-| [journey.md](journey.md)                                       | Product journey, architecture, trust boundaries, design rationale |
-| [status.md](status.md)                                         | What exists, evidence ledger, gaps G01–G13                        |
-| [roadmap.md](roadmap.md)                                       | Milestones M1–M4, task IDs S1–S5, decisions D01–D17               |
-| [technology.md](technology.md)                                 | Technology → stage → prize → evidence, plus judge guide           |
-| [build.md](build.md)                                           | Integration specs (Part A) and runbook (Part B)                   |
-| [agents.md](agents.md)                                         | Agent handoff protocol                                            |
-| [demographic-analytics-spec.md](demographic-analytics-spec.md) | Long-term product direction DA0–DA3; proposed, not built          |
-| [data-and-tally-architecture.md](data-and-tally-architecture.md) | Concrete storage, processing, demographic binding and result-delivery architecture |
+| File                                                             | What it is                                                                              |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [journey-map.md](journey-map.md)                                 | **Start here.** Call-by-call ASCII map of the system as built                           |
+| [journey.md](journey.md)                                         | Product journey, architecture, trust boundaries, design rationale                       |
+| [status.md](status.md)                                           | What exists, evidence ledger, gaps G01–G13                                              |
+| [roadmap.md](roadmap.md)                                         | Milestones M1–M4, task IDs S1–S5, decisions D01–D17                                     |
+| [technology.md](technology.md)                                   | Technology → stage → prize → evidence, plus judge guide                                 |
+| [build.md](build.md)                                             | Integration specs (Part A) and runbook (Part B)                                         |
+| [product-mount.md](product-mount.md)                             | **C gate spec (Cursor handoff):** mount ZKPassport → app.ts + FE Auth → join gate bytes |
+| [agents.md](agents.md)                                           | Agent handoff protocol                                                                  |
+| [demographic-analytics-spec.md](demographic-analytics-spec.md)   | Long-term product direction DA0–DA3; proposed, not built                                |
+| [data-and-tally-architecture.md](data-and-tally-architecture.md) | Concrete storage, processing, demographic binding and result-delivery architecture      |
 
 ## Authority
 

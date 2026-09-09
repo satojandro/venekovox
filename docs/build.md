@@ -37,16 +37,16 @@ Keep provider experiments outside the active login/voting route. Dependencies: S
 actual caller/account model, D12 uniqueness and recovery policy. No new cryptographic
 primitives or circuit forks are needed for the initial comparison.
 
-| Test | Evidence required for both providers |
-| --- | --- |
-| First visit | Actual target document/device, elapsed time, prompts, completion/failure; no identity payload in evidence |
-| Return visit | Repeat proof from registered document versus fresh scan; refresh and new-device recovery measured separately |
-| Verification boundary | Local cryptographic verification, hosted API, webhook and contract roles identified; test remote fallback explicitly |
-| Authorization | Bind approved policy, account, chain, target, action, expiry and nonce; wrong-account, wrong-poll, replay and expired evidence rejected |
-| Uniqueness | Repeat same document across accounts; determine renewal, second-document and changed-scope behavior; unknown cases stay unknown |
-| Privacy | Enumerate recipients of attributes, proofs and metadata, retained state and public identifiers; no raw documents or low-entropy ID hashes on chain |
-| Operations/cost | Confirm pricing, limits and licence terms; measure per-success cost including retries, infrastructure, gas, support and maintenance at 1k/10k/100k verifications |
-| Recovery | Lost wallet, lost device and independent MACI-key recovery; no silent second membership |
+| Test                  | Evidence required for both providers                                                                                                                             |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| First visit           | Actual target document/device, elapsed time, prompts, completion/failure; no identity payload in evidence                                                        |
+| Return visit          | Repeat proof from registered document versus fresh scan; refresh and new-device recovery measured separately                                                     |
+| Verification boundary | Local cryptographic verification, hosted API, webhook and contract roles identified; test remote fallback explicitly                                             |
+| Authorization         | Bind approved policy, account, chain, target, action, expiry and nonce; wrong-account, wrong-poll, replay and expired evidence rejected                          |
+| Uniqueness            | Repeat same document across accounts; determine renewal, second-document and changed-scope behavior; unknown cases stay unknown                                  |
+| Privacy               | Enumerate recipients of attributes, proofs and metadata, retained state and public identifiers; no raw documents or low-entropy ID hashes on chain               |
+| Operations/cost       | Confirm pricing, limits and licence terms; measure per-success cost including retries, infrastructure, gas, support and maintenance at 1k/10k/100k verifications |
+| Recovery              | Lost wallet, lost device and independent MACI-key recovery; no silent second membership                                                                          |
 
 Run source/API review first, then synthetic integration tests, then Alejandro-operated
 real sessions, then a recommendation. Stop expanding after one complete representative
@@ -113,6 +113,45 @@ Existing entry points: [Self verifier](../apps/backend/src/routes/verify.ts),
 `signUpPolicy.enforce(msg.sender, data)`; poll joining calls its configured policy
 with the caller. Current frontend gate data is empty (`0x`). A browser verification
 flag is not a credential.
+
+#### ZKPassport real-document runbook — verified 2026-09-09 (D18)
+
+**TL;DR:** live (non-dev) proof generation requires the ZKPassport dashboard
+project's **Allowed origins** to contain the page's serving origin; otherwise
+the phone app crashes silently at "generating proof". And the browser must NOT
+verify proofs — esm.sh can't serve the `@aztec/bb.js` Worker asset; the server
+is the authoritative verifier.
+
+Setup steps that worked (real passport, app 1.3.1, Developer Options OFF):
+
+1. Dashboard (dashboard.zkpassport.id) → project with a **verified domain**
+   (`uxisnear.com`). Verify the domain + subdomain (`app.uxisnear.com`) with
+   DNS TXT records: Host `_zkpassport`, Value `zkpassport-verify=<host>`.
+   Preserve the primary-domain TXT when adding subdomain records (same host
+   label allows multiple TXT rows).
+2. Point the subdomain at the Mini: CNAME `app` →
+   `claudios-mac-mini.taila56fc2.ts.net` (works over the tailnet; the MacBook
+   resolves it to 100.83.148.118; no public exposure needed). Namecheap:
+   must be on **BasicDNS**, not Cloudflare, to see the editor.
+3. Project → Add origin: `app.uxisnear.com` (bare hostname — with scheme+port
+   it's rejected as "Invalid origin"). Verify it in the dashboard.
+4. Serve the trial client from that origin:
+   `TRIAL_PORT=3110 TRIAL_MODE=live TRIAL_ZKP_LIVE_REQUIRED=true
+TRIAL_ZKP_DOMAIN=uxisnear.com TRIAL_ZKP_SCOPE=venekovox-stage1
+TRIAL_CONFIG_ID=venekovox-stage1-salted-v1
+TRIAL_ISSUER_PRIVATE_KEY=… TRIAL_TAG_SECRET=$(openssl rand -hex 32)
+TRIAL_POLICY_ADDRESS=… TRIAL_TARGET_ADDRESS=… pnpm --dir apps/backend trial`
+   → browser opens `http://app.uxisnear.com:3110`.
+5. Client quirks (all fixed in `trialClient.html`):
+   - `zk.request()` is **async** — `await` it.
+   - `uniqueIdentifierType` in the deep link must be the **numeric enum**
+     (SALTED=1), not the string hint.
+   - Override `zk.handleResult` to relay proofs/result to the server and skip
+     browser-side `verify()` — otherwise `onResult` never fires (esm.sh
+     Worker 404).
+
+Verification evidence: full grant JSON + hashes in journey-map.md §0 and
+`D10-real-session-record-2026-09-08.md`.
 
 #### Provider pivot — historical, superseded by D17 (2026-09-08)
 

@@ -79,13 +79,18 @@ const deps = {
 if (deps.identityTagSecret.length < 32) throw new Error("TRIAL_TAG_SECRET too short in live mode");
 
 // --- ZKPassport adapter (real SDK, offline query rebuild) ---
+// D17 Stage-1 lock: salted + strict facematch is the DEFAULT and is enforced
+// by the adapter constructor (salted without facematch fails at config time).
+// TRIAL_ZKP_UNIQUENESS=scoped is a LABELED DIAGNOSTIC override only — it drops
+// salted + facematch so we can isolate device errors (per the 2026-09-08
+// addendum: never a silent mid-poll flip; scoped requires a PM decision
+// record + its own configId, and it is NOT the production lock).
+const uniquenessMode = process.env.TRIAL_ZKP_UNIQUENESS === "scoped" ? "scoped" : "salted";
 const zkConfig: ZkPassportConfig = {
   ...baseConfig,
   zkDomain: process.env.TRIAL_ZKP_DOMAIN || "venekovox.trial",
   zkScope: process.env.TRIAL_ZKP_SCOPE || "venekovox-stage1",
-  // D17 Stage-1 lock: salted uniqueness + strict facematch (config fails
-  // closed if facematch is omitted below).
-  uniqueIdentifierType: "salted",
+  uniqueIdentifierType: uniquenessMode,
   oprfKeyId: process.env.TRIAL_ZKP_OPRF_KEY_ID || undefined,
   validity: Number(process.env.TRIAL_ZKP_VALIDITY || 604800),
   devMode: !process.env.TRIAL_ZKP_LIVE_REQUIRED, // mock passports accepted in test mode
@@ -99,7 +104,9 @@ const zkConfig: ZkPassportConfig = {
     // Age-band is NATIVE in ZKPassport: pinned here to prove the capability.
     ageBand: process.env.TRIAL_ZKP_AGE_BAND === "on" ? { min: 18, max: 99 } : undefined,
     discloseGender: true,
-    facematch: "strict",
+    // Scoped diagnostic legitimately omits facematch (salted REQUIRES strict;
+    // scoped does not — see zkpassport.ts constructor).
+    ...(uniquenessMode === "salted" ? { facematch: "strict" as const } : {}),
   },
 };
 const zk = new ZkPassportEligibility(

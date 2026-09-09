@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Policy-mode isolation test — policy-1 via uxisnear.com</title>
+    <style>
+      body {
+        font:
+          15px -apple-system,
+          Segoe UI,
+          Roboto,
+          sans-serif;
+        max-width: 680px;
+        margin: 24px auto;
+        padding: 0 16px;
+        color: #1a1a1a;
+      }
+      h1 {
+        font-size: 19px;
+      }
+      code {
+        background: #f4f4f4;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+      button {
+        font: inherit;
+        padding: 8px 14px;
+        border: 1px solid #999;
+        border-radius: 6px;
+        background: #fff;
+        cursor: pointer;
+      }
+      section {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin: 14px 0;
+      }
+      .ok {
+        color: #0a7;
+      }
+      .err {
+        color: #c02;
+      }
+      .dim {
+        color: #777;
+        font-size: 13px;
+      }
+      img.qr {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Policy-mode isolation test — <code>policy-1</code></h1>
+    <p class="dim">
+      Reproduces the dashboard flow exactly: registered domain <code>uxisnear.com</code>, policy
+      <code>policy-1</code> (Human Validation). PURPOSE: prove whether the ZKPassport app will generate a proof from a
+      policy-mode QR outside the dashboard. No server verify in this page — this tests the phone's proof engine only.
+    </p>
+
+    <section>
+      <button id="build">Build policy QR</button>
+      <div id="qr" style="margin-top: 10px"></div>
+      <div class="dim" id="status">Not started</div>
+    </section>
+
+    <script type="module">
+      import { ZKPassport, NullifierType } from "https://esm.sh/@zkpassport/sdk@0.16.2";
+
+      const $ = (id) => document.getElementById(id);
+      $("build").onclick = async () => {
+        try {
+          $("status").textContent = "request()… (fetching dashboard config for uxisnear.com)";
+          const zk = new ZKPassport("uxisnear.com");
+          // policy FIRST — builder methods cannot follow (SDK assertion).
+          const request = zk.request({
+            name: "OpenPoll",
+            purpose: "Human Validation",
+          });
+          const qb = await request;
+          qb.policy("policy-1");
+          const done = qb.done();
+          const url = done.url;
+          $("qr").innerHTML =
+            `<img class="qr" alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(url)}" />`;
+          $("status").innerHTML = `QR ready — deep link:<br/><code><a href="${url}">${url}</a></code>`;
+          done.onResult(
+            (r) =>
+              ($("status").innerHTML =
+                `Proof received. verified=${r.verified} type=${r.uniqueIdentifierType} id=${r.uniqueIdentifier ? String(r.uniqueIdentifier).slice(0, 16) + "…" : "none"}`),
+          );
+          done.onError(
+            (e) => ($("status").innerHTML = `<span class="err">SDK error: ${String(e.message || e)}</span>`),
+          );
+          done.onBridgeConnect?.(() => ($("status").textContent = "Bridge connected — ready to receive from phone"));
+          done.onRequestReceived?.(() => ($("status").textContent = "Phone connected — generating proof…"));
+          done.onGeneratingProof?.(() => ($("status").textContent = "Phone generating ZK proof…"));
+          done.onReject?.(() => ($("status").innerHTML = '<span class="err">Phone REJECTED the request</span>'));
+        } catch (e) {
+          $("status").innerHTML = `<span class="err">${e.message}</span>`;
+        }
+      };
+    </script>
+  </body>
+</html>

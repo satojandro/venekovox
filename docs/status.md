@@ -1,5 +1,24 @@
 # Current state and evidence
 
+## WP0 — Continuity France poll deployed — 2026-09-09
+
+Poll **1** is live on Sepolia under the existing MACI `0x44F31f3823ceFE00C2FA5acEB2576F119143Fe3a`,
+with the issuer-backed **SelfEligibilityPolicy** bound (no FreeForAll). Blocker A from the
+architect brief is resolved via the preferred option: policy registered in the deploy framework
+(`EContracts`/`EPolicies`/`FULL_POLICY_NAMES` + `02-policies.ts` deploy branch; `03-poll.ts`
+`setTarget` binds it to the poll). Commit `5e94ed744`.
+
+Verified by on-chain read-back (publicnode RPC): `extContracts().policy = 0x530BDc1f…5Ea`,
+`guarded() == poll 0x517D4260…709`, `issuer = 0xE13208E1…ec6D` (throwaway deployer, D09),
+`configId`/`action` byte-match the product backend derivations (`product.ts`). Window
+2026-09-10T00:14Z → 2026-09-16T23:14Z (7 days), mode 2 (FULL / 1p1v), voteOptions 6.
+
+Full details: [continuity-french-poll-manifest.md](continuity-french-poll-manifest.md).
+
+Remaining for a full smoke: backend live env (`ZKP_MODE=live`, France allowlist, policy/target
+addresses above), restart, then passport → grant → join → vote from the product UI. The join
+dry-run (`eth_call enforce` before wallet sign) is already wired in the mount.
+
 ## C product mount — ZKPassport HTTP + Auth + join bytes — 2026-09-09
 
 Mounted the D17 ZKPassport path on `exp/provider-trial-self-vs-zkpassport` (`d4139c36`

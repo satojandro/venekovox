@@ -28,6 +28,14 @@ ISSUER_PRIVATE_KEY + TAG_SECRET are provisioned — on-chain issuer is the throw
 2026-09-10T00:14Z). Challenge endpoint confirmed issuing configId-matched challenges bound to
 the deployed policy/target pair.
 
+Re-verification after the descriptor change (Node 22.23.2, mounted main):
+FE unit suite **91/91** (descriptor test updated to assert the France poll 1
+shape — 6 options, pollId 1, 18+ note; commit `8b71d6427`); backend `test:p2`
+**64/64** with `P2_TOOLCHAIN_PACKAGE_JSON` = zkpassport-scratch. Note: the p2
+loader's data-URL `createRequire` is invalid on the shell's default Node 26 —
+run p2 tests on Node 22 with the scratch toolchain env, matching the documented
+`>=22 <23` pin.
+
 ## C product mount — ZKPassport HTTP + Auth + join bytes — 2026-09-09
 
 Mounted the D17 ZKPassport path on `exp/provider-trial-self-vs-zkpassport` (`d4139c36`

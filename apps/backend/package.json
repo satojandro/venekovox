@@ -10,10 +10,12 @@
     "serve": "node dist/index.js",
     "test:polls": "node --test tests/polls.test.mjs",
     "test:p2": "node --test tests/p2/*.test.mjs",
-    "typecheck:p2": "tsc -p tsconfig.p2.json --noEmit"
+    "typecheck:p2": "tsc -p tsconfig.p2.json --noEmit",
+    "trial": "ts-node-dev src/trialServer.ts"
   },
   "dependencies": {
     "@selfxyz/core": "^1.0.8",
+    "@zkpassport/sdk": "0.16.2",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",

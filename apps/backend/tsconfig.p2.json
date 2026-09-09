@@ -5,6 +5,6 @@
     "moduleResolution": "NodeNext",
     "outDir": "dist/p2"
   },
-  "include": ["src/eligibility/**/*.ts", "src/eligibility/**/*.mts"],
+  "include": ["src/eligibility/**/*.ts", "src/eligibility/**/*.mts", "src/routes/eligibility.ts"],
   "exclude": ["node_modules", "dist"]
 }

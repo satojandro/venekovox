@@ -26,9 +26,9 @@ import {
  *        — real SDK verify(); canonical query match; attribute checks; minimised claims
  *   5. authorize(id, signature)                       — repeat wallet control; EIP-712 grant
  *
- * This candidate is not wired into app.ts. Run it via the trial server
- * (src/trialServer.ts) with an operator-approved config; do not treat a passing
- * synthetic test as a completed voting journey (see docs/build.md provider-trial).
+ * Product HTTP lives in routes/eligibility.ts (mounted from app.ts). The
+ * trial server remains a separate entrypoint. Do not treat a passing synthetic
+ * test as a completed voting journey (see docs/build.md provider-trial).
  */
 
 export interface ZkPassportQueryConfig {

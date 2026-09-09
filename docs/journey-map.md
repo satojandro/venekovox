@@ -1,5 +1,25 @@
 # VenekoVox technical journey map
 
+## C product mount — as-built 2026-09-09 (not live-join evidence)
+
+Product path (this branch). Trial `/trial/zkpassport/*` still exists; new UI uses `/eligibility`.
+
+```
+  Auth.tsx /trust-ritual
+  └─ connect wallet → POST /eligibility/challenge
+  └─ personal_sign → POST /eligibility/begin (server-pinned SALTED + queryBuild)
+  └─ await zk.request({ uniqueIdentifierType: NullifierType.SALTED })  ← async
+       chain disclose/gte/range/in/facematch from queryBuild
+  └─ QR via `qrcode` (no api.qrserver.com)
+  └─ zk.handleResult OVERRIDE → POST /eligibility/receive (server verify)
+  └─ POST /eligibility/authorize → sessionStorage venekovox_eligibility
+       { venue, account, evidence, signature, issuedAt, expiresAt }  — no proofs
+  └─ voteFlow joinPoll({ sgDataArg: evidence })
+       dryRunJoinGate: eth_call policy.enforce from pollAddress BEFORE wallet sign
+       Poll.sol:388 policy.enforce(msg.sender, _signUpPolicyData)
+  MACI.signup({ sgData: "0x" }) unchanged until WP0
+```
+
 ## §0 ZKPassport real-document session — as-built, verified 2026-09-09 (D18)
 
 Real passport + app 1.3.1 flowed the **D17 salted lock** end-to-end and produced

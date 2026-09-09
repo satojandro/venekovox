@@ -77,7 +77,10 @@ For the **call-by-call map** of what each technology does, read
 
 Main base checked: `c12361c3ac2797f98e1238cdca669227fc43ebcc`.
 Local branch: `feat/p2-eligibility-bridge`; delivered as a patch, not a remote release.
-D02 now selects Enterprise by explicit user instruction. Root and canonical contributor
+D02 now selects Enterprise by explicit user instruction (2026-09-05); **D17
+(2026-09-08) supersedes D02's provider selection for new Stage 1 identity work —
+ZKPassport is locked (salted + facematch-strict), Enterprise remains unmounted.**
+Root and canonical contributor
 instructions were corrected. Existing Pass `/verify` and QR remain legacy migration debt.
 The new candidate Pass adapter was removed rather than shipped as a competing path.
 

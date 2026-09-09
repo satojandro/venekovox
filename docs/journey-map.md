@@ -3,9 +3,11 @@
 ## P2 Enterprise candidate overlay — 2026-09-05
 
 The legacy call map below remains historical/as-built for the existing UI. **New identity
-work uses Self Enterprise (D02); do not copy the Pass QR/verifier path into new code.**
+work uses ZKPassport (D17, 2026-09-08); do not copy the Pass QR/verifier path into new code.**
 This patch adds unmounted modules on main `c12361c3ac2797f98e1238cdca669227fc43ebcc`.
-It does not claim the old browser flow now invokes them.
+It does not claim the old browser flow now invokes them. The Enterprise candidate
+(D02, unmounted) and the ZKPassport adapter (provider lock) share the same
+authorization boundary: challenge → EIP-712 grant → `SelfEligibilityPolicy.enforce`.
 
 | Step | Actual candidate symbol                                            | Input → output / boundary                                                                    |
 | ---- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |

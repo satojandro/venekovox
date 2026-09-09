@@ -121,7 +121,7 @@
     </section>
 
     <script type="module">
-      import { ZKPassport } from "https://esm.sh/@zkpassport/sdk@0.16.2";
+      import { ZKPassport, NullifierType } from "https://esm.sh/@zkpassport/sdk@0.16.2";
 
       const $ = (id) => document.getElementById(id);
       const set = (id, html) => ($(id).innerHTML = html);
@@ -185,16 +185,23 @@
         }
       };
 
-      $("buildqr").onclick = () => {
+      $("buildqr").onclick = async () => {
         try {
           const zk = new ZKPassport(params.domain);
-          const qb = zk.request({
+          // request() is ASYNC (creates the WebSocket bridge + beacon before
+          // returning the builder); await it or qb is a Promise with no .disclose().
+          const qb = await zk.request({
             name: "VenekoVox Stage 1",
             purpose: "One-person-one-choice eligibility verification",
             scope: params.scope,
             validity: params.validity,
             devMode: params.devMode,
-            uniqueIdentifierType: params.uniqueIdentifierType,
+            // CRITICAL: the SDK's NullifierType is a NUMERIC enum (SALTED=1), and the
+            // deep link embeds its value as nt=<number>. Passing the server's string
+            // hint ("SALTED") produces nt=SALTED, which the phone app cannot parse
+            // and answers with a generic "something went wrong". Map to the enum.
+            uniqueIdentifierType:
+              params.uniqueIdentifierType === "SALTED" ? NullifierType.SALTED : NullifierType.NON_SALTED,
             ...(params.oprfKeyId ? { oprfKeyId: params.oprfKeyId } : {}),
           });
           // Rebuild the SAME query the server pinned (must be deep-equal to canonicalQuery).
@@ -221,6 +228,14 @@
             $("authorize").disabled = false;
           });
           done.onError((e) => set("qrstatus", `<span class="err">SDK error: ${String(e.message || e)}</span>`));
+          // Surface bridge/session state so a phone-side failure shows WHERE it died
+          // instead of a generic "something went wrong" on the phone.
+          done.onBridgeConnect?.(() => set("qrstatus", "Bridge connected — ready to receive from phone"));
+          done.onRequestReceived?.(() => set("qrstatus", "Phone connected — generating proof…"));
+          done.onGeneratingProof?.(() => set("qrstatus", "Phone generating ZK proof (this is the slow part)…"));
+          done.onReject?.(() =>
+            set("qrstatus", '<span class="err">Phone REJECTED the request (user cancelled or app error)</span>'),
+          );
           set(
             "qrstatus",
             "Waiting for the phone… open the ZKPassport app with this QR (Developer Options if mocking).",

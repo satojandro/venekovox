@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VenekoVox Stage 1 — D10 real-session client (trial)</title>
+    <style>
+      /* Trial-only page for the WP1 acceptance session. NOT product UI. */
+      body {
+        font:
+          15px/1.5 -apple-system,
+          Segoe UI,
+          Roboto,
+          sans-serif;
+        max-width: 760px;
+        margin: 24px auto;
+        padding: 0 16px;
+        color: #1a1a1a;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      code {
+        background: #f4f4f4;
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      button {
+        font: inherit;
+        padding: 8px 14px;
+        border: 1px solid #999;
+        border-radius: 6px;
+        background: #fff;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      section {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin: 14px 0;
+      }
+      .ok {
+        color: #0a7;
+      }
+      .err {
+        color: #c02;
+      }
+      .dim {
+        color: #777;
+        font-size: 13px;
+      }
+      pre {
+        background: #111;
+        color: #8f8;
+        padding: 10px;
+        border-radius: 6px;
+        overflow: auto;
+        font-size: 12px;
+      }
+      img.qr {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+      label {
+        display: block;
+        margin: 8px 0 4px;
+        font-weight: 600;
+      }
+      input,
+      textarea {
+        font: inherit;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 6px;
+        border: 1px solid #bbb;
+        border-radius: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>VenekoVox Stage-1 eligibility — D10 client</h1>
+    <p class="dim">
+      TRIAL TOOLING for the WP1 acceptance session (addendum 2026-09-08, D17 lock: ZKPassport salted + facematch
+      strict). This page builds the QR, forwards the proofs to the trial server, and issues the EIP-712 grant. It is
+      <b>not</b> the product flow.
+    </p>
+
+    <section>
+      <h2>1 · Connect wallet</h2>
+      <button id="connect">Connect wallet (MetaMask / injected)</button>
+      <div id="acct" class="dim"></div>
+    </section>
+
+    <section>
+      <h2>2 · Challenge → begin</h2>
+      <button id="begin" disabled>Create challenge &amp; begin</button>
+      <div id="chal" class="dim"></div>
+      <label>Returned request params (server-pinned)</label>
+      <textarea id="params" rows="8" readonly placeholder="Params appear here after begin()"></textarea>
+    </section>
+
+    <section>
+      <h2>3 · Scan the QR</h2>
+      <button id="buildqr" disabled>Build request &amp; show QR</button>
+      <div id="qr" style="margin-top: 10px"></div>
+      <div class="dim" id="qrlink"></div>
+      <div id="qrstatus" class="dim"></div>
+    </section>
+
+    <section>
+      <h2>4 · Receive proof → grant</h2>
+      <button id="authorize" disabled>Send proof &amp; authorize</button>
+      <div id="flow" class="dim"></div>
+      <label>EIP-712 grant (evidence)</label>
+      <textarea id="evidence" rows="10" readonly placeholder="authorization + signature + evidence"></textarea>
+    </section>
+
+    <script type="module">
+      import { ZKPassport } from "https://esm.sh/@zkpassport/sdk@0.16.2";
+
+      const $ = (id) => document.getElementById(id);
+      const set = (id, html) => ($(id).innerHTML = html);
+      const API = "";
+      let account = null,
+        challenge = null,
+        sig = null,
+        params = null,
+        sdkReq = null,
+        lastResult = null;
+
+      async function api(path, body) {
+        const r = await fetch(API + path, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body || {}),
+        });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          const e = new Error(j.error || "HTTP " + r.status);
+          e.payload = j;
+          throw e;
+        }
+        return j;
+      }
+
+      $("connect").onclick = async () => {
+        try {
+          if (!window.ethereum) throw new Error("No injected wallet (MetaMask) found");
+          const [a] = await window.ethereum.request({ method: "eth_requestAccounts" });
+          account = a;
+          set("acct", "Account: <code>" + account + "</code>");
+          $("begin").disabled = false;
+        } catch (e) {
+          set("acct", `<span class="err">${e.message}</span>`);
+        }
+      };
+
+      $("begin").onclick = async () => {
+        try {
+          $("begin").disabled = true;
+          set("chal", "Creating challenge…");
+          const c = await api("/trial/zkpassport/challenge", { account });
+          challenge = c.challengeId;
+          sig = await window.ethereum.request({
+            method: "personal_sign",
+            params: [c.message, account],
+          });
+          set("chal", `Challenge <code>${challenge.slice(0, 16)}…</code> — signed ✓`);
+          const p = await api("/trial/zkpassport/begin", { challengeId: challenge, signature: sig });
+          params = p;
+          $("params").value = JSON.stringify(p, null, 2);
+          set(
+            "chal",
+            "begin() OK — params are server-pinned (domain/scope/type/oprf/query). Build the QR with the SDK using exactly these.",
+          );
+          $("buildqr").disabled = false;
+        } catch (e) {
+          set("chal", `<span class="err">${e.message}</span>`);
+          $("begin").disabled = false;
+        }
+      };
+
+      $("buildqr").onclick = () => {
+        try {
+          const zk = new ZKPassport(params.domain);
+          const qb = zk.request({
+            name: "VenekoVox Stage 1",
+            purpose: "One-person-one-choice eligibility verification",
+            scope: params.scope,
+            validity: params.validity,
+            devMode: params.devMode,
+            uniqueIdentifierType: params.uniqueIdentifierType,
+            ...(params.oprfKeyId ? { oprfKeyId: params.oprfKeyId } : {}),
+          });
+          // Rebuild the SAME query the server pinned (must be deep-equal to canonicalQuery).
+          const b = params.queryBuild || {};
+          if (b.discloseGender) qb.disclose("gender");
+          if (b.minimumAge != null) qb.gte("age", b.minimumAge);
+          if (b.ageBand) qb.range("age", b.ageBand.min, b.ageBand.max);
+          if (b.nationalityIn?.length) qb.in("nationality", b.nationalityIn);
+          if (b.facematch === "strict") qb.facematch("strict");
+          const done = qb.done();
+          sdkReq = { done, query: done.query };
+          const url = done.url;
+          set(
+            "qr",
+            `<img class="qr" alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(url)}" />`,
+          );
+          set("qrlink", `Deep link (same as QR):<br/><code><a href="${url}">${url}</a></code>`);
+          done.onResult((r) => {
+            lastResult = r;
+            set(
+              "qrstatus",
+              `Proof received. verified=${r.verified} type=${r.uniqueIdentifierType} id=${r.uniqueIdentifier ? String(r.uniqueIdentifier).slice(0, 16) + "…" : "none"}`,
+            );
+            $("authorize").disabled = false;
+          });
+          done.onError((e) => set("qrstatus", `<span class="err">SDK error: ${String(e.message || e)}</span>`));
+          set(
+            "qrstatus",
+            "Waiting for the phone… open the ZKPassport app with this QR (Developer Options if mocking).",
+          );
+        } catch (e) {
+          set("qrstatus", `<span class="err">${e.message}</span>`);
+        }
+      };
+
+      $("authorize").onclick = async () => {
+        try {
+          set("flow", "Sending proofs to server verify()…");
+          const payload = {
+            proofs: lastResult.proofs,
+            originalQuery: sdkReq.query,
+            queryResult: lastResult.result,
+          };
+          const out = await api("/trial/zkpassport/receive", { challengeId: challenge, signature: sig, payload });
+          set("flow", `receiveProof → <span class="ok">${out.outcome}</span>`);
+          const grant = await api("/trial/zkpassport/authorize", { challengeId: challenge, signature: sig });
+          $("evidence").value = JSON.stringify(grant, null, 2);
+          set(
+            "flow",
+            `authorize → grant issued for <code>${grant.authorization?.account}</code>. Evidence below. Copy it for the D10 stopwatch table (step F).`,
+          );
+          $("authorize").disabled = true;
+        } catch (e) {
+          set("flow", `<span class="err">${e.message}</span>`);
+        }
+      };
+    </script>
+  </body>
+</html>

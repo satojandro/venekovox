@@ -11,7 +11,7 @@
     "test:polls": "node --test tests/polls.test.mjs",
     "test:p2": "node --test tests/p2/*.test.mjs",
     "typecheck:p2": "tsc -p tsconfig.p2.json --noEmit",
-    "trial": "ts-node-dev src/trialServer.ts"
+    "trial": "node --loader ./tests/p2/run-trial.mjs ./tests/p2/run-trial-entry.mjs"
   },
   "dependencies": {
     "@selfxyz/core": "^1.0.8",

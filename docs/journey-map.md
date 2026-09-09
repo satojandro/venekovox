@@ -1,5 +1,52 @@
 # VenekoVox technical journey map
 
+## §0 ZKPassport real-document session — as-built, verified 2026-09-09 (D18)
+
+Real passport + app 1.3.1 flowed the **D17 salted lock** end-to-end and produced
+an EIP-712 grant. Browser is a pure relay; the server is the authoritative verifier.
+
+```
+  D10 client (trialClient.html, served from http://app.uxisnear.com:3110)
+  └─ connect wallet (MetaMask)  → POST /trial/zkpassport/challenge {account}
+       └─ createChallenge (authorization.ts:117)          → {challengeId, message}
+  └─ sign message (wallet)      → POST /trial/zkpassport/begin {challengeId, sig}
+       └─ begin (zkpassport.ts:170) → ACCOUNT_CONTROL first; returns server-pinned
+          domain=uxisnear.com scope=venekovox-stage1 uniqueIdentifierType=SALTED
+          oprfKeyId? query(facematch strict) queryBuild
+  └─ new ZKPassport(domain); await request({... SALTED enum ...})  ← ASYNC, builds
+     WebSocket bridge; chain builder from queryBuild (disclose/gte/range/in/facematch)
+       └─ done() → deep link https://zkpassport.id/r?d=uxisnear.com&nt=1&…  → QR
+  └─ phone scans QR → ZKPassport app (stored passport) → generates salted proof
+       └─ proof chunks + queryResult arrive on SDK instance (topicToProofs/topicToResults)
+  └─ zk.handleResult OVERRIDE (086c1b089): capture proofs+result, SKIP browser
+     verify() — esm.sh cannot serve @aztec/bb.js Worker asset (404); browser
+     never onResult. Browser is relay only.
+  └─ POST /trial/zkpassport/receive {challengeId, sig, payload{proofs, originalQuery, queryResult}}
+       └─ zkpassport.ts receiveProof: SESSION_NOT_STARTED guard → deep-equal canonical
+          query → transport.verify() REAL SDK SERVER-SIDE (authoritative) →
+          uniqueIdentifierType SALTED check (D17 mix-reject) → attribute gates →
+          canonicalNullifier → claims {account, nullifier}  → outcome "accepted"
+  └─ POST /trial/zkpassport/authorize → EligibilityService.authorize: HMAC tag from
+     canonical decimal nullifier (authorization.ts:185) → EIP-712 Authorization →
+     issuer signs → grant {authorization, signature, evidence}
+  └─ GRANT (real): configId keccak("venekovox-stage1-salted-v1"), action keccak("signup"),
+     identityTag HMAC(real uniqueIdentifier)  [verified byte-for-byte]
+```
+
+**Two upstream/device gates found (D18):**
+
+1. **ZKPassport dashboard Allowed origins** — unknown origins crash the app
+   silently at "generating proof". Required: verified subdomain (DNS TXT
+   `_zkpassport` = `zkpassport-verify=app.uxisnear.com`; CNAME `app` →
+   `claudios-mac-mini.taila56fc2.ts.net`) + project allowedOrigins + serve page
+   from the matching origin.
+2. **esm.sh cannot serve the `@aztec/bb.js` Worker asset** (404 + cross-origin
+   Worker block) → SDK `onResult` never fires → browser verify bypassed; server
+   verify is the source of truth.
+
+Remaining acceptance = **G (join, tag consumed) and H (second-wallet reject)**:
+require WP0 (fresh poll + `SelfEligibilityPolicy` deployed and bound).
+
 ## P2 Enterprise candidate overlay — 2026-09-05
 
 The legacy call map below remains historical/as-built for the existing UI. **New identity

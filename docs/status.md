@@ -19,6 +19,15 @@ Remaining for a full smoke: backend live env (`ZKP_MODE=live`, France allowlist,
 addresses above), restart, then passport → grant → join → vote from the product UI. The join
 dry-run (`eth_call enforce` before wallet sign) is already wired in the mount.
 
+Backend now configured (apps/backend/.env, gitignored): POLICY_ADDRESS/TARGET_ADDRESS/POLL_ID=1/
+MACI_ADDRESS/France allowlist set. Service boots and reads the deployed poll:
+`GET /eligibility/health` → `{ok:true, mode:"test", provider:"zkpassport"}` (test mode until
+ISSUER_PRIVATE_KEY + TAG_SECRET are provisioned — on-chain issuer is the throwaway deployer
+0xE132…ec6D, so those secrets ARE the deployer key + a TAG_SECRET of Alejandro's choosing);
+`GET /polls/configured` → pollId 1, window 1788999251→1789600451, status `UPCOMING` (opens
+2026-09-10T00:14Z). Challenge endpoint confirmed issuing configId-matched challenges bound to
+the deployed policy/target pair.
+
 ## C product mount — ZKPassport HTTP + Auth + join bytes — 2026-09-09
 
 Mounted the D17 ZKPassport path on `exp/provider-trial-self-vs-zkpassport` (`d4139c36`

@@ -9,9 +9,7 @@ const source = readFileSync(new URL("../../src/polls/descriptor.ts", import.meta
 const js = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020 },
 }).outputText;
-const { readConfiguredDescriptor } = await import(
-  "data:text/javascript;base64," + Buffer.from(js).toString("base64")
-);
+const { readConfiguredDescriptor } = await import("data:text/javascript;base64," + Buffer.from(js).toString("base64"));
 
 test("rejects missing or malformed deployment env", () => {
   assert.equal(readConfiguredDescriptor({}), null);
@@ -29,12 +27,16 @@ test("returns an operator descriptor bound to the configured poll", () => {
   const descriptor = readConfiguredDescriptor({
     VITE_CHAIN_ID: "11155111",
     VITE_MACI_ADDRESS: "0x44F31f3823ceFE00C2FA5acEB2576F119143Fe3a",
-    VITE_POLL_ID: "0",
+    VITE_POLL_ID: "1",
   });
   assert.equal(descriptor.schemaVersion, 1);
   assert.equal(descriptor.metadataSource, "operator");
-  assert.equal(descriptor.pollId, "0");
-  assert.equal(descriptor.options.length, 3);
+  assert.equal(descriptor.pollId, "1");
+  // Continuity France poll 1: 5 candidates + honest "Other/None" exit (voteOptions 6 on-chain)
+  assert.equal(descriptor.options.length, 6);
   assert.equal(descriptor.options[0].index, 0);
-  assert.match(descriptor.question.en, /Poll 0/);
+  assert.equal(descriptor.options[5].label.en, "Other / None of these");
+  assert.match(descriptor.question.en, /French presidential election/);
+  assert.match(descriptor.question.en, /Poll 1/);
+  assert.match(descriptor.description.en, /18\+/);
 });

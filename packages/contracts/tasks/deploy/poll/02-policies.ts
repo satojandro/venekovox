@@ -15,6 +15,7 @@ import type {
   HatsPolicyFactory,
   MerkleProofCheckerFactory,
   MerkleProofPolicyFactory,
+  SelfEligibilityPolicy,
   SemaphoreCheckerFactory,
   SemaphorePolicyFactory,
   ZupassCheckerFactory,
@@ -87,6 +88,12 @@ deployment.deployTask(EDeploySteps.PollPolicy, "Deploy Poll policies").then((tas
       `poll-${pollId}`,
     );
     const erc20PolicyContractAddress = storage.getAddress(EPolicies.ERC20, hre.network.name, `poll-${pollId}`);
+    // VenekoVox: standalone issuer-backed policy, registered under the same poll-N key
+    const selfEligibilityPolicyContractAddress = storage.getAddress(
+      EPolicies.SelfEligibility,
+      hre.network.name,
+      `poll-${pollId}`,
+    );
 
     const policyToDeploy =
       deployment.getDeployConfigField<EContracts | null>(EContracts.Poll, "policy") || EContracts.FreeForAllPolicy;
@@ -100,6 +107,7 @@ deployment.deployTask(EDeploySteps.PollPolicy, "Deploy Poll policies").then((tas
     const skipDeployMerkleProofPolicy = policyToDeploy !== EContracts.MerkleProofPolicy;
     const skipDeployERC20VotesPolicy = policyToDeploy !== EContracts.ERC20VotesPolicy;
     const skipDeployERC20Policy = policyToDeploy !== EContracts.ERC20Policy;
+    const skipDeploySelfEligibilityPolicy = policyToDeploy !== EContracts.SelfEligibilityPolicy;
     const hasPolicyAddress = [
       freeForAllPolicyContractAddress,
       easPolicyContractAddress,
@@ -110,6 +118,7 @@ deployment.deployTask(EDeploySteps.PollPolicy, "Deploy Poll policies").then((tas
       merkleProofPolicyContractAddress,
       erc20VotesPolicyContractAddress,
       erc20PolicyContractAddress,
+      selfEligibilityPolicyContractAddress,
     ].some(Boolean);
 
     const isSkipable = [
@@ -122,6 +131,7 @@ deployment.deployTask(EDeploySteps.PollPolicy, "Deploy Poll policies").then((tas
       skipDeployMerkleProofPolicy,
       skipDeployERC20VotesPolicy,
       skipDeployERC20Policy,
+      skipDeploySelfEligibilityPolicy,
     ].some((skip) => !skip);
 
     const canSkipDeploy = incremental && hasPolicyAddress && isSkipable;
@@ -748,6 +758,52 @@ deployment.deployTask(EDeploySteps.PollPolicy, "Deploy Poll policies").then((tas
           network: hre.network.name,
         }),
       ]);
+    }
+
+    // VenekoVox: standalone issuer-backed ZKPassport eligibility policy.
+    // Constructor: (owner, issuer, configId, action). Defaults match the product
+    // backend (apps/backend/src/eligibility/product.ts): configId/action are the
+    // keccak256 of the same UTF-8 strings the backend hashes, so issuer-signed
+    // grants verify on-chain. Issuer defaults to the deployer (demo); override
+    // via deploy config "SelfEligibilityPolicy": { "issuer": "0x...", ... }.
+    if (!skipDeploySelfEligibilityPolicy) {
+      const { keccak256, toUtf8Bytes, isAddress } = await import("ethers");
+
+      const selfConfig = deployment.getDeployConfigField<Record<string, string> | null>(
+        EContracts.SelfEligibilityPolicy,
+        "SelfEligibilityPolicy",
+      );
+      const issuerFromConfig = selfConfig?.issuer;
+      if (issuerFromConfig && !isAddress(issuerFromConfig)) {
+        throw new Error("SelfEligibilityPolicy.issuer must be a valid address");
+      }
+      const issuer = issuerFromConfig || (await deployer.getAddress());
+      const configId = keccak256(toUtf8Bytes(selfConfig?.configId || "venekovox-stage1-salted-v1"));
+      const action = keccak256(toUtf8Bytes(selfConfig?.action || "signup"));
+
+      const selfPolicyContract = await deployment.deployContract<SelfEligibilityPolicy>(
+        { name: EContracts.SelfEligibilityPolicy },
+        await deployer.getAddress(),
+        issuer,
+        configId,
+        action,
+      );
+
+      // eslint-disable-next-line no-console
+      logGreen({
+        text: info(
+          `Deployed SelfEligibilityPolicy at ${await selfPolicyContract.getAddress()} (issuer: ${issuer}, configId: ${configId}, action: ${action})`,
+        ),
+      });
+
+      await storage.register({
+        id: EPolicies.SelfEligibility,
+        contract: selfPolicyContract,
+        name: EPolicies.SelfEligibility,
+        key: `poll-${pollId}`,
+        args: [await deployer.getAddress(), issuer, configId, action],
+        network: hre.network.name,
+      });
     }
   }),
 );

@@ -42,17 +42,20 @@ export function readConfiguredDescriptor(env: EnvLike): PollDescriptor | null {
     pollId,
     metadataSource: "operator",
     question: {
-      en: `Configured Sepolia poll (Poll ${pollId})`,
-      es: `Encuesta configurada en Sepolia (Poll ${pollId})`,
+      en: `Who do you support for the next French presidential election? (Poll ${pollId})`,
+      es: `¿A quién apoyas para las próximas elecciones presidenciales de Francia? (Encuesta ${pollId})`,
     },
     description: {
-      en: "The question text is operator metadata. It is not stored on the Poll contract. Read the voting window from the chain before treating this as an open poll.",
-      es: "El texto de la pregunta es metadato del operador. No está guardado en el contrato Poll. Lee la ventana de votación en la cadena antes de tratarla como abierta.",
+      en: "Eligibility: verified French citizens, 18+ (ZKPassport, one vote per person). The question text is operator metadata. It is not stored on the Poll contract. Read the voting window from the chain before treating this as an open poll.",
+      es: "Elegibilidad: ciudadanos franceses verificados, 18+ (ZKPassport, un voto por persona). El texto de la pregunta es metadato del operador. No está guardado en el contrato Poll. Lee la ventana de votación en la cadena antes de tratarla como abierta.",
     },
     options: [
-      { index: 0, label: { en: "Yes", es: "Sí" } },
-      { index: 1, label: { en: "No", es: "No" } },
-      { index: 2, label: { en: "Abstain", es: "Abstenerse" } },
+      { index: 0, label: { en: "Marine Le Pen", es: "Marine Le Pen" } },
+      { index: 1, label: { en: "Édouard Philippe", es: "Édouard Philippe" } },
+      { index: 2, label: { en: "Jean-Luc Mélenchon", es: "Jean-Luc Mélenchon" } },
+      { index: 3, label: { en: "Jordan Bardella", es: "Jordan Bardella" } },
+      { index: 4, label: { en: "Gabriel Attal", es: "Gabriel Attal" } },
+      { index: 5, label: { en: "Other / None of these", es: "Otro / Ninguno de estos" } },
     ],
   };
 }

@@ -36,17 +36,17 @@ export interface ZkPassportQueryConfig {
    *  Values MUST be full country names as the SDK expects (e.g. "Venezuela", "Australia"),
    *  matching the exported country constants; ISO codes would build an unsatisfiable query. */
   nationalityIn?: string[];
-  /** Inclusive age floor, e.g. 18. The ONLY age primitive ZKPassport CHECKs;
-   *  age *bands* are not a CHECK — band analytics require REVEALing date of
-   *  birth (Stage 2), which is why no ageBand field exists here. */
+  /** Inclusive age floor, e.g. 18. Age ranges (.range on age) are also a
+   *  supported CHECK (mobile compare_age) — band analytics can use ranges
+   *  without REVEALing date of birth; the Stage-2 plan may not need it. */
   minimumAge?: number;
   /** Opt-in REVEALs (disclosure circuits on-device; each adds proof cost and
    *  failed-artifact risk). Stage 1 ships all-off; Stage 2 breakdowns turn them
    *  on per-poll. Vocabulary mirrors the dashboard REVEAL chips exactly. */
   reveal?: {
     gender?: boolean;
-    /** Stage-2 age-band analytics: REVEAL date of birth (the only way to bucket
-     *  ages — there is no band CHECK). */
+    /** Stage-2 age-range analytics: use .range("age",min,max) — a CHECK
+     *  (mobile compare_age) — no birthdate REVEAL needed. */
     dateOfBirth?: boolean;
     nationality?: boolean;
   };
@@ -224,9 +224,8 @@ export class ZkPassportEligibility {
         // .facematch to reproduce the exact canonical query (the raw query
         // object alone cannot be fed back into the SDK's request() builder).
         // Vocabulary = ZKPassport primitives ONLY: gte/age (CHECK),
-        // in/nationality (CHECK), facematch (CHECK), and REVEAL disclosures.
-        // There is no "ageBand" primitive — age bands require REVEALing
-        // date of birth (Stage 2).
+        // range/age (CHECK — mobile compare_age handles it), in/nationality
+        // (CHECK), facematch (CHECK), and REVEAL disclosures.
         queryBuild: {
           ...(this.config.query.minimumAge !== undefined ? { minimumAge: this.config.query.minimumAge } : {}),
           ...(this.config.query.nationalityIn?.length ? { nationalityIn: this.config.query.nationalityIn } : {}),

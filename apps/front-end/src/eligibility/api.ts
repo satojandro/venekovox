@@ -30,8 +30,8 @@ export interface BeginParams {
   oprfKeyId?: string;
   query: unknown;
   /** Mirrors ZKPassport's primitives exactly: CHECKs (minimumAge, nationalityIn,
-   *  facematch) and REVEAL opt-ins (disclosures). No "ageBand" — the app has no
-   *  such CHECK; band analytics require disclosing birthdate (Stage 2). */
+   *  facematch, and age ranges via the mobile compare_age circuit) and REVEAL
+   *  opt-ins (disclosures). Age-range analytics don't require birthdate. */
   queryBuild: {
     minimumAge?: number;
     nationalityIn?: string[];

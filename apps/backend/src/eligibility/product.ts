@@ -31,6 +31,10 @@ export interface ProductEnv {
   ZKP_VALIDITY?: string;
   ZKP_NATIONALITY_ALLOWLIST?: string;
   ZKP_AGE_BAND?: string;
+  /** "on" = request official document gender disclosure (extra disclosure circuit
+   *  on-device). Default OFF for Stage 1 — a phone failed with
+   *  FAILED_TO_GET_DISCLOSURE_CIRCUITS when gender disclosure was forced. */
+  ZKP_DISCLOSE_GENDER?: string;
   ISSUER_PRIVATE_KEY?: string;
   TAG_SECRET?: string;
   POLICY_ADDRESS?: string;
@@ -84,7 +88,11 @@ export function createProductEligibility(env: ProductEnv = process.env as Produc
       ],
       minimumAge: 18,
       ageBand: env.ZKP_AGE_BAND === "on" ? { min: 18, max: 99 } : undefined,
-      discloseGender: true,
+      // Default OFF: gender is a REVEAL (disclosure circuit) in the ZKPassport app,
+      // and forcing it tripped FAILED_TO_GET_DISCLOSURE_CIRCUITS on a real phone
+      // (2026-09-10). Stage 1 gates on CHECK predicates only; gender breakdowns
+      // are Stage 2. Set ZKP_DISCLOSE_GENDER=on to re-enable.
+      discloseGender: env.ZKP_DISCLOSE_GENDER === "on",
       facematch: "strict",
     },
   };

@@ -21,9 +21,18 @@ Candidate list sourced from Polymarket market odds, 2026-09-09 (top 5 + honest e
 
 ## Eligibility (who can join)
 
-- **ZKPassport only** (D02 superseded, D17 lock): nationality == **France**, age ≥ **18**, **facematch strict**, **salted** uniqueness
+- **ZKPassport only** (D02 superseded, D17 lock): nationality predicate, age ≥ **18**, **facematch strict**, **salted** uniqueness
 - Issuer-signed EIP-712 grant (`SelfEligibilityPolicy`), one grant per poll target, MAX_LIFETIME 15 min
 - This is the `C_FR` config from `demo-poll-slate-2026-09-10.md`
+
+> **Eligibility gate note (2026-09-10):** No French passport is available to the operator for
+> the live demo scan. Nationality is enforced **issuer-side only** (the ZKPassport query
+> allowlist), never on-chain — the deployed policy, configId and poll are nationality-agnostic.
+> Demo gate therefore = **Australian passports, 18+** (the operator's available document).
+> Switching the gate back to France (or adding any nationality) is one
+> `ZKP_NATIONALITY_ALLOWLIST` edit + backend restart; no redeploy. The question remains the
+> French election — the product point is that _the same verified-human poll can gate on any
+> passport cohort without touching the chain_.
 
 ## Chain facts (Sepolia, chainId 11155111) — verified by read-back
 

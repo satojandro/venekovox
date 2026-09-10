@@ -39,4 +39,5 @@ test("returns an operator descriptor bound to the configured poll", () => {
   assert.match(descriptor.question.en, /French presidential election/);
   assert.match(descriptor.question.en, /Poll 1/);
   assert.match(descriptor.description.en, /18\+/);
+  assert.match(descriptor.description.en, /Australian/);
 });

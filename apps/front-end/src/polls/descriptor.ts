@@ -46,8 +46,8 @@ export function readConfiguredDescriptor(env: EnvLike): PollDescriptor | null {
       es: `¿A quién apoyas para las próximas elecciones presidenciales de Francia? (Encuesta ${pollId})`,
     },
     description: {
-      en: "Eligibility: verified French citizens, 18+ (ZKPassport, one vote per person). The question text is operator metadata. It is not stored on the Poll contract. Read the voting window from the chain before treating this as an open poll.",
-      es: "Elegibilidad: ciudadanos franceses verificados, 18+ (ZKPassport, un voto por persona). El texto de la pregunta es metadato del operador. No está guardado en el contrato Poll. Lee la ventana de votación en la cadena antes de tratarla como abierta.",
+      en: "Eligibility: verified citizens 18+ (ZKPassport, one vote per person). Demo gate: Australian passports (operator's available document). The question text is operator metadata. It is not stored on the Poll contract. Read the voting window from the chain before treating this as an open poll.",
+      es: "Elegibilidad: ciudadanos verificados 18+ (ZKPassport, un voto por persona). Puerta de demo: pasaportes australianos (documento disponible del operador). El texto de la pregunta es metadato del operador. No está guardado en el contrato Poll. Lee la ventana de votación en la cadena antes de tratarla como abierta.",
     },
     options: [
       { index: 0, label: { en: "Marine Le Pen", es: "Marine Le Pen" } },

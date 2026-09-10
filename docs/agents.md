@@ -1,21 +1,22 @@
 # Agent handoff and continuity protocol
 
+## Main 78fc grant/retry/test repair — 2026-09-10
+
+- Owner: Cursor. Merged `fix/main-78fc-grant-retry-tests` (`5555a124`) into main.
+- Scope: three regressions from Astra's [main review](reviews/main-78fc7d19/review.md).
+  Grant default 3600→900 with cap validation; join retry boundary (reads/prep only
+  + membership reconcile); voteFlow test loader via `getReadAccess` DI.
+- Verification: Node 22.20.0; backend typecheck:p2 clean; p2 **66/66**; FE unit
+  **93/93**. No funded tx or subgraph work in the repair itself.
+
 ## Branch reconciliation — 2026-09-10
 
-- Preserved former local-main tip `00b7a233` (ENS/journey unique commits) as
-  `archive/local-main-ens-journey-2026-09-10` on origin; local `main` tracks
-  `origin/main` again.
-- Cherry-picked trial Audit `1fe7f22f` (design mockups + WP2 review) onto main;
-  `docs/status.md` conflict resolved by keeping Audit sections and WP0 evidence.
-- Fix branch `fix/main-78fc-grant-retry-tests` (`5555a124`) committed separately
-  (grant ≤900s, join retry boundary, voteFlow test loader).
-- Preserve unmerged: `codex/ens-registration-v2`, `w1-privy-experiment`.
-- Retired merged remotes: `fix/wp2-review-comment-corrections`, both Cursor fix
-  branches, `s5-governance`, `p1-poll-receipt-verification`, `p2-self-enterprise`.
-  Preserved unmerged: `codex/ens-registration-v2`, `w1-privy-experiment`.
-  Also preserved: trial branch and `archive/local-main-ens-journey-2026-09-10`.
-  Fix branch `fix/main-78fc-grant-retry-tests` is committed/pushed separately
-  (not yet merged to main).
+- Preserved former local-main tip `00b7a233` as
+  `archive/local-main-ens-journey-2026-09-10` on origin.
+- Cherry-picked trial Audit `1fe7f22f` onto main; status conflict kept Audit + WP0.
+- Retired merged remotes: WP2 corrections, Cursor fixes, s5, p1, p2.
+- Preserved unmerged: `codex/ens-registration-v2`, `w1-privy-experiment`, trial branch.
+- Primary checkout should track `origin/main` after worktree cleanup.
 
 ## S2.1 / WP2 independent review — 2026-09-10
 
@@ -55,7 +56,6 @@
 - Delivery: uncommitted design files and documentation; no push or deployment.
 - Next: user design review before translating the concept into product screens;
   existing identity/deployment/results gates remain as recorded below.
-
 ## C product mount — 2026-09-09
 
 - Owner: Cursor; reviewer/committer: Hermes. Branch `exp/provider-trial-self-vs-zkpassport`.

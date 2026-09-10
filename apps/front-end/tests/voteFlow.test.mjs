@@ -341,3 +341,41 @@ test("a throwing receipt store does not fail the submitted vote", async () => {
   const result = await vote(0); // must resolve, not reject
   assert.equal(result.hash, "0xreceipt");
 });
+
+test("joinPoll is not retried after a transient failure", async () => {
+  let joinCalls = 0;
+  const f = fixture({
+    getSignedupUserData: async () => ({ isRegistered: true, stateIndex: "5" }),
+    getJoinedUserData: async () => ({ isJoined: false }),
+    joinPoll: async () => {
+      joinCalls += 1;
+      throw new Error("CALL_EXCEPTION missing revert data");
+    },
+  });
+  await assert.rejects(f.vote(0), /CALL_EXCEPTION/);
+  assert.equal(joinCalls, 1);
+});
+
+test("failed join confirmation recovers membership without a second join", async () => {
+  let joined = false;
+  let joinCalls = 0;
+  let lookups = 0;
+  const f = fixture({
+    getSignedupUserData: async () => ({ isRegistered: true, stateIndex: "5" }),
+    getJoinedUserData: async () => {
+      lookups += 1;
+      return { isJoined: joined, pollStateIndex: joined ? "17" : undefined };
+    },
+    joinPoll: async () => {
+      joinCalls += 1;
+      joined = true;
+      throw new Error("CALL_EXCEPTION missing revert data");
+    },
+  });
+  const result = await f.vote(0);
+  assert.equal(result.hash, "0xreceipt");
+  assert.equal(joinCalls, 1);
+  assert.ok(lookups >= 2); // initial miss + post-join reconcile
+  assert.equal(f.calls.filter((c) => c.name === "joinPoll").length, 1);
+  assert.equal(f.calls.at(-1).args.stateIndex, 17n);
+});

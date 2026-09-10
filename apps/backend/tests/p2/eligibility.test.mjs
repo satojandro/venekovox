@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 const require = createRequire(process.env.P2_TOOLCHAIN_PACKAGE_JSON || import.meta.url);
 const { Wallet, verifyTypedData, keccak256, toUtf8Bytes, ZeroAddress } = require("ethers");
 import { load } from "./load.mjs";
-const { EligibilityService, AUTHORIZATION_TYPES, authorizationDomain } = await load(
+const { EligibilityService, AUTHORIZATION_TYPES, authorizationDomain, resolveGrantLifetimeSeconds, MAX_GRANT_LIFETIME_SECONDS } = await load(
   "../../src/eligibility/authorization.ts",
 );
 const { accountControlVerifier } = await load("../../src/eligibility/accountControl.ts");
@@ -186,4 +186,22 @@ test("deployed ERC-1271 accepted; invalid/counterfactual signatures rejected", a
 test("zero account and missing tag secret reject configuration", () => {
   assert.throws(() => setup({}, { ...config, policyAddress: ZeroAddress }));
   assert.throws(() => setup({ identityTagSecret: new Uint8Array(0) }));
+});
+test("default grant lifetime matches policy MAX_LIFETIME and is independent of the challenge clock", async () => {
+  const f = setup();
+  const c = f.service.createChallenge(alice.address);
+  const grant = await f.service.authorize(c.id, await alice.signMessage(c.message), claims(c));
+  assert.equal(grant.authorization.expiresAt - grant.authorization.issuedAt, MAX_GRANT_LIFETIME_SECONDS);
+  // Challenge window remains 300s; grant must not inherit it.
+  assert.equal(c.expiresAt - 1000, 300);
+  assert.notEqual(grant.authorization.expiresAt, c.expiresAt);
+});
+test("grant lifetime env must be a positive integer at or below the policy cap", () => {
+  assert.equal(resolveGrantLifetimeSeconds(undefined), MAX_GRANT_LIFETIME_SECONDS);
+  assert.equal(resolveGrantLifetimeSeconds(""), MAX_GRANT_LIFETIME_SECONDS);
+  assert.equal(resolveGrantLifetimeSeconds("600"), 600);
+  assert.equal(resolveGrantLifetimeSeconds("900"), 900);
+  for (const bad of ["3600", "901", "0", "-1", "15.5", "abc", "1e2"]) {
+    assert.throws(() => resolveGrantLifetimeSeconds(bad), /INVALID_GRANT_LIFETIME/);
+  }
 });

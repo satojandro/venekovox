@@ -1,15 +1,29 @@
 # Current state and evidence
 
+## Main 78fc7d19 regressions repaired — 2026-09-10
+
+Merged `fix/main-78fc-grant-retry-tests` into main. See
+[reviews/main-78fc7d19/review.md](reviews/main-78fc7d19/review.md).
+
+1. **Grant lifetime** defaults to **900s** (`SelfEligibilityPolicy.MAX_LIFETIME`);
+   `ELIGIBILITY_GRANT_VALIDITY_SECONDS` must be a plain positive integer ≤ 900
+   (`INVALID_GRANT_LIFETIME` otherwise). Challenge window stays 300s.
+2. **Join retry** no longer wraps `joinPoll` submission. `voteFlow` retries
+   read-only membership lookups only and reconciles after a thrown join;
+   browser `joinPoll` retries read/circuit prep, submits once, then surfaces
+   confirmation/log failures for reconcile.
+3. **voteFlow unit loader** no longer imports `ethers`/`readProvider` at module
+   load; `getReadAccess` is injected from `useMaci`.
+
+Local verification (Node 22.20.0): backend `typecheck:p2` clean; p2 **66/66**;
+frontend unit **93/93**. No live join/vote claim. Remaining review P2 items
+(signup CALL_EXCEPTION fail-open; read-provider chain identity) are untouched.
+
 ## Branch reconciliation — 2026-09-10
 
-Local `main` previously held four unique ENS/journey commits; preserved as
-`archive/local-main-ens-journey-2026-09-10` (also on origin) before resetting
-local `main` to `origin/main`. This commit brings trial `1fe7f22f` Audit/design
-(review + poll mockups) onto current main while retaining WP0 deployment evidence
-below. Unmerged `codex/ens-registration-v2` and `w1-privy-experiment` remain for
-separate integration. Grant/retry/test repair lives on
-`fix/main-78fc-grant-retry-tests` (committed/pushed; awaiting merge).
-Merged remotes retired (WP2 corrections, Cursor fixes, s5, p1, p2). ENS-registration and W1 branches preserved for separate integration.
+Local-main ENS/journey tip preserved as `archive/local-main-ens-journey-2026-09-10`.
+Audit/design and this repair are on `origin/main`. Merged remotes retired
+(WP2/Cursor/s5/p1/p2). ENS-registration and W1 kept for separate integration.
 
 ## WP2 independent scan review — 2026-09-10
 
@@ -42,7 +56,6 @@ Added [desktop and mobile design concepts](design/poll-mockups-2026-09-09/README
 for the supplied four-poll slate and verification → ballot → receipt → results
 journey. Raster boards were visually inspected; results are synthetic and no
 runtime behavior, deployment, or acceptance-gate completion is claimed.
-
 ## WP0 — Continuity France poll deployed — 2026-09-09
 
 Poll **1** is live on Sepolia under the existing MACI `0x44F31f3823ceFE00C2FA5acEB2576F119143Fe3a`,

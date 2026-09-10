@@ -1,5 +1,44 @@
 # Agent handoff and continuity protocol
 
+## S2.1 / WP2 independent review — 2026-09-10
+
+- Owner: Astra. Checkout `exp/provider-trial-self-vs-zkpassport`, base `d5b978ac`;
+  fetched/reviewed main `f094d1b9` via `/private/tmp/venekovox-wp2-review` snapshot.
+- Request: second opinion on Hermes's repeated ZKPassport scan failure.
+- Added `docs/reviews/wp2-2026-09-10/review.md` and offline real-SDK parity harness;
+  updated this record/status. Existing dirty docs/design preserved.
+- Verified: Node 22.20.0, harness 3/3; main p2 64/64 after localhost sandbox
+  permission. Three public OPRF key endpoints responded with matching keys.
+- Finding: public mobile source exposes a broad error wrapper including salted
+  OPRF and input generation; same-input trial/product requests agree. Age range
+  removal rationale is incorrect. Live-mode mock config and slow-session recovery
+  need separate fixes; neither establishes the scan's cause.
+- No native scan, main runtime edit, credentials, commit/push or deployment.
+  Source-to-installed-app parity remains unverified. Report includes exact citations.
+- Next: owner-operated fresh trial/product comparison; sanitized inner exception
+  and OPRF timing; alternate network when available. User is travelling with Wi-Fi
+  only, app 1.3.1, so do not assume a cellular test happened.
+- Dirty delivery: this/status documentation, new review directory; prior design
+  directory still uncommitted. No task messages were sent to Hermes.
+
+## S3.2 presentation concept — 2026-09-09
+
+- Follow-up: user requested inclusive cypherpunk tone, light/dark themes,
+  signed-in/out states and cross-border narrative. Added three boards plus
+  prompts/design review under `docs/design/poll-mockups-2026-09-09/v2/`.
+  Read existing Landing.tsx narrative. Visually inspected; no runtime tests or
+  live claims. State/icon/chart corrections documented before implementation.
+
+- Owner: Codex; branch `exp/provider-trial-self-vs-zkpassport`, base `d5b978ac`.
+- User request: beautiful mockups for the supplied four-poll slate and journey.
+- Added `docs/design/poll-mockups-2026-09-09/` (two PNG boards and exact prompts)
+  and this/status documentation. Existing checkout was clean; runtime untouched.
+- Validation: visually inspected generated desktop/mobile images. Synthetic
+  results explicitly labeled; no live-chain claim or product gate closed.
+- Delivery: uncommitted design files and documentation; no push or deployment.
+- Next: user design review before translating the concept into product screens;
+  existing identity/deployment/results gates remain as recorded below.
+
 ## C product mount — 2026-09-09
 
 - Owner: Cursor; reviewer/committer: Hermes. Branch `exp/provider-trial-self-vs-zkpassport`.

@@ -38,11 +38,18 @@ the impersonated Poll on an anvil fork of Sepolia —
 
 **Demo gate pivot (2026-09-10, commit `2ada07d02`):** no French passport is
 available to the operator, so the live-scan gate is **Australian passports, 18+**
-(`ZKP_NATIONALITY_ALLOWLIST=Australia` in `apps/backend/.env`, restarted and
-health-verified). Nationality is enforced issuer-side only — the deployed
-policy/configId/poll are nationality-agnostic, so no redeploy was needed and
-switching cohorts later is one env edit + restart. The poll question remains the
-French election.
+(`ZKP_NATIONALITY_ALLOWLIST=Australia` in `apps/backend/.env`). Nationality is
+enforced issuer-side only — the deployed policy/configId/poll are
+nationality-agnostic, so no redeploy was needed and switching cohorts later is
+one env edit + restart. The poll question remains the French election.
+
+**Backend is now in LIVE mode (2026-09-10):** `ZKP_MODE=live` with
+`TAG_SECRET` (crypto-random 32B, throwaway, generated via crypto.randomBytes)
+and `ISSUER_PRIVATE_KEY` = the throwaway deployer key (verified to resolve to
+the on-chain issuer `0xE132…ec6D`; an initial hand-written value resolved to a
+different address and was caught by verification before use). Health:
+`{ok:true, mode:"live", provider:"zkpassport"}`. Grants signed from here on are
+on-chain-valid for `enforce()`.
 
 Fork findings worth knowing for WP2: grant timestamps must anchor to the fork's
 block clock (wall-clock drift trips InvalidLifetime — the product backend is

@@ -64,6 +64,29 @@ export interface Dependencies<Proof> {
   now?: () => number;
 }
 const HASH = /^0x[\da-f]{64}$/i;
+
+/**
+ * Must stay ≤ SelfEligibilityPolicy.MAX_LIFETIME (15 minutes / 900s).
+ * A longer grant reverts InvalidLifetime at enforce(), independent of RPC health.
+ */
+export const MAX_GRANT_LIFETIME_SECONDS = 900;
+/** Default grant window: policy max. Issued at authorize(), consumed at join. */
+export const DEFAULT_GRANT_LIFETIME_SECONDS = MAX_GRANT_LIFETIME_SECONDS;
+
+/** Resolve and validate grant lifetime. Env override must be a positive integer ≤ policy cap. */
+export function resolveGrantLifetimeSeconds(
+  raw: string | undefined = process.env.ELIGIBILITY_GRANT_VALIDITY_SECONDS,
+): number {
+  if (raw === undefined || raw === "") return DEFAULT_GRANT_LIFETIME_SECONDS;
+  // Reject scientific notation / floats: only plain decimal integers.
+  if (!/^\d+$/.test(raw)) throw new Error("INVALID_GRANT_LIFETIME");
+  const value = Number(raw);
+  if (!Number.isSafeInteger(value) || value <= 0 || value > MAX_GRANT_LIFETIME_SECONDS) {
+    throw new Error("INVALID_GRANT_LIFETIME");
+  }
+  return value;
+}
+
 export function authorizationDomain(c: EligibilityConfig) {
   return { name: "VenekoVox Self Eligibility", version: "1", chainId: c.chainId, verifyingContract: c.policyAddress };
 }
@@ -91,14 +114,8 @@ export class EligibilityService<Proof> {
   private readonly config: EligibilityConfig;
   private readonly now: () => number;
   private readonly tagSecret: Buffer;
-
-  /** Grant validity in seconds. Defaults to 1h — long enough to cover the
-   *  passport scan + proof generation + join between authorize() and the
-   *  enforce() call, short enough to limit replay value. The CHALLENGE keeps
-   *  its own 300s window; the grant must not inherit it (WP2 review). */
-  private grantValiditySeconds(): number {
-    return Number(process.env.ELIGIBILITY_GRANT_VALIDITY_SECONDS || 3600);
-  }
+  /** Seconds from issuedAt → expiresAt. Capped at policy MAX_LIFETIME. */
+  private readonly grantLifetimeSeconds: number;
 
   constructor(
     config: EligibilityConfig,
@@ -122,6 +139,10 @@ export class EligibilityService<Proof> {
       throw new Error("INVALID_CONFIG");
     this.now = deps.now ?? (() => Math.floor(Date.now() / 1000));
     this.tagSecret = Buffer.from(deps.identityTagSecret);
+    // Challenge (300s) gates the passport scan. The GRANT is issued after that
+    // scan succeeds and must fit SelfEligibilityPolicy.MAX_LIFETIME (900s).
+    // Do not inherit the challenge clock, and never exceed the on-chain cap.
+    this.grantLifetimeSeconds = resolveGrantLifetimeSeconds();
   }
   createChallenge(account: string): Challenge {
     const normalized = accountAddress(account);
@@ -201,12 +222,8 @@ export class EligibilityService<Proof> {
         action: this.config.action,
         nonce: c.id,
         issuedAt,
-        // The GRANT must not inherit the challenge's 300s clock: the grant is
-        // presented at join time, AFTER the passport scan + proof generation
-        // (which alone can exceed 5 minutes). The challenge window protects
-        // the scan; the grant window protects the issuer signature. WP2
-        // review (Astra, 2026-09-10) flagged exactly this coupling.
-        expiresAt: issuedAt + this.grantValiditySeconds(),
+        // Independent of the 300s challenge window; ≤ policy MAX_LIFETIME.
+        expiresAt: issuedAt + this.grantLifetimeSeconds,
       };
       const signature = await this.deps.sign(domain, AUTHORIZATION_TYPES, authorization);
       fresh();

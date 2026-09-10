@@ -1,5 +1,18 @@
 # Agent handoff and continuity protocol
 
+## Main 78fc grant/retry/test repair — 2026-09-10
+
+- Owner: Cursor. Worktree `/Users/avb/venekovox-fix-78fc`, branch
+  `fix/main-78fc-grant-retry-tests` from `origin/main` `78fc7d19`.
+- Scope: three regressions from Astra's [main review](reviews/main-78fc7d19/review.md).
+  Grant default 3600→900 with cap validation; join retry boundary (reads/prep only
+  + membership reconcile); voteFlow test loader via `getReadAccess` DI.
+- Verification: Node 22.20.0; backend typecheck:p2 clean; p2 **66/66**; FE unit
+  **93/93**. No funded tx, merge, push or subgraph work this turn.
+- Trial checkout `exp/provider-trial-self-vs-zkpassport` and local-main unique
+  ENS/journey commits were left untouched. Next: owner review/commit of this
+  fix branch; then branch preservation / subgraph brief as previously planned.
+
 ## C product mount — 2026-09-09
 
 - Owner: Cursor; reviewer/committer: Hermes. Branch `exp/provider-trial-self-vs-zkpassport`.

@@ -41,10 +41,13 @@ export function zkpassportTransport(domain: string, options?: { devMode?: boolea
     // Offline: builds the same query shape the trial server will verify against.
     buildQuery: (cfg: ZkPassportQueryConfig): Query => {
       const qb = zk.createQuery();
-      if (cfg.discloseGender) qb.disclose("gender");
+      // CHECK primitives only here (minimumAge gte, nationality in, facematch).
+      // REVEALs are explicit opt-ins — each adds an on-device disclosure circuit.
       if (cfg.minimumAge !== undefined) qb.gte("age", cfg.minimumAge);
-      if (cfg.ageBand) qb.range("age", cfg.ageBand.min, cfg.ageBand.max);
       if (cfg.nationalityIn?.length) qb.in("nationality", cfg.nationalityIn as CountryName[]);
+      if (cfg.reveal?.gender) qb.disclose("gender");
+      if (cfg.reveal?.dateOfBirth) qb.disclose("birthdate");
+      if (cfg.reveal?.nationality) qb.disclose("nationality");
       // D17: salted uniqueness requires strict facematch. The canonical query
       // carries it so the client query can never match without it.
       if (cfg.facematch === "strict") qb.facematch("strict");

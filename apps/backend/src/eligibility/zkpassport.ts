@@ -36,12 +36,20 @@ export interface ZkPassportQueryConfig {
    *  Values MUST be full country names as the SDK expects (e.g. "Venezuela", "Australia"),
    *  matching the exported country constants; ISO codes would build an unsatisfiable query. */
   nationalityIn?: string[];
-  /** Inclusive age floor, e.g. 18. */
+  /** Inclusive age floor, e.g. 18. The ONLY age primitive ZKPassport CHECKs;
+   *  age *bands* are not a CHECK — band analytics require REVEALing date of
+   *  birth (Stage 2), which is why no ageBand field exists here. */
   minimumAge?: number;
-  /** Inclusive age band, e.g. {min:18, max:35}; maps to the SDK range() gate. */
-  ageBand?: { min: number; max: number };
-  /** Require official document gender disclosure; no self-reported replacement. */
-  discloseGender?: boolean;
+  /** Opt-in REVEALs (disclosure circuits on-device; each adds proof cost and
+   *  failed-artifact risk). Stage 1 ships all-off; Stage 2 breakdowns turn them
+   *  on per-poll. Vocabulary mirrors the dashboard REVEAL chips exactly. */
+  reveal?: {
+    gender?: boolean;
+    /** Stage-2 age-band analytics: REVEAL date of birth (the only way to bucket
+     *  ages — there is no band CHECK). */
+    dateOfBirth?: boolean;
+    nationality?: boolean;
+  };
   /** Strict facematch against the issuing-state chip photo. REQUIRED when
    *  uniqueIdentifierType is "salted" (D17); the canonical query must contain
    *  it or the client query can never match and the SDK rejects salted proofs
@@ -161,12 +169,7 @@ export class ZkPassportEligibility {
       throw new Error("INVALID_ZKPASSPORT_CONFIG");
     const ageOk =
       !config.query.minimumAge || (Number.isInteger(config.query.minimumAge) && config.query.minimumAge >= 0);
-    const bandOk =
-      !config.query.ageBand ||
-      (Number.isInteger(config.query.ageBand.min) &&
-        Number.isInteger(config.query.ageBand.max) &&
-        config.query.ageBand.min <= config.query.ageBand.max);
-    if (!ageOk || !bandOk) throw new Error("INVALID_ZKPASSPORT_QUERY");
+    if (!ageOk) throw new Error("INVALID_ZKPASSPORT_QUERY");
     // D17: salted uniqueness REQUIRES strict facematch — fail closed at config
     // time rather than discovering it mid-verification.
     if (this.type === "salted" && config.query.facematch !== "strict") throw new Error("INVALID_ZKPASSPORT_QUERY");
@@ -217,14 +220,19 @@ export class ZkPassportEligibility {
         uniqueIdentifierType: this.type === "salted" ? "SALTED" : "NON_SALTED",
         ...(this.config.oprfKeyId ? { oprfKeyId: this.config.oprfKeyId } : {}),
         query: this.canonicalQuery,
-        // Builder hints so a browser client can chain .disclose/.gte/.range/
-        // .in/.facematch to reproduce the exact canonical query (the raw query
+        // Builder hints so a browser client can chain .disclose/.gte/.in/
+        // .facematch to reproduce the exact canonical query (the raw query
         // object alone cannot be fed back into the SDK's request() builder).
+        // Vocabulary = ZKPassport primitives ONLY: gte/age (CHECK),
+        // in/nationality (CHECK), facematch (CHECK), and REVEAL disclosures.
+        // There is no "ageBand" primitive — age bands require REVEALing
+        // date of birth (Stage 2).
         queryBuild: {
-          ...(this.config.query.discloseGender ? { discloseGender: true } : {}),
           ...(this.config.query.minimumAge !== undefined ? { minimumAge: this.config.query.minimumAge } : {}),
-          ...(this.config.query.ageBand ? { ageBand: this.config.query.ageBand } : {}),
           ...(this.config.query.nationalityIn?.length ? { nationalityIn: this.config.query.nationalityIn } : {}),
+          ...(this.config.query.reveal?.gender ? { discloseGender: true } : {}),
+          ...(this.config.query.reveal?.dateOfBirth ? { discloseBirthdate: true } : {}),
+          ...(this.config.query.reveal?.nationality ? { discloseNationality: true } : {}),
           ...(this.config.query.facematch ? { facematch: this.config.query.facematch } : {}),
         },
       };
@@ -285,20 +293,30 @@ export class ZkPassportEligibility {
         const gate = object(age.gte ?? {});
         if (gate.result !== true) throw new Error("ZKPASSPORT_AGE_REQUIREMENT_UNMET");
       }
-      if (this.config.query.ageBand) {
-        const band = object(age.range ?? {});
-        if (band.result !== true) throw new Error("ZKPASSPORT_AGE_BAND_UNMET");
-      }
       if (this.config.query.nationalityIn?.length) {
         const nat = object(queryResult.nationality ?? {});
         const gate = object(nat.in ?? {});
         if (gate.result !== true) throw new Error("ZKPASSPORT_NATIONALITY_REQUIREMENT_UNMET");
       }
-      if (this.config.query.discloseGender) {
+      // REVEAL verification — only enforced when the query actually requested it.
+      // Gate semantics live in the SDK's cryptographic verify; these checks catch
+      // a verified-but-empty disclosure result.
+      if (this.config.query.reveal?.gender) {
         const g = object(queryResult.gender ?? {});
         const gate = object(g.disclose ?? {});
         if (typeof gate.result !== "string" || gate.result === "")
           throw new Error("ZKPASSPORT_GENDER_REQUIREMENT_UNMET");
+      }
+      if (this.config.query.reveal?.dateOfBirth) {
+        const dob = object(queryResult.birthdate ?? {});
+        const gate = object(dob.disclose ?? {});
+        if (!gate.result) throw new Error("ZKPASSPORT_DOB_REVEAL_UNMET");
+      }
+      if (this.config.query.reveal?.nationality) {
+        const nat = object(queryResult.nationality ?? {});
+        const gate = object(nat.disclose ?? {});
+        if (typeof gate.result !== "string" || gate.result === "")
+          throw new Error("ZKPASSPORT_NATIONALITY_REVEAL_UNMET");
       }
       const nullifier = canonicalNullifier(result.uniqueIdentifier);
       if (entry.claims) {

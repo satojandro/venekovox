@@ -30,11 +30,12 @@ export interface ProductEnv {
   ZKP_OPRF_KEY_ID?: string;
   ZKP_VALIDITY?: string;
   ZKP_NATIONALITY_ALLOWLIST?: string;
-  ZKP_AGE_BAND?: string;
-  /** "on" = request official document gender disclosure (extra disclosure circuit
-   *  on-device). Default OFF for Stage 1 — a phone failed with
-   *  FAILED_TO_GET_DISCLOSURE_CIRCUITS when gender disclosure was forced. */
+  /** REVEAL opt-ins — each adds an on-device disclosure circuit. All default
+   *  OFF for Stage 1. Age "bands" are NOT a ZKPassport CHECK; band analytics
+   *  require ZKP_DISCLOSE_BIRTHDATE=on (Stage 2). */
   ZKP_DISCLOSE_GENDER?: string;
+  ZKP_DISCLOSE_BIRTHDATE?: string;
+  ZKP_DISCLOSE_NATIONALITY?: string;
   ISSUER_PRIVATE_KEY?: string;
   TAG_SECRET?: string;
   POLICY_ADDRESS?: string;
@@ -87,12 +88,14 @@ export function createProductEligibility(env: ProductEnv = process.env as Produc
         "Australia",
       ],
       minimumAge: 18,
-      ageBand: env.ZKP_AGE_BAND === "on" ? { min: 18, max: 99 } : undefined,
-      // Default OFF: gender is a REVEAL (disclosure circuit) in the ZKPassport app,
-      // and forcing it tripped FAILED_TO_GET_DISCLOSURE_CIRCUITS on a real phone
-      // (2026-09-10). Stage 1 gates on CHECK predicates only; gender breakdowns
-      // are Stage 2. Set ZKP_DISCLOSE_GENDER=on to re-enable.
-      discloseGender: env.ZKP_DISCLOSE_GENDER === "on",
+      // REVEALs: all OFF for Stage 1 (minimal disclosure). Each is a separate
+      // on-device disclosure circuit; age "bands" don't exist as a CHECK —
+      // band analytics need reveal.dateOfBirth (Stage 2).
+      reveal: {
+        gender: env.ZKP_DISCLOSE_GENDER === "on",
+        dateOfBirth: env.ZKP_DISCLOSE_BIRTHDATE === "on",
+        nationality: env.ZKP_DISCLOSE_NATIONALITY === "on",
+      },
       facematch: "strict",
     },
   };

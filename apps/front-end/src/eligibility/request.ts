@@ -63,10 +63,14 @@ export async function startZkPassportRequest(
   });
 
   const b = params.queryBuild || {};
-  if (b.discloseGender) qb.disclose("gender");
+  // CHECK primitives
   if (b.minimumAge != null) qb.gte("age", b.minimumAge);
-  if (b.ageBand) qb.range("age", b.ageBand.min, b.ageBand.max);
   if (b.nationalityIn?.length) qb.in("nationality", b.nationalityIn);
+  // REVEAL opt-ins — one disclosure circuit each on-device. The default Stage-1
+  // query carries none of these; ZKP_DISCLOSE_GENDER=on etc. add them.
+  if (b.discloseGender) qb.disclose("gender");
+  if (b.discloseBirthdate) qb.disclose("birthdate");
+  if (b.discloseNationality) qb.disclose("nationality");
   if (b.facematch === "strict") qb.facematch("strict");
 
   const done = qb.done();

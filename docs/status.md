@@ -36,12 +36,20 @@ the impersonated Poll on an anvil fork of Sepolia —
 - ✅ replay of consumed identityTag reverts (AlreadyEnforced)
 - ✅ second wallet with wallet A's grant reverts (architect gate H, minus passport)
 
+**Demo gate pivot (2026-09-10, commit `2ada07d02`):** no French passport is
+available to the operator, so the live-scan gate is **Australian passports, 18+**
+(`ZKP_NATIONALITY_ALLOWLIST=Australia` in `apps/backend/.env`, restarted and
+health-verified). Nationality is enforced issuer-side only — the deployed
+policy/configId/poll are nationality-agnostic, so no redeploy was needed and
+switching cohorts later is one env edit + restart. The poll question remains the
+French election.
+
 Fork findings worth knowing for WP2: grant timestamps must anchor to the fork's
 block clock (wall-clock drift trips InvalidLifetime — the product backend is
 immune, it reads the live chain clock), and replay/second-wallet probes must be
 real transactions with snapshot/revert isolation because eth_call rolls back
 enforce()'s consumed-state writes. Only untested link in the eligibility chain:
-the ZK proof itself (needs a real passport).
+the ZK proof itself (needs a real passport — now available: AU).
 
 Re-verification after the descriptor change (Node 22.23.2, mounted main):
 FE unit suite **91/91** (descriptor test updated to assert the France poll 1

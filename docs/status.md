@@ -8,7 +8,8 @@ local `main` to `origin/main`. This commit brings trial `1fe7f22f` Audit/design
 (review + poll mockups) onto current main while retaining WP0 deployment evidence
 below. Unmerged `codex/ens-registration-v2` and `w1-privy-experiment` remain for
 separate integration. Grant/retry/test repair lives on
-`fix/main-78fc-grant-retry-tests`.
+`fix/main-78fc-grant-retry-tests` (committed/pushed; awaiting merge).
+Merged remotes retired (WP2 corrections, Cursor fixes, s5, p1, p2). ENS-registration and W1 branches preserved for separate integration.
 
 ## WP2 independent scan review — 2026-09-10
 

@@ -1,5 +1,22 @@
 # Agent handoff and continuity protocol
 
+## Branch reconciliation — 2026-09-10
+
+- Preserved former local-main tip `00b7a233` (ENS/journey unique commits) as
+  `archive/local-main-ens-journey-2026-09-10` on origin; local `main` tracks
+  `origin/main` again.
+- Cherry-picked trial Audit `1fe7f22f` (design mockups + WP2 review) onto main;
+  `docs/status.md` conflict resolved by keeping Audit sections and WP0 evidence.
+- Fix branch `fix/main-78fc-grant-retry-tests` (`5555a124`) committed separately
+  (grant ≤900s, join retry boundary, voteFlow test loader).
+- Preserve unmerged: `codex/ens-registration-v2`, `w1-privy-experiment`.
+- Retired merged remotes: `fix/wp2-review-comment-corrections`, both Cursor fix
+  branches, `s5-governance`, `p1-poll-receipt-verification`, `p2-self-enterprise`.
+  Preserved unmerged: `codex/ens-registration-v2`, `w1-privy-experiment`.
+  Also preserved: trial branch and `archive/local-main-ens-journey-2026-09-10`.
+  Fix branch `fix/main-78fc-grant-retry-tests` is committed/pushed separately
+  (not yet merged to main).
+
 ## S2.1 / WP2 independent review — 2026-09-10
 
 - Owner: Astra. Checkout `exp/provider-trial-self-vs-zkpassport`, base `d5b978ac`;

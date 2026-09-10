@@ -183,8 +183,9 @@ test("attribute gates fail closed — no silent fallback for age, band, national
     await assert.rejects(f.service.receiveProof(c.id, signature, payload(patch)), /UNMET/);
   }
 });
-test("date-of-birth REVEAL is the only age-band mechanism and is enforced", async () => {
-  // ZKPassport has NO age-band CHECK; band analytics REVEAL birthdate.
+test("date-of-birth REVEAL is enforced when configured", async () => {
+  // This tests DOB REVEAL enforcement, not exclusivity: age ranges are also
+  // a supported CHECK (.range, mobile compare_age) without any REVEAL.
   const dobConfig = { ...config, query: { ...config.query, reveal: { gender: true, dateOfBirth: true } } };
   let now = Math.floor(Date.now() / 1000);
   const service = new ZkPassportEligibility(

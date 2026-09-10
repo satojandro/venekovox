@@ -230,6 +230,8 @@
           // Rebuild the SAME query the server pinned (must be deep-equal to canonicalQuery).
           const b = params.queryBuild || {};
           if (b.discloseGender) qb.disclose("gender");
+          if (b.discloseBirthdate) qb.disclose("birthdate");
+          if (b.discloseNationality) qb.disclose("nationality");
           if (b.minimumAge != null) qb.gte("age", b.minimumAge);
           if (b.ageBand) qb.range("age", b.ageBand.min, b.ageBand.max);
           if (b.nationalityIn?.length) qb.in("nationality", b.nationalityIn);

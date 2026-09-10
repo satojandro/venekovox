@@ -101,8 +101,9 @@ const zkConfig: ZkPassportConfig = {
       "Australia",
     ],
     minimumAge: 18,
-    // REVEAL opt-ins (2026-09-10): ZKPassport has NO age-band CHECK — band
-    // analytics REVEAL birthdate. Trial keeps gender on (it passed D10 with it).
+    // REVEAL opt-ins (2026-09-10): age ranges ARE a CHECK (mobile compare_age
+    // handles .range("age",min,max)) — band analytics don't need birthdate.
+    // Trial keeps gender on (it passed D10 with it).
     reveal: {
       gender: true,
       dateOfBirth: process.env.TRIAL_ZKP_DISCLOSE_BIRTHDATE === "on",

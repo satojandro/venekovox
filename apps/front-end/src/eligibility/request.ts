@@ -66,8 +66,9 @@ export async function startZkPassportRequest(
   // CHECK primitives
   if (b.minimumAge != null) qb.gte("age", b.minimumAge);
   if (b.nationalityIn?.length) qb.in("nationality", b.nationalityIn);
-  // REVEAL opt-ins — one disclosure circuit each on-device. The default Stage-1
-  // query carries none of these; ZKP_DISCLOSE_GENDER=on etc. add them.
+  // REVEAL opt-ins — REVEALs coalesce into one disclose_bytes circuit on-device.
+  // The default Stage-1 query carries none of these; ZKP_DISCLOSE_GENDER=on etc.
+  // add them. Age ranges are a CHECK (.range, mobile compare_age), not a REVEAL.
   if (b.discloseGender) qb.disclose("gender");
   if (b.discloseBirthdate) qb.disclose("birthdate");
   if (b.discloseNationality) qb.disclose("nationality");

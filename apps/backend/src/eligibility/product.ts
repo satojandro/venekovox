@@ -30,9 +30,10 @@ export interface ProductEnv {
   ZKP_OPRF_KEY_ID?: string;
   ZKP_VALIDITY?: string;
   ZKP_NATIONALITY_ALLOWLIST?: string;
-  /** REVEAL opt-ins — each adds an on-device disclosure circuit. All default
-   *  OFF for Stage 1. Age "bands" are NOT a ZKPassport CHECK; band analytics
-   *  require ZKP_DISCLOSE_BIRTHDATE=on (Stage 2). */
+  /** REVEAL opt-ins — the mobile app coalesces REVEALs into one disclose_bytes
+   *  circuit (age/country CHECKs ride the compare circuits). All default
+   *  OFF for Stage 1. Age ranges ARE a CHECK (mobile compare_age handles
+   *  .range("age",min,max)); range analytics do NOT require birthdate. */
   ZKP_DISCLOSE_GENDER?: string;
   ZKP_DISCLOSE_BIRTHDATE?: string;
   ZKP_DISCLOSE_NATIONALITY?: string;
@@ -88,9 +89,9 @@ export function createProductEligibility(env: ProductEnv = process.env as Produc
         "Australia",
       ],
       minimumAge: 18,
-      // REVEALs: all OFF for Stage 1 (minimal disclosure). Each is a separate
-      // on-device disclosure circuit; age "bands" don't exist as a CHECK —
-      // band analytics need reveal.dateOfBirth (Stage 2).
+      // REVEALs: all OFF for Stage 1 (minimal disclosure). REVEALs coalesce
+      // into one disclose_bytes circuit on-device; age ranges are a CHECK
+      // (mobile compare_age) — range analytics don't need birthdate REVEAL.
       reveal: {
         gender: env.ZKP_DISCLOSE_GENDER === "on",
         dateOfBirth: env.ZKP_DISCLOSE_BIRTHDATE === "on",

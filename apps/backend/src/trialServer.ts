@@ -101,9 +101,12 @@ const zkConfig: ZkPassportConfig = {
       "Australia",
     ],
     minimumAge: 18,
-    // Age-band is NATIVE in ZKPassport: pinned here to prove the capability.
-    ageBand: process.env.TRIAL_ZKP_AGE_BAND === "on" ? { min: 18, max: 99 } : undefined,
-    discloseGender: true,
+    // REVEAL opt-ins (2026-09-10): ZKPassport has NO age-band CHECK — band
+    // analytics REVEAL birthdate. Trial keeps gender on (it passed D10 with it).
+    reveal: {
+      gender: true,
+      dateOfBirth: process.env.TRIAL_ZKP_DISCLOSE_BIRTHDATE === "on",
+    },
     // Scoped diagnostic legitimately omits facematch (salted REQUIRES strict;
     // scoped does not — see zkpassport.ts constructor).
     ...(uniquenessMode === "salted" ? { facematch: "strict" as const } : {}),

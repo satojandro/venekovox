@@ -28,7 +28,7 @@ const config = {
   query: {
     nationalityIn: ["Venezuela", "United States", "Australia"],
     minimumAge: 18,
-    discloseGender: true,
+    reveal: { gender: true },
     facematch: "strict",
   },
   validity: 604800,
@@ -39,7 +39,7 @@ const scopedConfig = {
   ...config,
   configId: keccak256(toUtf8Bytes("zkpassport-stage1-scoped-v1")),
   uniqueIdentifierType: "scoped",
-  query: { nationalityIn: ["Venezuela", "United States", "Australia"], minimumAge: 18, discloseGender: true },
+  query: { nationalityIn: ["Venezuela", "United States", "Australia"], minimumAge: 18, reveal: { gender: true } },
 };
 
 /** Returns the REAL-SDK canonical query for the configured requirements. */
@@ -183,11 +183,12 @@ test("attribute gates fail closed — no silent fallback for age, band, national
     await assert.rejects(f.service.receiveProof(c.id, signature, payload(patch)), /UNMET/);
   }
 });
-test("age band capability is pinned when configured and enforced", async () => {
-  const bandConfig = { ...config, query: { ...config.query, ageBand: { min: 18, max: 99 } } };
+test("date-of-birth REVEAL is the only age-band mechanism and is enforced", async () => {
+  // ZKPassport has NO age-band CHECK; band analytics REVEAL birthdate.
+  const dobConfig = { ...config, query: { ...config.query, reveal: { gender: true, dateOfBirth: true } } };
   let now = Math.floor(Date.now() / 1000);
   const service = new ZkPassportEligibility(
-    bandConfig,
+    dobConfig,
     {
       now: () => now,
       identityTagSecret: new Uint8Array(32).fill(4),
@@ -206,15 +207,15 @@ test("age band capability is pinned when configured and enforced", async () => {
   const c = service.createChallenge(wallet.address),
     signature = await wallet.signMessage(c.message);
   await service.begin(c.id, signature);
-  const bandQuery = { ...payload().originalQuery, age: { gte: 18, range: [18, 99] } };
-  const qrBandFalse = { ...validQueryResult(), age: { gte: { result: true }, range: { result: false } } };
+  const dobQuery = { ...payload().originalQuery, birthdate: { disclose: true } };
+  const qrDobFalse = { ...validQueryResult(), birthdate: { disclose: { result: false } } };
   await assert.rejects(
-    service.receiveProof(c.id, signature, payload({ originalQuery: bandQuery, queryResult: qrBandFalse })),
-    /BAND_UNMET/,
+    service.receiveProof(c.id, signature, payload({ originalQuery: dobQuery, queryResult: qrDobFalse })),
+    /DOB_REVEAL_UNMET/,
   );
-  const qrBandTrue = { ...validQueryResult(), age: { gte: { result: true }, range: { result: true } } };
+  const qrDobTrue = { ...validQueryResult(), birthdate: { disclose: { result: "1990-01-01" } } };
   await assert.equal(
-    await service.receiveProof(c.id, signature, payload({ originalQuery: bandQuery, queryResult: qrBandTrue })),
+    await service.receiveProof(c.id, signature, payload({ originalQuery: dobQuery, queryResult: qrDobTrue })),
     "accepted",
   );
 });

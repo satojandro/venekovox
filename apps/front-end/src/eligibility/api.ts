@@ -29,12 +29,16 @@ export interface BeginParams {
   uniqueIdentifierType: "SALTED" | "NON_SALTED";
   oprfKeyId?: string;
   query: unknown;
+  /** Mirrors ZKPassport's primitives exactly: CHECKs (minimumAge, nationalityIn,
+   *  facematch) and REVEAL opt-ins (disclosures). No "ageBand" — the app has no
+   *  such CHECK; band analytics require disclosing birthdate (Stage 2). */
   queryBuild: {
-    discloseGender?: boolean;
     minimumAge?: number;
-    ageBand?: { min: number; max: number };
     nationalityIn?: string[];
     facematch?: "strict";
+    discloseGender?: boolean;
+    discloseBirthdate?: boolean;
+    discloseNationality?: boolean;
   };
 }
 

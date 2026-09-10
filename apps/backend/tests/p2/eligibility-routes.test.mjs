@@ -31,7 +31,7 @@ const config = {
   query: {
     nationalityIn: ["Venezuela", "United States", "Australia"],
     minimumAge: 18,
-    discloseGender: true,
+    reveal: { gender: true },
     facematch: "strict",
   },
   validity: 604800,

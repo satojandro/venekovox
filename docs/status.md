@@ -61,6 +61,18 @@ different address and was caught by verification before use). Health:
 `{ok:true, mode:"live", provider:"zkpassport"}`. Grants signed from here on are
 on-chain-valid for `enforce()`.
 
+**WP2 scan failures root-caused (2026-09-10, commit `a5054b4ba`):** two failed
+scans (`FAILED_TO_GET_DISCLOSURE_CIRCUITS` at ~10%, progress bouncing, phone
+hot = app retry-looping artifact fetches) happened with the FE served from
+`localhost:3000` — **not** in the ZKPassport dashboard Allowed origins. D10
+documented this exact gate ("without allowedOrigins: silent native crash at
+generating proof"); it resurfaced because the product mount was reached via
+localhost. Also, Vite 4+ blocks unknown Host headers (403), fixed with
+`server.allowedHosts = [app.uxisnear.com, <tailscale name>]`. The CNAME
+`app.uxisnear.com → claudios-mac-mini.taila56fc2.ts.net` (verified live in DNS)
+maps the allowlisted origin to this machine. **Scan from
+`http://app.uxisnear.com:3000/trust-ritual` — that origin is verified.**
+
 Fork findings worth knowing for WP2: grant timestamps must anchor to the fork's
 block clock (wall-clock drift trips InvalidLifetime — the product backend is
 immune, it reads the live chain clock), and replay/second-wallet probes must be

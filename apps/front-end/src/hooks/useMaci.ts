@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { BrowserProvider, isAddress, type Eip1193Provider } from "ethers";
+import { BrowserProvider, JsonRpcProvider, Wallet, isAddress, type Eip1193Provider } from "ethers";
 // Namespace imports are required for the workspace packages' CommonJS exports.
 import * as maciSdk from "@maci-protocol/sdk/browser";
 import * as domainobjs from "@maci-protocol/domainobjs";
@@ -301,21 +301,26 @@ export function useMaci() {
       getConfig,
       readKey: readKeypair,
       lookupParticipation: async ({ publicKey, maciAddress, pollId }) => {
-        const wallet = window.ethereum;
-        if (!wallet) throw new Error("No wallet found.");
-        const provider = new BrowserProvider(wallet);
-        const signer = await provider.getSigner();
+        // Read calls ride the PUBLIC RPC (VITE_PUBLIC_RPC_URL), not the wallet
+        // provider — MetaMask's Infura rate-limits the event-scan bursts
+        // (-32005) and even single eth_getCode calls once the quota is hot.
+        // The wallet stays only for actual signing. The SDK view calls never
+        // sign, so a throwaway key on the read provider is safe here.
+        const rpcUrl = import.meta.env.VITE_PUBLIC_RPC_URL as string | undefined;
+        if (!rpcUrl) throw new Error("VITE_PUBLIC_RPC_URL is not configured.");
+        const readProvider = new JsonRpcProvider(rpcUrl, getConfig().chainId, { staticNetwork: true });
+        const readSigner = await Wallet.createRandom().connect(readProvider);
         const config = getConfig();
         const signupData = await maciSdk.getSignedupUserData({
           maciAddress,
           maciPublicKey: publicKey,
-          signer,
+          signer: readSigner,
         });
         const joinedData = await maciSdk.getJoinedUserData({
           maciAddress,
           pollId,
           pollPublicKey: publicKey,
-          signer,
+          signer: readSigner,
           startBlock: config.startBlock,
         });
         return {

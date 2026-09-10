@@ -91,6 +91,15 @@ export class EligibilityService<Proof> {
   private readonly config: EligibilityConfig;
   private readonly now: () => number;
   private readonly tagSecret: Buffer;
+
+  /** Grant validity in seconds. Defaults to 1h — long enough to cover the
+   *  passport scan + proof generation + join between authorize() and the
+   *  enforce() call, short enough to limit replay value. The CHALLENGE keeps
+   *  its own 300s window; the grant must not inherit it (WP2 review). */
+  private grantValiditySeconds(): number {
+    return Number(process.env.ELIGIBILITY_GRANT_VALIDITY_SECONDS || 3600);
+  }
+
   constructor(
     config: EligibilityConfig,
     private readonly deps: Dependencies<Proof>,
@@ -192,7 +201,12 @@ export class EligibilityService<Proof> {
         action: this.config.action,
         nonce: c.id,
         issuedAt,
-        expiresAt: c.expiresAt,
+        // The GRANT must not inherit the challenge's 300s clock: the grant is
+        // presented at join time, AFTER the passport scan + proof generation
+        // (which alone can exceed 5 minutes). The challenge window protects
+        // the scan; the grant window protects the issuer signature. WP2
+        // review (Astra, 2026-09-10) flagged exactly this coupling.
+        expiresAt: issuedAt + this.grantValiditySeconds(),
       };
       const signature = await this.deps.sign(domain, AUTHORIZATION_TYPES, authorization);
       fresh();

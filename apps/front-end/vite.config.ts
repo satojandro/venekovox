@@ -3,17 +3,23 @@ import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 
 const assertShim = fileURLToPath(new URL("./src/shims/assert.ts", import.meta.url));
+const cryptoShim = fileURLToPath(new URL("./src/shims/crypto.ts", import.meta.url));
 
-// Force every `assert` import (including Node's builtin) onto the browser shim
-// during Vite's dependency pre-bundle. resolve.alias alone is not enough because
-// esbuild treats `assert` as a Node builtin.
-function assertShimPlugin(): Plugin {
+// Force every `assert`/`crypto` import (including Node builtins) onto the
+// browser shims during Vite's dependency pre-bundle. resolve.alias alone is
+// not enough because esbuild treats these as Node builtins. crypto is needed
+// by MACI domainobjs (Keypair generation → packages/crypto keys.ts/babyjub.ts
+// import { randomBytes } from "crypto").
+function nodeBuiltinShimPlugin(): Plugin {
   return {
-    name: "venekovox-assert-shim",
+    name: "venekovox-node-builtin-shims",
     enforce: "pre",
     resolveId(source) {
       if (source === "assert" || source === "node:assert") {
         return assertShim;
+      }
+      if (source === "crypto" || source === "node:crypto") {
+        return cryptoShim;
       }
       return undefined;
     },
@@ -22,7 +28,7 @@ function assertShimPlugin(): Plugin {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [assertShimPlugin(), react()],
+  plugins: [nodeBuiltinShimPlugin(), react()],
   server: {
     port: 3000,
     host: true,
@@ -40,6 +46,8 @@ export default defineConfig({
       "@": "/src",
       assert: assertShim,
       "node:assert": assertShim,
+      crypto: cryptoShim,
+      "node:crypto": cryptoShim,
     },
   },
   // MACI workspace packages are CommonJS; ensure proper pre-bundling
@@ -50,6 +58,8 @@ export default defineConfig({
       alias: {
         assert: assertShim,
         "node:assert": assertShim,
+        crypto: cryptoShim,
+        "node:crypto": cryptoShim,
       },
     },
   },

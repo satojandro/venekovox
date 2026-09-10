@@ -1,5 +1,47 @@
 # Current state and evidence
 
+## Branch reconciliation — 2026-09-10
+
+Local `main` previously held four unique ENS/journey commits; preserved as
+`archive/local-main-ens-journey-2026-09-10` (also on origin) before resetting
+local `main` to `origin/main`. This commit brings trial `1fe7f22f` Audit/design
+(review + poll mockups) onto current main while retaining WP0 deployment evidence
+below. Unmerged `codex/ens-registration-v2` and `w1-privy-experiment` remain for
+separate integration. Grant/retry/test repair lives on
+`fix/main-78fc-grant-retry-tests`.
+
+## WP2 independent scan review — 2026-09-10
+
+Reviewed fetched main `f094d1b9` in an isolated source snapshot; this checkout stays
+on `exp/provider-trial-self-vs-zkpassport` (`d5b978ac`). See the
+[review and reproduction](reviews/wp2-2026-09-10/review.md).
+
+Reproduced: backend p2 **64/64**, real-SDK offline request parity/range checks
+**3/3** on Node 22.20.0. Product/trial builders agree for identical inputs.
+Public mobile source wraps OPRF, circuit selection and input preparation failures
+in `FAILED_TO_GET_DISCLOSURE_CIRCUITS`; the label does not establish a gender
+download or origin root cause. Age ranges are supported by the pinned SDK.
+All three OPRF public-key endpoints responded from the laptop; authenticated
+phone evaluation remains untested. Source-to-App-Store-build parity is unverified.
+
+Alejandro reports app 1.3.1 and Wi-Fi, with no mobile data currently available.
+Live scan remains unresolved; next evidence is controlled trial/product comparison
+and a sanitized inner error/stage. No live acceptance gate closed or runtime
+configuration changed. Preserve the existing design work below.
+
+## Poll journey mockups — 2026-09-09
+
+User-directed [V2 design refinement](design/poll-mockups-2026-09-09/v2/README.md)
+adds dark/light discovery, signed-in states, France/EU comparison, mission copy
+and gentle privacy onboarding. Existing landing narrative reviewed; absolute
+security claims not carried forward. Visual concepts only; implementation
+corrections and synthetic-chart limitations recorded with the boards.
+
+Added [desktop and mobile design concepts](design/poll-mockups-2026-09-09/README.md)
+for the supplied four-poll slate and verification → ballot → receipt → results
+journey. Raster boards were visually inspected; results are synthetic and no
+runtime behavior, deployment, or acceptance-gate completion is claimed.
+
 ## WP0 — Continuity France poll deployed — 2026-09-09
 
 Poll **1** is live on Sepolia under the existing MACI `0x44F31f3823ceFE00C2FA5acEB2576F119143Fe3a`,
@@ -87,7 +129,6 @@ shape — 6 options, pollId 1, 18+ note; commit `8b71d6427`); backend `test:p2`
 loader's data-URL `createRequire` is invalid on the shell's default Node 26 —
 run p2 tests on Node 22 with the scratch toolchain env, matching the documented
 `>=22 <23` pin.
-
 ## C product mount — ZKPassport HTTP + Auth + join bytes — 2026-09-09
 
 Mounted the D17 ZKPassport path on `exp/provider-trial-self-vs-zkpassport` (`d4139c36`

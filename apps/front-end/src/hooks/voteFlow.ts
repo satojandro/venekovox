@@ -1,6 +1,4 @@
-import { Wallet } from "ethers";
-import type { JsonRpcSigner } from "ethers";
-import { makeReadProvider } from "../eligibility/readProvider";
+import type { JsonRpcSigner, Provider, Signer } from "ethers";
 import type { VoteReceipt } from "../lib/receipts";
 
 export type VoteStatus = "idle" | "connecting" | "signing-up" | "joining" | "ready" | "voting" | "voted";
@@ -38,6 +36,14 @@ type VoteSdk = Pick<
   "getSignedupUserData" | "signup" | "getJoinedUserData" | "joinPoll" | "publish"
 >;
 
+/** Read-only RPC access for membership lookups and join prep. Injected so unit
+ *  tests can load this module without resolving ethers providers or Vite env. */
+export interface VoteReadAccess {
+  signer: Signer;
+  /** Optional multi-RPC provider for joinPoll's state-tree scan. */
+  provider?: Provider;
+}
+
 interface VoteFlowOptions {
   sdk: VoteSdk;
   getSession: () => Promise<VoteSession>;
@@ -59,12 +65,17 @@ interface VoteFlowOptions {
     maciAddress: string;
     pollId: bigint;
   }) => Promise<void>;
+  /**
+   * Read-optimized signer/provider for lookups. When omitted, the wallet
+   * signer is used (tests). Production wires makeReadProvider via useMaci.
+   */
+  getReadAccess?: (chainId: bigint) => VoteReadAccess | Promise<VoteReadAccess>;
 }
 
-/** Retry a read-heavy SDK step. Free public RPCs load-balance across backend
+/** Retry a read-only SDK step. Free public RPCs load-balance across backend
  *  nodes; a lagging replica can revert getPoll/getStateIndex with empty data
- *  (CALL_EXCEPTION) or 429 mid-scan. All failures here happen BEFORE any
- *  wallet signature, so retrying cannot double-spend. Exponential backoff. */
+ *  (CALL_EXCEPTION) or 429 mid-scan. Only wrap calls that cannot submit a
+ *  transaction — never joinPoll/signup/publish. Exponential backoff. */
 async function withRpcRetry<T>(fn: () => Promise<T>, attempts = 4): Promise<T> {
   let lastError: unknown;
   for (let attempt = 1; attempt <= attempts; attempt++) {
@@ -96,6 +107,7 @@ export function createVoteFlow({
   onReceipt,
   getSignUpPolicyData,
   dryRunJoin,
+  getReadAccess,
 }: VoteFlowOptions) {
   let busy = false;
 
@@ -125,15 +137,13 @@ export function createVoteFlow({
       await assertCurrent();
 
       const signupArgs = { maciAddress, maciPublicKey: publicKey, signer };
-      // The registration lookup is read-only — ride the public RPC (wallet
-      // RPCs rate-limit, and a reverted getStateIndex on some nodes surfaces
-      // as CALL_EXCEPTION). signup() itself still uses the wallet signer.
-      const readProvider = makeReadProvider(chainId);
-      const readSigner = await Wallet.createRandom().connect(readProvider);
+      // Registration lookup is read-only. Prefer the injected read RPC; fall
+      // back to the wallet signer in tests that omit getReadAccess.
+      const readAccess = getReadAccess ? await getReadAccess(chainId) : { signer, provider: undefined };
       const registered = await sdk.getSignedupUserData({
         maciAddress,
         maciPublicKey: publicKey,
-        signer: readSigner,
+        signer: readAccess.signer,
       });
       let stateIndex = registered.stateIndex;
       if (!registered.isRegistered) {
@@ -147,18 +157,17 @@ export function createVoteFlow({
       await assertCurrent();
 
       // Recover membership from the chain after refresh or a failed publish.
-      // Read-only — ride the public RPC (same readSigner as the lookup above);
-      // getJoinedUserData internally calls getPoll(pollId) which the wallet's
-      // node intermittently reverts with empty data.
-      const joined = await withRpcRetry(() =>
+      // Read-only — safe to retry. getJoinedUserData calls getPoll(pollId),
+      // which wallet nodes intermittently revert with empty data.
+      const lookupJoined = () =>
         sdk.getJoinedUserData({
           maciAddress,
           pollId,
           pollPublicKey: publicKey,
-          signer: readSigner,
+          signer: readAccess.signer,
           startBlock,
-        }),
-      );
+        });
+      const joined = await withRpcRetry(lookupJoined);
       let pollStateIndex = joined.pollStateIndex;
       if (!joined.isJoined) {
         await assertCurrent();
@@ -169,8 +178,12 @@ export function createVoteFlow({
         if (dryRunJoin) {
           await dryRunJoin({ account, sgDataArg, signer, maciAddress, pollId });
         }
-        const result = await withRpcRetry(() =>
-          sdk.joinPoll({
+        // joinPoll submits a transaction. Do NOT wrap it in withRpcRetry —
+        // a transient error after submission can re-enter join or report
+        // failure after success. SDK retries reads/proof prep internally;
+        // here we only reconcile membership if the call throws.
+        try {
+          const result = await sdk.joinPoll({
             maciAddress,
             pollId,
             privateKey,
@@ -180,12 +193,19 @@ export function createVoteFlow({
             pollWasm: "/zkeys/PollJoining_10_test/PollJoining_10_test.wasm",
             sgDataArg,
             ivcpDataArg: "0x",
-            // State-tree event scan rides the fallback read providers — the
-            // wallet provider (Infura) rate-limits the ~hundreds of eth_getLogs.
-            provider: makeReadProvider(chainId),
-          }),
-        );
-        pollStateIndex = result.pollStateIndex;
+            // State-tree event scan rides the fallback read providers when
+            // wired; wallet Infura rate-limits the eth_getLogs burst.
+            ...(readAccess.provider ? { provider: readAccess.provider } : {}),
+          });
+          pollStateIndex = result.pollStateIndex;
+        } catch (error) {
+          const recovered = await withRpcRetry(lookupJoined).catch(() => null);
+          if (recovered?.isJoined && recovered.pollStateIndex) {
+            pollStateIndex = recovered.pollStateIndex;
+          } else {
+            throw error;
+          }
+        }
       }
       if (!pollStateIndex || BigInt(pollStateIndex) <= 0n) throw new Error("Could not confirm poll membership.");
       report({ pollStateIndex, status: "ready" });

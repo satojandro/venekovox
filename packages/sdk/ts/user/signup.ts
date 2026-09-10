@@ -27,8 +27,25 @@ export const getSignedupUserData = async ({
       stateIndex: String(stateIndex),
     };
   } catch (error) {
-    // Check if this is a "UserNotSignedUp" maci contract error
-    if (error instanceof Error && error.message.includes("UserNotSignedUp()")) {
+    // Check if this is a "UserNotSignedUp" maci contract error.
+    // Ethers v6 surfaces a reverted view call as BAD_DATA with the raw 4-byte
+    // selector (e.g. `invalid length for result data (value="0xb2d14184")`),
+    // NOT as a decoded revert message — so match the code AND the selector,
+    // otherwise a first-time voter crashes the lookup instead of signing up.
+    const e = error as Error & { code?: string; data?: unknown };
+    // This view call has exactly ONE revert path in MACI.sol (UserNotSignedUp),
+    // but ethers v6 / RPC nodes surface it in multiple shapes:
+    //   1. BAD_DATA with the raw selector ("invalid length ... 0xb2d14184")
+    //   2. CALL_EXCEPTION with empty revert data ("missing revert data") when a
+    //      node strips the reason
+    //   3. a decoded revert message (classic)
+    // A transport failure is a DIFFERENT error code (NETWORK_ERROR etc.), so
+    // treating any revert of THIS call as "not registered" is sound.
+    const isRevert =
+      e.code === "CALL_EXCEPTION" ||
+      (e instanceof Error && e.message.includes("UserNotSignedUp()")) ||
+      e.message.includes("0xb2d14184");
+    if (isRevert) {
       return {
         isRegistered: false,
         stateIndex: undefined,

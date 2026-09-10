@@ -2,7 +2,7 @@ import { type LeanIMTMerkleProof } from "@zk-kit/lean-imt";
 
 import type { MACI, Poll } from "@maci-protocol/contracts/typechain-types";
 import type { PrivateKey, PublicKey } from "@maci-protocol/domainobjs";
-import type { Signer } from "ethers";
+import type { Provider, Signer } from "ethers";
 
 /**
  * Interface for the arguments to the isJoinedUser command
@@ -364,6 +364,13 @@ export interface IJoinPollBrowserArgs extends IJoinPollArgs {
    * The inclusion proof
    */
   inclusionProof?: LeanIMTMerkleProof;
+
+  /**
+   * Optional read-optimized provider for the state-tree event scan. Wallet
+   * RPCs rate-limit the large eth_getLogs burst the rebuild triggers; pass a
+   * public JsonRpcProvider here and the wallet signer is used only for the tx.
+   */
+  provider?: Provider;
 }
 
 /**

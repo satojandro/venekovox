@@ -1,4 +1,6 @@
+import { Wallet } from "ethers";
 import type { JsonRpcSigner } from "ethers";
+import { makeReadProvider } from "../eligibility/readProvider";
 import type { VoteReceipt } from "../lib/receipts";
 
 export type VoteStatus = "idle" | "connecting" | "signing-up" | "joining" | "ready" | "voting" | "voted";
@@ -59,6 +61,32 @@ interface VoteFlowOptions {
   }) => Promise<void>;
 }
 
+/** Retry a read-heavy SDK step. Free public RPCs load-balance across backend
+ *  nodes; a lagging replica can revert getPoll/getStateIndex with empty data
+ *  (CALL_EXCEPTION) or 429 mid-scan. All failures here happen BEFORE any
+ *  wallet signature, so retrying cannot double-spend. Exponential backoff. */
+async function withRpcRetry<T>(fn: () => Promise<T>, attempts = 4): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      const message = error instanceof Error ? error.message : String(error);
+      const transient =
+        message.includes("CALL_EXCEPTION") ||
+        message.includes("Rate Limit") ||
+        message.includes("-32005") ||
+        message.includes("-32602") ||
+        message.includes("429") ||
+        message.includes("missing revert data");
+      if (!transient || attempt === attempts) throw error;
+      await new Promise((r) => setTimeout(r, 1500 * 2 ** (attempt - 1)));
+    }
+  }
+  throw lastError;
+}
+
 /** One invocation owns signup, join and publish. React state is display-only. */
 export function createVoteFlow({
   sdk,
@@ -97,7 +125,16 @@ export function createVoteFlow({
       await assertCurrent();
 
       const signupArgs = { maciAddress, maciPublicKey: publicKey, signer };
-      const registered = await sdk.getSignedupUserData(signupArgs);
+      // The registration lookup is read-only — ride the public RPC (wallet
+      // RPCs rate-limit, and a reverted getStateIndex on some nodes surfaces
+      // as CALL_EXCEPTION). signup() itself still uses the wallet signer.
+      const readProvider = makeReadProvider(chainId);
+      const readSigner = await Wallet.createRandom().connect(readProvider);
+      const registered = await sdk.getSignedupUserData({
+        maciAddress,
+        maciPublicKey: publicKey,
+        signer: readSigner,
+      });
       let stateIndex = registered.stateIndex;
       if (!registered.isRegistered) {
         await assertCurrent();
@@ -110,13 +147,18 @@ export function createVoteFlow({
       await assertCurrent();
 
       // Recover membership from the chain after refresh or a failed publish.
-      const joined = await sdk.getJoinedUserData({
-        maciAddress,
-        pollId,
-        pollPublicKey: publicKey,
-        signer,
-        startBlock,
-      });
+      // Read-only — ride the public RPC (same readSigner as the lookup above);
+      // getJoinedUserData internally calls getPoll(pollId) which the wallet's
+      // node intermittently reverts with empty data.
+      const joined = await withRpcRetry(() =>
+        sdk.getJoinedUserData({
+          maciAddress,
+          pollId,
+          pollPublicKey: publicKey,
+          signer: readSigner,
+          startBlock,
+        }),
+      );
       let pollStateIndex = joined.pollStateIndex;
       if (!joined.isJoined) {
         await assertCurrent();
@@ -127,17 +169,22 @@ export function createVoteFlow({
         if (dryRunJoin) {
           await dryRunJoin({ account, sgDataArg, signer, maciAddress, pollId });
         }
-        const result = await sdk.joinPoll({
-          maciAddress,
-          pollId,
-          privateKey,
-          signer,
-          startBlock,
-          pollJoiningZkey: "/zkeys/PollJoining_10_test/PollJoining_10_test.0.zkey",
-          pollWasm: "/zkeys/PollJoining_10_test/PollJoining_10_test.wasm",
-          sgDataArg,
-          ivcpDataArg: "0x",
-        });
+        const result = await withRpcRetry(() =>
+          sdk.joinPoll({
+            maciAddress,
+            pollId,
+            privateKey,
+            signer,
+            startBlock,
+            pollJoiningZkey: "/zkeys/PollJoining_10_test/PollJoining_10_test.0.zkey",
+            pollWasm: "/zkeys/PollJoining_10_test/PollJoining_10_test.wasm",
+            sgDataArg,
+            ivcpDataArg: "0x",
+            // State-tree event scan rides the fallback read providers — the
+            // wallet provider (Infura) rate-limits the ~hundreds of eth_getLogs.
+            provider: makeReadProvider(chainId),
+          }),
+        );
         pollStateIndex = result.pollStateIndex;
       }
       if (!pollStateIndex || BigInt(pollStateIndex) <= 0n) throw new Error("Could not confirm poll membership.");

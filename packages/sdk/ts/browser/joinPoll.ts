@@ -2,6 +2,7 @@
 import { MACI__factory as MACIFactory, Poll__factory as PollFactory } from "@maci-protocol/contracts/typechain-types";
 import { poseidon } from "@maci-protocol/crypto";
 import { Keypair, PrivateKey } from "@maci-protocol/domainobjs";
+import { Wallet } from "ethers";
 
 import type { IJoinPollBrowserArgs, IJoinPollData } from "../user/types";
 import type { TCircuitInputs } from "../utils/types";
@@ -32,6 +33,9 @@ export const joinPoll = async ({
   ivcpDataArg,
   inclusionProof,
   useLatestStateIndex,
+  // Optional read-optimized provider for the state-tree event scan — wallet
+  // RPCs rate-limit the large eth_getLogs burst the rebuild triggers.
+  provider: readProvider,
 }: IJoinPollBrowserArgs): Promise<IJoinPollData> => {
   const validContract = await contractExists(signer.provider!, maciAddress);
 
@@ -51,19 +55,27 @@ export const joinPoll = async ({
   const userMaciPublicKey = new Keypair(userMaciPrivateKey).publicKey;
   const nullifier = poseidon([BigInt(userMaciPrivateKey.asCircuitInputs()), pollId]);
 
-  // check if the user has already joined the poll based on the nullifier
+  // check if the user has already joined the poll based on the nullifier.
+  // Read-only lookup — keep it off the wallet RPC (same rationale as
+  // readSigner below); needs a signer-shaped object for the factory.
+  const nullifierReadSigner = readProvider ? Wallet.createRandom().connect(readProvider) : signer;
   const hasUserJoinedAlready = await hasUserJoinedPoll({
     maciAddress,
     pollId,
     nullifier,
-    signer,
+    signer: nullifierReadSigner,
   });
 
   if (hasUserJoinedAlready) {
     throw new Error("User has already joined");
   }
 
-  const maciContract = MACIFactory.connect(maciAddress, signer);
+  // All READS (getPoll, getStateIndex, stateTreeDepth, totalSignups, event
+  // scans) ride the read-optimized provider when given — wallet RPCs throttle
+  // and some strip revert data on these. The wallet signer is used ONLY for
+  // the joinPoll transaction.
+  const readSigner = readProvider ? Wallet.createRandom().connect(readProvider) : signer;
+  const maciContract = MACIFactory.connect(maciAddress, readSigner);
   const pollContracts = await maciContract.getPoll(pollId);
   const pollContract = PollFactory.connect(pollContracts.poll, signer);
 
@@ -86,6 +98,7 @@ export const joinPoll = async ({
       startBlock,
       endBlock,
       blocksPerBatch,
+      provider: readProvider,
     });
   }
 

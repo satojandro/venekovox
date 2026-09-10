@@ -6,6 +6,7 @@ import {
 import { type IJsonMaciState, MaciState } from "@maci-protocol/core";
 import { poseidon, stringifyBigInts } from "@maci-protocol/crypto";
 import { Keypair, type PrivateKey, PublicKey } from "@maci-protocol/domainobjs";
+import { type Provider } from "ethers";
 
 import fs from "fs";
 
@@ -38,30 +39,50 @@ export const parsePollJoinEvents = async ({
   pollStateIndex?: string;
   voiceCredits?: string;
 }> => {
-  for (let block = startBlock; block <= currentBlock; block += BLOCKS_STEP) {
-    const toBlock = Math.min(block + BLOCKS_STEP - 1, currentBlock);
-    const publicKey = pollPublicKey.asArray();
-    // eslint-disable-next-line no-await-in-loop
-    const newEvents = await pollContract.queryFilter(
-      pollContract.filters.PollJoined(publicKey[0], publicKey[1], undefined, undefined, undefined),
-      block,
-      toBlock,
-    );
+  // The chunked scan fires many sequential eth_getLogs calls; wallet RPCs
+  // (MetaMask/Infura) rate-limit bursts with -32005. Back off and retry the
+  // chunk instead of failing the whole join/lookup flow.
+  let parsed: { pollStateIndex?: string; voiceCredits?: string } | undefined;
+  const fetchChunk = async (block: number, toBlock: number, attempt = 1): Promise<void> => {
+    try {
+      const publicKey = pollPublicKey.asArray();
+      // eslint-disable-next-line no-await-in-loop
+      const newEvents = await pollContract.queryFilter(
+        pollContract.filters.PollJoined(publicKey[0], publicKey[1], undefined, undefined, undefined),
+        block,
+        toBlock,
+      );
 
-    if (newEvents.length > 0) {
-      const [event] = newEvents;
+      if (newEvents.length > 0) {
+        const [event] = newEvents;
 
-      return {
-        pollStateIndex: event.args[4].toString(),
-        voiceCredits: event.args[2].toString(),
-      };
+        parsed = {
+          pollStateIndex: event.args[4].toString(),
+          voiceCredits: event.args[2].toString(),
+        };
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const rateLimited = message.includes("-32005") || message.includes("Rate Limit");
+      if (rateLimited && attempt < 5) {
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((resolve) => {
+          setTimeout(resolve, 1000 * 2 ** (attempt - 1));
+        });
+        await fetchChunk(block, toBlock, attempt + 1);
+        return;
+      }
+      throw error;
     }
+  };
+
+  for (let block = startBlock; block <= currentBlock && !parsed; block += BLOCKS_STEP) {
+    const toBlock = Math.min(block + BLOCKS_STEP - 1, currentBlock);
+    // eslint-disable-next-line no-await-in-loop
+    await fetchChunk(block, toBlock);
   }
 
-  return {
-    pollStateIndex: undefined,
-    voiceCredits: undefined,
-  };
+  return parsed ?? { pollStateIndex: undefined, voiceCredits: undefined };
 };
 
 /**
@@ -285,14 +306,19 @@ export const generateMaciStateTree = async ({
   startBlock,
   endBlock,
   blocksPerBatch,
-}: IGenerateMaciStateTreeArgs): Promise<IGenerateSignUpTree> => {
+  // Optional read-optimized provider: the tree rebuild fires one eth_getLogs
+  // per batch (hundreds of calls); wallet RPCs (MetaMask/Infura) rate-limit
+  // that burst (-32005). Callers can pass a public JsonRpcProvider here and
+  // keep the wallet signer for actual transactions.
+  provider: readProvider,
+}: IGenerateMaciStateTreeArgs & { provider?: Provider }): Promise<IGenerateSignUpTree> => {
   const maciContract = MACIFactory.connect(maciContractAddress, signer);
 
   // build an off-chain representation of the MACI contract using data in the contract storage
   const fromBlock = await getFirstSignUpBlockNumber(maciContract, startBlock);
 
   return generateSignUpTree({
-    provider: signer.provider!,
+    provider: readProvider ?? signer.provider!,
     address: await maciContract.getAddress(),
     blocksPerRequest: blocksPerBatch || 50,
     fromBlock,
@@ -345,7 +371,10 @@ export const getPollJoiningCircuitEvents = async ({
   startBlock,
   endBlock,
   blocksPerBatch,
-}: IGetPollJoiningCircuitEventsArgs): Promise<TCircuitInputs> => {
+  // Optional read-optimized provider for the state-tree event scan (see
+  // generateMaciStateTree) — keeps the burst of eth_getLogs off the wallet RPC.
+  provider: readProvider,
+}: IGetPollJoiningCircuitEventsArgs & { provider?: Provider }): Promise<TCircuitInputs> => {
   const [stateTreeDepth, maciContractAddress] = await Promise.all([
     maciContract.stateTreeDepth(),
     maciContract.getAddress(),
@@ -357,6 +386,7 @@ export const getPollJoiningCircuitEvents = async ({
     startBlock,
     endBlock,
     blocksPerBatch,
+    provider: readProvider,
   });
 
   const { publicKey: userPublicKey } = new Keypair(userMaciPrivateKey);

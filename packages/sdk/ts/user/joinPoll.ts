@@ -5,6 +5,7 @@ import { Keypair, PrivateKey } from "@maci-protocol/domainobjs";
 
 import type { IJoinPollData, IJoinPollArgs } from "./types";
 import type { TCircuitInputs } from "../utils/types";
+import type { Provider } from "ethers";
 
 import { contractExists } from "../utils/contracts";
 import { generateAndVerifyProof } from "../utils/proofs";
@@ -32,7 +33,12 @@ export const joinPoll = async ({
   pollWasm,
   sgDataArg,
   ivcpDataArg,
-}: IJoinPollArgs): Promise<IJoinPollData> => {
+  // Optional read-optimized provider: the state-tree rebuild fires hundreds of
+  // eth_getLogs calls and wallet RPCs (MetaMask/Infura) rate-limit that burst
+  // (-32005). Reads go here (e.g. a public JsonRpcProvider); the wallet signer
+  // is used only for the joinPoll transaction.
+  provider: readProvider,
+}: IJoinPollArgs & { provider?: Provider }): Promise<IJoinPollData> => {
   const validContract = await contractExists(signer.provider!, maciAddress);
 
   if (!validContract) {
@@ -89,6 +95,7 @@ export const joinPoll = async ({
       startBlock,
       endBlock,
       blocksPerBatch,
+      provider: readProvider,
     });
   }
 

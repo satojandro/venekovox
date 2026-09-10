@@ -43,6 +43,16 @@ enforced issuer-side only — the deployed policy/configId/poll are
 nationality-agnostic, so no redeploy was needed and switching cohorts later is
 one env edit + restart. The poll question remains the French election.
 
+**First real scan failed at ~10%: `FAILED_TO_GET_DISCLOSURE_CIRCUITS`.**
+Diagnosis: the query forced `discloseGender: true` — gender is a **REVEAL**
+(disclosure circuit) in the ZKPassport app, requiring extra on-device proving
+artifacts the phone failed to fetch. CHECK predicates (nationality, minimumAge,
+ageBand, facematch) are separate circuits and were not the problem. Fix
+(commit `6fb6eabe0`): gender disclosure is now opt-in via
+`ZKP_DISCLOSE_GENDER=on`, default **OFF** — consistent with the approved
+Stage-1 minimal-disclosure rule (gender is a Stage-2 demographic breakdown).
+Backend restarted; health `{ok:true, mode:"live"}`; p2 64/64.
+
 **Backend is now in LIVE mode (2026-09-10):** `ZKP_MODE=live` with
 `TAG_SECRET` (crypto-random 32B, throwaway, generated via crypto.randomBytes)
 and `ISSUER_PRIVATE_KEY` = the throwaway deployer key (verified to resolve to

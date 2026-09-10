@@ -26,6 +26,10 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
+    // D10 lesson: ZKPassport live proofs require the dashboard-allowed origin.
+    // app.uxisnear.com (CNAME → this Mini's Tailscale name) is the allowlisted
+    // origin, so Vite must serve requests addressed to that hostname too.
+    allowedHosts: ["app.uxisnear.com", "claudios-mac-mini.taila56fc2.ts.net"],
   },
   build: {
     outDir: "dist",

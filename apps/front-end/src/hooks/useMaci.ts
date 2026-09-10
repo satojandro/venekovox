@@ -8,6 +8,7 @@ import { createReceiptStore, applySubmittedReceipt, type VoteReceipt } from "../
 import { checkReceiptStatus, isRecheckable, type ReceiptCheckStatus, type ReceiptProvider } from "../lib/receiptStatus";
 import { loadEligibilityForAccount } from "../eligibility/storage";
 import { dryRunJoinGate } from "../eligibility/dryRunJoin";
+import { makeReadProvider } from "../eligibility/readProvider";
 import {
   createFlightAnchor,
   hydrationContextKey,
@@ -449,6 +450,10 @@ export function useMaci() {
           expectedPolicy: import.meta.env.VITE_POLICY_ADDRESS as string | undefined,
           expectedTarget: import.meta.env.VITE_TARGET_ADDRESS as string | undefined,
         });
+      },
+      getReadAccess: async (chainId) => {
+        const provider = makeReadProvider(chainId);
+        return { signer: await Wallet.createRandom().connect(provider), provider };
       },
       onProgress: (progress) => {
         if (mounted.current && activeGeneration.current === generation.current) setProgress(progress);

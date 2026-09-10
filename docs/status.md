@@ -1,5 +1,28 @@
 # Current state and evidence
 
+## Main 78fc7d19 regressions repaired — 2026-09-10
+
+Branch `fix/main-78fc-grant-retry-tests` (worktree) on `origin/main` `78fc7d19`.
+Repaired the three issues called out in [reviews/main-78fc7d19/review.md](reviews/main-78fc7d19/review.md)
+before further subgraph work:
+
+1. **Grant lifetime** defaults to **900s** (`SelfEligibilityPolicy.MAX_LIFETIME`);
+   `ELIGIBILITY_GRANT_VALIDITY_SECONDS` must be a plain positive integer ≤ 900
+   (`INVALID_GRANT_LIFETIME` otherwise). Challenge window stays 300s.
+2. **Join retry** no longer wraps `joinPoll` submission. `voteFlow` retries
+   read-only membership lookups only and reconciles after a thrown join;
+   browser `joinPoll` retries read/circuit prep, submits once, then surfaces
+   confirmation/log failures for reconcile.
+3. **voteFlow unit loader** no longer imports `ethers`/`readProvider` at module
+   load; `getReadAccess` is injected from `useMaci`.
+
+Local verification (Node 22.20.0, `P2_TOOLCHAIN_PACKAGE_JSON` =
+`~/hermes-crypto-builder/p2-toolchain/zkpassport-scratch/package.json`):
+backend `typecheck:p2` clean; p2 **66/66**; frontend unit **93/93**.
+No live join/vote claim. Remaining review P2 items (signup CALL_EXCEPTION
+fail-open; read-provider chain identity) are untouched. Local-main ENS/journey
+and Audit/design preservation remain as in the review.
+
 ## WP0 — Continuity France poll deployed — 2026-09-09
 
 Poll **1** is live on Sepolia under the existing MACI `0x44F31f3823ceFE00C2FA5acEB2576F119143Fe3a`,

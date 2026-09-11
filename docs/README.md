@@ -2,28 +2,32 @@
 
 Read in this order.
 
-| You are                          | Read this                                                                                                 |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| **Anyone, first time**           | [journey-map.md](journey-map.md) — call-by-call ASCII map of what each technology does and when it enters |
-| Alejandro / product collaborator | [journey.md](journey.md) → [journey-map.md](journey-map.md) → [roadmap.md](roadmap.md)                    |
-| New implementation agent         | [agents.md](agents.md) → [status.md](status.md) → [roadmap.md](roadmap.md) → [build.md](build.md)         |
-| Judge / evaluator                | [technology.md](technology.md) → [journey-map.md](journey-map.md) → [status.md](status.md)                |
-| Operator / demo runner           | [build.md](build.md) Part B → [status.md](status.md)                                                      |
+| You are                                   | Read this                                                                                                     |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Anyone, first time**                    | [journey-map.md](journey-map.md) — call-by-call ASCII map of what each technology does and when it enters     |
+| Alejandro / product collaborator          | [journey.md](journey.md) → [journey-map.md](journey-map.md) → [roadmap.md](roadmap.md)                        |
+| New implementation agent                  | [agents.md](agents.md) → [status.md](status.md) → [roadmap.md](roadmap.md) → [build.md](build.md)             |
+| **Debugging or running the live journey** | [live-test-runbook.md](live-test-runbook.md) — topology, failure modes, diagnostic channel, recipes           |
+| **Planning the wallet/sponsorship work**  | [privy-migration-analysis.md](privy-migration-analysis.md) — what breaks, what survives, what to decide first |
+| Judge / evaluator                         | [technology.md](technology.md) → [journey-map.md](journey-map.md) → [status.md](status.md)                    |
+| Operator / demo runner                    | [live-test-runbook.md](live-test-runbook.md) → [build.md](build.md) Part B → [status.md](status.md)           |
 
-## The eight documents
+## The documents
 
-| File                                                             | What it is                                                                              |
-| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| [journey-map.md](journey-map.md)                                 | **Start here.** Call-by-call ASCII map of the system as built                           |
-| [journey.md](journey.md)                                         | Product journey, architecture, trust boundaries, design rationale                       |
-| [status.md](status.md)                                           | What exists, evidence ledger, gaps G01–G13                                              |
-| [roadmap.md](roadmap.md)                                         | Milestones M1–M4, task IDs S1–S5, decisions D01–D17                                     |
-| [technology.md](technology.md)                                   | Technology → stage → prize → evidence, plus judge guide                                 |
-| [build.md](build.md)                                             | Integration specs (Part A) and runbook (Part B)                                         |
-| [product-mount.md](product-mount.md)                             | **C gate spec (Cursor handoff):** mount ZKPassport → app.ts + FE Auth → join gate bytes |
-| [agents.md](agents.md)                                           | Agent handoff protocol                                                                  |
-| [demographic-analytics-spec.md](demographic-analytics-spec.md)   | Long-term product direction DA0–DA3; proposed, not built                                |
-| [data-and-tally-architecture.md](data-and-tally-architecture.md) | Concrete storage, processing, demographic binding and result-delivery architecture      |
+| File                                                             | What it is                                                                                                                   |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| [journey-map.md](journey-map.md)                                 | **Start here.** Call-by-call ASCII map of the system as built                                                                |
+| [journey.md](journey.md)                                         | Product journey, architecture, trust boundaries, design rationale                                                            |
+| [status.md](status.md)                                           | What exists, evidence ledger, gaps G01–G13                                                                                   |
+| [roadmap.md](roadmap.md)                                         | Milestones M1–M4, task IDs S1–S5, decisions D01–D17                                                                          |
+| [technology.md](technology.md)                                   | Technology → stage → prize → evidence, plus judge guide                                                                      |
+| [build.md](build.md)                                             | Integration specs (Part A) and runbook (Part B)                                                                              |
+| [product-mount.md](product-mount.md)                             | **C gate spec (Cursor handoff):** mount ZKPassport → app.ts + FE Auth → join gate bytes                                      |
+| [agents.md](agents.md)                                           | Agent handoff protocol                                                                                                       |
+| [demographic-analytics-spec.md](demographic-analytics-spec.md)   | Long-term product direction DA0–DA3; proposed, not built                                                                     |
+| [data-and-tally-architecture.md](data-and-tally-architecture.md) | Concrete storage, processing, demographic binding and result-delivery architecture                                           |
+| [live-test-runbook.md](live-test-runbook.md)                     | **Operational:** topology, the failure modes we actually hit, the diagnostic channel, CLI recipes, demo-day procedure        |
+| [privy-migration-analysis.md](privy-migration-analysis.md)       | Replacing the injected EOA with a Privy embedded/sponsored wallet: what changes per layer, what breaks, what to decide first |
 
 ## Authority
 

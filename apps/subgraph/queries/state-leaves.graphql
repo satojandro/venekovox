@@ -1,0 +1,42 @@
+# MACI signup leaves for LeanIMT rebuild. Pin every page to one indexed block.
+# PAD is not a SignUp event; clients prepend padKey. Order by stateIndex, never createdAt.
+query StateLeaves($maci: Bytes!, $first: Int!, $cursor: BigInt!, $block: Int!) {
+  _meta {
+    block {
+      number
+      hash
+    }
+    hasIndexingErrors
+  }
+  stateLeaves(
+    first: $first
+    orderBy: stateIndex
+    orderDirection: asc
+    where: { maci: $maci, stateIndex_gt: $cursor }
+    block: { number: $block }
+  ) {
+    id
+    stateIndex
+    publicKeyX
+    publicKeyY
+    timestamp
+  }
+}
+
+query PollJoinedCount($id: ID!, $block: Int!) {
+  _meta {
+    block {
+      number
+      hash
+    }
+    hasIndexingErrors
+  }
+  poll(id: $id, block: { number: $block }) {
+    id
+    pollId
+    registrationCount
+    startDate
+    endDate
+    voteOptions
+  }
+}

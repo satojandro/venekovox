@@ -1,5 +1,73 @@
 # Current state and evidence
 
+## WP4 indexed voter state — 2026-09-11
+
+Implemented on `feat/wp4-subgraph-state-leaves` from main `be3665ac`.
+
+### Local correctness (implementation PR)
+
+Immutable `StateLeaf` from `SignUp` (event params only); Matchstick + GraphQL
+pagination tests; browser `joinPoll` requires pinned `stateRootIndex` with an
+inclusion proof and checks `getStateRootOnIndexedSignUp`; backend
+`GET /trees/inclusion-proof` + `POST /graph/query` proxy; poll page
+`GET /trees/joined-count` shows **joined participants** with indexer freshness.
+Preferred path is one proof HTTP call, not a browser leaf dump. Fallback:
+proxied `stateLeaves` then RPC. Private key stays in the browser. `joinPoll` is
+still submitted once.
+
+Review fixes: `joiningCircuitInputs` pads a **copy** of siblings; each join
+source prepares **and validates** inside its own fallback; lagging cache is
+served only when the historical on-chain root still matches. Tree refresh
+**clones** the published LeanIMT (`export`/`import`), `insertMany`s only new
+leaf hashes, yields between chunks, and swaps cache after the root check —
+it does not rebuild every leaf on the live tree. Browser `joinPoll` tests
+drive the real SDK function with mocked contract/prover boundaries (one
+submit; confirmation failure reconciles without a second tx; a signup during
+prep still submits the historical pin). `typecheck:trees` covers the new
+routes/service.
+
+Verified on Node 22.20.0:
+
+- subgraph Matchstick **11/11**; `test:governance` **22/22**
+- backend `test:polls` **29/29**; `typecheck:trees` clean; `git diff --check` clean
+- Live local graph-node (shifted ports 18000/18020/15001) stack fully exercised:
+  `docker compose -f apps/subgraph/docker-compose.local.yaml` up, subgraph
+  `venekovox-governance-v-2` deployed, synced from `11567000` to head with
+  `_meta.hasIndexingErrors: false`; result recorded in **`apps/backend/tests/live-parity.mjs`** (run with `pnpm --filter backend test:live-parity`)
+
+### Local indexer parity gate — **PASSED 2026-09-11** (the previously missing gate)
+
+Deployed the branch subgraph to a local graph-node (graphprotocol/graph-node +
+IPFS kubo + postgres via `docker-compose.local.yaml`, shifted ports
+18000/18020/15001; RPC `https://ethereum-sepolia-rpc.publicnode.com`) and let it
+sync Sepolia from `11567000` to head. Then compared three independent sources at
+one pinned block:
+
+| Check                                                                           | Result                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pinned block (first pass — was head at run time)                                | `11680562` (`0xd6fdeed984f45177dd1fb977708109d0c09de584a9b9053438db33ac3dcc115f`)                                                                                                                           |
+| Re-run at later head                                                            | `11680580` — served-block semantics: graph-node falls back to current head for a block:number already outside its block cache; all three sources share the served block and the immutable root is unchanged |
+| Indexed `StateLeaf` rows (local graph-node, `state-leaves` query, block-pinned) | 1 row: `stateIndex=1`, `publicKeyX=1469127…05539`, `publicKeyY=5380539…73210`, `timestamp=1789076412` (`0x99686f82…` SignUp tx)                                                                             |
+| RPC rebuild leaves (SignUp logs to same block)                                  | 1 row — **row-for-row identical** (stateIndex, X, Y, ts)                                                                                                                                                    |
+| `stateRootIndex` (`tree.size - 1`, PAD + 1 leaf)                                | `1`                                                                                                                                                                                                         |
+| Indexed tree root (`buildSignUpTree`: `PAD_KEY_HASH` + `hashLeftRight(x,y)`)    | `0x160818aa7af04782c6e28e4bd73abe17cfdc5485433d77b3e5d6a9c652f9f450`                                                                                                                                        |
+| RPC rebuild root                                                                | `0x160818aa7af04782c6e28e4bd73abe17cfdc5485433d77b3e5d6a9c652f9f450` — **equal**                                                                                                                            |
+| On-chain pinned root `getStateRootOnIndexedSignUp(1)` @ same block              | `0x160818aa7af04782c6e28e4bd73abe17cfdc5485433d77b3e5d6a9c652f9f450` — **equal**                                                                                                                            |
+| `_meta.hasIndexingErrors`                                                       | `false`; `padKey.hash() == PAD_KEY_HASH` confirmed                                                                                                                                                          |
+
+This is real live graph-node parity: the production mapping ran against a
+running node over real Sepolia logs, and the indexed `StateLeaf` rows + PAD
+rebuild the exact state root the MACI contract pins at the same block.
+`live-parity.mjs` re-runs the whole gate from env (`GRAPH_URL`, `RPC`, `BLOCK`,
+`MACI_ADDRESS`); it is intentionally NOT part of `test:polls` (needs a live
+local graph-node).
+
+### Studio / live (separate gate — not claimed)
+
+Not deployed. Needs Alejandro’s Graph Studio key. Version-label
+`wp4-state-leaves`, slug `venekovox-governance-v-2`. No public query URL,
+synced block, or `_meta` to record. Live join not exercised.
+
 ## Main 78fc7d19 regressions repaired — 2026-09-10
 
 Merged `fix/main-78fc-grant-retry-tests` into main. See
@@ -56,6 +124,7 @@ Added [desktop and mobile design concepts](design/poll-mockups-2026-09-09/README
 for the supplied four-poll slate and verification → ballot → receipt → results
 journey. Raster boards were visually inspected; results are synthetic and no
 runtime behavior, deployment, or acceptance-gate completion is claimed.
+
 ## WP0 — Continuity France poll deployed — 2026-09-09
 
 Poll **1** is live on Sepolia under the existing MACI `0x44F31f3823ceFE00C2FA5acEB2576F119143Fe3a`,
@@ -143,6 +212,7 @@ shape — 6 options, pollId 1, 18+ note; commit `8b71d6427`); backend `test:p2`
 loader's data-URL `createRequire` is invalid on the shell's default Node 26 —
 run p2 tests on Node 22 with the scratch toolchain env, matching the documented
 `>=22 <23` pin.
+
 ## C product mount — ZKPassport HTTP + Auth + join bytes — 2026-09-09
 
 Mounted the D17 ZKPassport path on `exp/provider-trial-self-vs-zkpassport` (`d4139c36`
@@ -345,7 +415,7 @@ new documentation-only patch. No new live evidence is claimed by this repair.
 | Poll screen                  | [PollDetail.tsx](../apps/front-end/src/pages/PollDetail.tsx), [useConfiguredPoll.ts](../apps/front-end/src/polls/useConfiguredPoll.ts) | Operator descriptor + on-chain window; results shown as unavailable; eligibility not claimed |
 | Creation                     | [CreatePoll.tsx](../apps/front-end/src/pages/CreatePoll.tsx)                                                                           | UI submission toast, not contract deployment                                                 |
 | Contracts                    | [contracts package](../packages/contracts/README.md)                                                                                   | MACI policy hooks and proof/tally machinery; Self integration not demonstrated               |
-| Indexing                     | [subgraph directory](../apps/subgraph)                                                                                                 | Native event schema/mappings, PollJoined support; no standardized v2 or tally data source    |
+| Indexing                     | [subgraph directory](../apps/subgraph)                                                                                                 | Native + v2 + WP4 `StateLeaf`; Studio/live query not recorded this turn                      |
 | ENS / smart wallets / agents | [build.md](build.md)                                                                                                                   | Planned; not implemented                                                                     |
 
 ## 2. Documentation-review validation

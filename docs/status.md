@@ -62,11 +62,43 @@ rebuild the exact state root the MACI contract pins at the same block.
 `MACI_ADDRESS`); it is intentionally NOT part of `test:polls` (needs a live
 local graph-node).
 
-### Studio / live (separate gate — not claimed)
+### Studio / live — **DEPLOYED 2026-09-11** ✅
 
-Not deployed. Needs Alejandro’s Graph Studio key. Version-label
-`wp4-state-leaves`, slug `venekovox-governance-v-2`. No public query URL,
-synced block, or `_meta` to record. Live join not exercised.
+Deployed to Subgraph Studio and verified serving live Sepolia data.
+
+| Field          | Value                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------- |
+| Deployment ID  | `QmeBkGteYdc7bQeHD2FneLBG1dm5MHcMbvgYPiKxAfqDeM`                                          |
+| Version label  | `wp4-state-leaves`                                                                        |
+| Slug           | `venekovox-governance-v-2` (subgraph ID `1758839`)                                        |
+| Query endpoint | `https://api.studio.thegraph.com/query/1758839/venekovox-governance-v-2/wp4-state-leaves` |
+| Studio page    | `https://thegraph.com/studio/subgraph/venekovox-governance-v-2`                           |
+| Sync           | `_meta.block.number` `11682506`, advancing; `hasIndexingErrors: false`                    |
+| Auth on query  | Endpoint answered with **no API key** (public)                                            |
+
+Verified by live query (not by the deploy command's exit status): `stateLeaves(first:3)`
+returns the one real registration — `stateIndex=1`, `publicKeyX=1469127…05539`,
+`publicKeyY=5380539…73210`, `timestamp=1789076412` — **byte-identical** to the local
+graph-node parity gate and the RPC rebuild. The Studio deployment ID equals the local
+graph-node deployment ID (same content hash), so the two sources are the same artifact.
+
+Deploy recipe (the old script was stale — `graph-cli` 0.97.1 removed `--studio`):
+
+```sh
+cd apps/subgraph
+pnpm build                      # prebuild → precodegen: schema copy + yaml mustache
+graph auth "$GRAPH_STUDIO_DEPLOY_KEY"        # stores ~/.graph-cli.json
+graph deploy venekovox-governance-v-2 \
+  --node https://api.studio.thegraph.com/deploy/ \
+  --version-label wp4-state-leaves
+```
+
+`package.json` `deploy` / `deploy:studio` were corrected to this form in the same commit.
+Redeploy with a NEW `--version-label` for any further schema/mapping change — a deployment
+is an immutable snapshot, so a pre-WP4 deployment cannot answer `stateLeaves`.
+
+The local graph-node remains the app's read path (`GRAPH_URL`); Studio is the hosted,
+prize-eligible endpoint on record. Live join still not exercised.
 
 ## Main 78fc7d19 regressions repaired — 2026-09-10
 

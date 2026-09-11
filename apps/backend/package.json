@@ -12,7 +12,8 @@
     "test:p2": "node --test tests/p2/*.test.mjs",
     "typecheck:p2": "tsc -p tsconfig.p2.json --noEmit",
     "typecheck:trees": "tsc -p tsconfig.trees.json --noEmit",
-    "trial": "node --loader ./tests/p2/run-trial.mjs ./tests/p2/run-trial-entry.mjs"
+    "trial": "node --loader ./tests/p2/run-trial.mjs ./tests/p2/run-trial-entry.mjs",
+    "test:live-parity": "node --test tests/live-parity.mjs"
   },
   "dependencies": {
     "@maci-protocol/crypto": "workspace:*",

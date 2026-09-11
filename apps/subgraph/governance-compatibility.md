@@ -38,9 +38,21 @@ fields into a deployed Governor subgraph.
 | `offchainBatchCount`                                                 | IPFS hash announcement events                                | Not an authenticated count of payload messages                             |
 | `voteOptionCapacity`                                                 | Contract capacity                                            | Not a list of actual question choices                                      |
 
-The original v1 entities remain structurally identical for existing readers. The new
-mappings require v2; `VERSION=v1` is a historical schema selection, not a supported
-build of the new mapping code. Roll back the mapping revision as well to build v1.
+The original v1 entities remain structurally identical for existing readers except WP4's
+added `StateLeaf` (and `MACI.stateLeaves`), which is present in both v1 and v2.
+
+## WP4 StateLeaf (signup tree, not poll joins)
+
+`StateLeaf` is an immutable SignUp row: `stateIndex`, `publicKeyX`, `publicKeyY`,
+`timestamp`, `maci`. It is **not** `Registration` (that is PollJoined). Clients
+rebuild LeanIMT as PAD + these leaves ordered by `stateIndex`. Query:
+[`queries/state-leaves.graphql`](queries/state-leaves.graphql). Pin pages to one
+`_meta` block. Operator question/candidates stay off-chain (scope + provenance).
+
+Studio deploy (separate evidence gate, not done in this package): `pnpm --dir apps/subgraph deploy:studio` with a privately held Studio key and `VERSION_LABEL=wp4-state-leaves`. Local graph-node on Honcho-shifted ports: `create-local-shifted` / `deploy-local-shifted` (18020 / 15001). Do not treat unit tests as a live index.
+
+## Reindex note
+
 Reindex from the correct MACI deployment block: existing entities will not backfill
 new Proposal records simply because the schema was redeployed.
 
@@ -133,7 +145,7 @@ Only Astra's narrow deltas were adopted (Messari row, D14 status, S5 sections).
    an explicit reviewed slug rather than accidentally publishing over another project.
 
    ```sh
-   pnpm --dir apps/subgraph exec graph deploy YOUR_PROJECT_SLUG --version-label governance-v2
+   pnpm --dir apps/subgraph exec graph deploy YOUR_PROJECT_SLUG --version-label wp4-state-leaves
    ```
 
 3. Wait for indexing and run `COMMON_QUERY`. Confirm `_meta.hasIndexingErrors=false`,

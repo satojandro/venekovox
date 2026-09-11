@@ -23,6 +23,7 @@ dataSources:
         - MACI
         - User
         - Account
+        - StateLeaf
         - Proposal
         - GovernanceFramework
         - Poll

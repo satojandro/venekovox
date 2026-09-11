@@ -10,7 +10,7 @@ import type { Provider } from "ethers";
 import { contractExists } from "../utils/contracts";
 import { generateAndVerifyProof } from "../utils/proofs";
 
-import { getPollJoiningCircuitEvents, getPollJoiningCircuitInputsFromStateFile, hasUserJoinedPoll } from "./utils";
+import { preparePollJoiningFromEvents, getPollJoiningCircuitInputsFromStateFile, hasUserJoinedPoll } from "./utils";
 
 /**
  * Join Poll user to the Poll contract
@@ -77,6 +77,7 @@ export const joinPoll = async ({
   const stateIndex = await maciContract.getStateIndex(userMaciPublicKey.hash()).catch(() => -1n);
 
   let circuitInputs: TCircuitInputs;
+  let pinnedStateRootIndex: number;
 
   if (stateFile) {
     circuitInputs = await getPollJoiningCircuitInputsFromStateFile({
@@ -85,8 +86,11 @@ export const joinPoll = async ({
       stateIndex,
       userMaciPrivateKey,
     });
+    const file = await (await import("fs")).promises.readFile(stateFile);
+    const content = JSON.parse(file.toString()) as { publicKeys?: unknown[] };
+    pinnedStateRootIndex = (content.publicKeys?.length ?? 1) - 1;
   } else {
-    circuitInputs = await getPollJoiningCircuitEvents({
+    const prepared = await preparePollJoiningFromEvents({
       maciContract,
       stateIndex,
       pollId,
@@ -97,11 +101,10 @@ export const joinPoll = async ({
       blocksPerBatch,
       provider: readProvider,
     });
+    circuitInputs = prepared.inputs;
+    pinnedStateRootIndex = prepared.stateRootIndex;
   }
 
-  const currentStateRootIndex = Number.parseInt((await maciContract.totalSignups()).toString(), 10) - 1;
-
-  // generate the proof for this batch
   const proof = await generateAndVerifyProof(
     circuitInputs,
     pollJoiningZkey,
@@ -115,7 +118,7 @@ export const joinPoll = async ({
   const tx = await pollContract.joinPoll(
     nullifier,
     userMaciPublicKey.asContractParam(),
-    currentStateRootIndex,
+    pinnedStateRootIndex,
     proof,
     sgDataArg,
     ivcpDataArg,

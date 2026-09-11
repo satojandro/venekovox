@@ -1,11 +1,31 @@
 # Agent handoff and continuity protocol
 
+## WP4 indexed voter state — 2026-09-11
+
+- Owner: Cursor. Branch `feat/wp4-subgraph-state-leaves` from main `be3665ac`.
+- Scope: StateLeaf subgraph entity; pinned inclusion-proof join path; thin
+  in-memory tree service on backend :3100; poll joined-participant display.
+- This turn: incremental LeanIMT `insertMany` on a cloned snapshot (yield
+  between chunks; publish after on-chain root check); real browser `joinPoll`
+  tests (one submit, confirmation reconcile, signup-during-prep still uses the
+  pin). Matchstick two-SignUp mapping + MACI ABI/template signature check.
+  Live graph-node still not started (no `.env.local-graph`; long Sepolia sync).
+- Local verification (Node 22.20.0): backend `test:polls` **29/29**;
+  `typecheck:trees` clean; `git diff --check` clean; Matchstick **11/11**;
+  subgraph `test:governance` **22/22**. Live graph-node not started
+  (`.env.local-graph` missing; port 18000 down).
+- Not claimed: Studio deploy, live join, live graph-node parity, 1M sharding.
+- Next: copy `apps/subgraph/.env.local-graph.example` and index on 18020/15001
+  for the remaining acceptance gate; Alejandro provisions Graph Studio key;
+  deploy version-label `wp4-state-leaves`; record public query URL, synced
+  block, `_meta`.
+
 ## Main 78fc grant/retry/test repair — 2026-09-10
 
 - Owner: Cursor. Merged `fix/main-78fc-grant-retry-tests` (`5555a124`) into main.
 - Scope: three regressions from Astra's [main review](reviews/main-78fc7d19/review.md).
   Grant default 3600→900 with cap validation; join retry boundary (reads/prep only
-  + membership reconcile); voteFlow test loader via `getReadAccess` DI.
+  - membership reconcile); voteFlow test loader via `getReadAccess` DI.
 - Verification: Node 22.20.0; backend typecheck:p2 clean; p2 **66/66**; FE unit
   **93/93**. No funded tx or subgraph work in the repair itself.
 
@@ -56,6 +76,7 @@
 - Delivery: uncommitted design files and documentation; no push or deployment.
 - Next: user design review before translating the concept into product screens;
   existing identity/deployment/results gates remain as recorded below.
+
 ## C product mount — 2026-09-09
 
 - Owner: Cursor; reviewer/committer: Hermes. Branch `exp/provider-trial-self-vs-zkpassport`.
@@ -123,6 +144,20 @@ as durations. Do not treat mock results, joined count or encrypted-message count
 finalized voter results.
 
 ## Task ownership and interruption record
+
+### WP4 incremental tree + browser joinPoll tests — 2026-09-11
+
+- Owner: Cursor; branch `feat/wp4-subgraph-state-leaves`.
+- Request: actual incremental insertion with safe snapshot publication; invoke
+  real browser `joinPoll` (confirmation failure + signup during prep). Do not
+  close live graph-node parity.
+- Changed: `apps/backend/src/trees/leanTree.ts` (`appendSignupLeaves`);
+  `service.ts` incremental path no longer calls `buildSignUpTree` on every
+  leaf; `tests/browser-joinPoll.test.mjs`; tree-service/parity tests; subgraph
+  Matchstick two-SignUp; ABI/template check; status/journey/agents.
+- Validation: Node 22.20.0; backend `test:polls` **29/29**; `typecheck:trees`
+  clean; `git diff --check` clean; Matchstick **11/11**; governance **22/22**.
+  Graph-node not started (no `.env.local-graph`; 18000 down). No commit.
 
 ### S3.2 review follow-up — 2026-09-08
 

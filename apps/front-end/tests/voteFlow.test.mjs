@@ -19,7 +19,7 @@ try {
 }
 const { createVoteFlow } = await import(`data:text/javascript;base64,${Buffer.from(javascript).toString("base64")}`);
 
-function fixture(overrides = {}) {
+function fixture(overrides = {}, flow = {}) {
   const calls = [];
   const progress = [];
   const receipts = [];
@@ -53,6 +53,7 @@ function fixture(overrides = {}) {
     getConfig: () => ({ maciAddress: "0xmaci", pollId: 0n, startBlock: 11567000, chainId: 11155111n }),
     onProgress: (state) => progress.push(state),
     onReceipt: (ctx, receipt) => receipts.push({ ctx, receipt }),
+    ...flow,
   });
   return { vote, calls, progress, receipts, session };
 }
@@ -378,4 +379,37 @@ test("failed join confirmation recovers membership without a second join", async
   assert.ok(lookups >= 2); // initial miss + post-join reconcile
   assert.equal(f.calls.filter((c) => c.name === "joinPoll").length, 1);
   assert.equal(f.calls.at(-1).args.stateIndex, 17n);
+});
+
+test("joinPoll is passed the pinned stateRootIndex from the proof service", async () => {
+  const inclusionProof = { root: 99n, leaf: 7n, index: 1, siblings: [8n] };
+  const f = fixture(
+    {
+      getSignedupUserData: async () => ({ isRegistered: true, stateIndex: "5" }),
+      getJoinedUserData: async () => ({ isJoined: false }),
+    },
+    {
+      prepareJoinWitness: async () => ({ inclusionProof, stateRootIndex: 1 }),
+    },
+  );
+  await f.vote(0);
+  const join = f.calls.find((c) => c.name === "joinPoll").args;
+  assert.equal(join.stateRootIndex, 1);
+  assert.equal(join.inclusionProof.root, 99n);
+});
+
+test("proof-service miss falls back to joinPoll without a witness", async () => {
+  const f = fixture(
+    {
+      getSignedupUserData: async () => ({ isRegistered: true, stateIndex: "5" }),
+      getJoinedUserData: async () => ({ isJoined: false }),
+    },
+    {
+      prepareJoinWitness: async () => null,
+    },
+  );
+  await f.vote(0);
+  const join = f.calls.find((c) => c.name === "joinPoll").args;
+  assert.equal(join.inclusionProof, undefined);
+  assert.equal(join.stateRootIndex, undefined);
 });

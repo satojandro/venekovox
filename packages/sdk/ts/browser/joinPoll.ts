@@ -1,13 +1,13 @@
-/* eslint-disable no-underscore-dangle */
+/* eslint-disable no-underscore-dangle, no-await-in-loop */
 import { MACI__factory as MACIFactory, Poll__factory as PollFactory } from "@maci-protocol/contracts/typechain-types";
 import { poseidon } from "@maci-protocol/crypto";
 import { Keypair, PrivateKey } from "@maci-protocol/domainobjs";
 import { Wallet } from "ethers";
 
 import type { IJoinPollBrowserArgs, IJoinPollData } from "../user/types";
-import type { TCircuitInputs } from "../utils/types";
 
-import { getPollJoiningCircuitEvents, hasUserJoinedPoll, joiningCircuitInputs } from "../user/utils";
+import { resolvePinnedJoinInputs } from "../user/joinWitness";
+import { hasUserJoinedPoll } from "../user/utils";
 import { contractExists } from "../utils/contracts";
 
 import { generateProofSnarkjs, formatProofForVerifierContract } from "./utils";
@@ -28,7 +28,9 @@ async function withReadRetry<T>(fn: () => Promise<T>, attempts = 4): Promise<T> 
         message.includes("-32602") ||
         message.includes("429") ||
         message.includes("missing revert data");
-      if (!transient || attempt === attempts) throw error;
+      if (!transient || attempt === attempts) {
+        throw error;
+      }
       await new Promise((r) => {
         setTimeout(r, 1500 * 2 ** (attempt - 1));
       });
@@ -57,7 +59,8 @@ export const joinPoll = async ({
   sgDataArg,
   ivcpDataArg,
   inclusionProof,
-  useLatestStateIndex,
+  stateRootIndex: pinnedStateRootIndex,
+  subgraphUrl,
   // Optional read-optimized provider for the state-tree event scan — wallet
   // RPCs rate-limit the large eth_getLogs burst the rebuild triggers.
   provider: readProvider,
@@ -107,35 +110,29 @@ export const joinPoll = async ({
     const stateIndex = await maciContract.getStateIndex(userMaciPublicKey.hash()).catch(() => -1n);
     const stateTreeDepth = await maciContract.stateTreeDepth();
 
-    let inputs: TCircuitInputs;
+    const resolved = await resolvePinnedJoinInputs({
+      maciContract,
+      maciAddress,
+      userMaciPublicKey,
+      userMaciPrivateKey,
+      pollId,
+      stateTreeDepth,
+      stateIndex,
+      inclusionProof,
+      pinnedStateRootIndex,
+      subgraphUrl,
+      signer,
+      startBlock,
+      endBlock,
+      blocksPerBatch,
+      provider: readProvider,
+    });
 
-    if (inclusionProof) {
-      inputs = joiningCircuitInputs(
-        inclusionProof,
-        stateTreeDepth,
-        userMaciPrivateKey,
-        userMaciPublicKey,
-        pollId,
-      );
-    } else {
-      inputs = await getPollJoiningCircuitEvents({
-        maciContract,
-        stateIndex,
-        pollId,
-        userMaciPrivateKey,
-        signer,
-        startBlock,
-        endBlock,
-        blocksPerBatch,
-        provider: readProvider,
-      });
-    }
-
-    const rootIndex = useLatestStateIndex
-      ? Number.parseInt((await maciContract.totalSignups()).toString(), 10) - 1
-      : stateIndex;
-
-    return { pollAddress: pollContracts.poll, stateRootIndex: rootIndex, circuitInputs: inputs };
+    return {
+      pollAddress: pollContracts.poll,
+      stateRootIndex: resolved.stateRootIndex,
+      circuitInputs: resolved.circuitInputs,
+    };
   });
 
   const pollContract = PollFactory.connect(pollAddress, signer);
@@ -168,7 +165,9 @@ export const joinPoll = async ({
       nullifier,
       signer: nullifierReadSigner,
     }).catch(() => false);
-    if (!joined) throw error;
+    if (!joined) {
+      throw error;
+    }
     throw new Error(
       `Join transaction submitted (${tx.hash}) but confirmation failed; membership appears on-chain. Reconcile before retrying.`,
     );

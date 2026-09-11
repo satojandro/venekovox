@@ -10,6 +10,8 @@ type MACI @entity(immutable: false) {
 
   "relations"
   polls: [Poll!]! @derivedFrom(field: "maci")
+  "MACI-wide signup leaves (SignUp), not poll joins. PAD leaf 0 is not emitted."
+  stateLeaves: [StateLeaf!]! @derivedFrom(field: "maci")
 }
 
 type User @entity(immutable: true) {
@@ -26,6 +28,16 @@ type Account @entity(immutable: true) {
   createdAt: BigInt! # uint256
   "relations"
   owner: User!
+}
+
+"One MACI SignUp leaf. stateIndex is SignUp._stateIndex (PAD is 0 on-chain, first user is 1)."
+type StateLeaf @entity(immutable: true) {
+  id: Bytes! # tx hash + logIndex
+  stateIndex: BigInt!
+  publicKeyX: BigInt!
+  publicKeyY: BigInt!
+  timestamp: BigInt!
+  maci: MACI!
 }
 
 type Poll @entity(immutable: false) {

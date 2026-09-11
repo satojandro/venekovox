@@ -4,22 +4,19 @@ import { newMockEvent } from "matchstick-as";
 
 import { SignUp, DeployPoll } from "../../generated/MACI/MACI";
 
+/** Current MACI SignUp: (stateIndex, timestamp, indexed pubkeyX, indexed pubkeyY). */
 export function createSignUpEvent(
   stateIndex: GraphBN,
+  timestamp: GraphBN,
   userPublicKeyX: GraphBN,
   userPublicKeyY: GraphBN,
-  voiceCreditBalance: GraphBN,
-  timestamp: GraphBN,
 ): SignUp {
   const event = changetype<SignUp>(newMockEvent());
 
   event.parameters.push(new ethereum.EventParam("_stateIndex", ethereum.Value.fromUnsignedBigInt(stateIndex)));
+  event.parameters.push(new ethereum.EventParam("_timestamp", ethereum.Value.fromUnsignedBigInt(timestamp)));
   event.parameters.push(new ethereum.EventParam("_userPublicKeyX", ethereum.Value.fromUnsignedBigInt(userPublicKeyX)));
   event.parameters.push(new ethereum.EventParam("_userPublicKeyY", ethereum.Value.fromUnsignedBigInt(userPublicKeyY)));
-  event.parameters.push(
-    new ethereum.EventParam("_voiceCreditBalance", ethereum.Value.fromUnsignedBigInt(voiceCreditBalance)),
-  );
-  event.parameters.push(new ethereum.EventParam("_timestamp", ethereum.Value.fromUnsignedBigInt(timestamp)));
 
   return event;
 }

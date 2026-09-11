@@ -4,6 +4,7 @@ import { Shield, Globe, BarChart2 } from "lucide-react";
 import { useMaci } from "../hooks/useMaci";
 import { isVoteOpen, pollStatusLabel } from "../polls/labels";
 import { useConfiguredPoll } from "../polls/useConfiguredPoll";
+import { fetchJoinedParticipants } from "../lib/inclusionProof";
 
 // --- LANGUAGE CONTENT ---
 const content = {
@@ -13,10 +14,12 @@ const content = {
     verifiedToVote: "You are verified to vote in this poll",
     notEligible: "Eligibility is not enforced in this UI. The voting window below comes from the Poll contract.",
     unknownPoll: "This URL is not the poll configured in the app.",
-    resultsUnavailable:
-      "Verified results are not published yet. Encrypted message counts are not vote totals.",
+    resultsUnavailable: "Verified results are not published yet. Encrypted message counts are not vote totals.",
     windowClosed: "This poll is not open for voting on the configured chain.",
     metadataNote: "Question text is operator metadata, not stored on the Poll contract.",
+    joinedParticipants: "Joined participants (indexed)",
+    joinedFreshness: "Indexed at block",
+    joinedNotVotes: "This is PollJoined count, not votes or final turnout. It does not open the voting window.",
     voteOptions: { yes: "Yes", no: "No", abstain: "Abstain" },
     voteConfirmation: "Your encrypted vote has been submitted. Results will be available after the verified tally.",
     submissionRecorded: "Your encrypted vote was recorded. Awaiting on-chain confirmation…",
@@ -49,10 +52,12 @@ const content = {
     verifiedToVote: "Estás verificado para votar en esta encuesta",
     notEligible: "Esta pantalla no aplica elegibilidad. La ventana de votación sale del contrato Poll.",
     unknownPoll: "Esta URL no es la encuesta configurada en la aplicación.",
-    resultsUnavailable:
-      "Aún no hay resultados verificados. El recuento de mensajes cifrados no es un total de votos.",
+    resultsUnavailable: "Aún no hay resultados verificados. El recuento de mensajes cifrados no es un total de votos.",
     windowClosed: "Esta encuesta no está abierta para votar en la cadena configurada.",
     metadataNote: "El texto de la pregunta es metadato del operador; no está en el contrato Poll.",
+    joinedParticipants: "Participantes unidos (índice)",
+    joinedFreshness: "Indexado en el bloque",
+    joinedNotVotes: "Es el recuento de PollJoined, no votos ni escrutinio. No autoriza a votar.",
     voteOptions: { yes: "Sí", no: "No", abstain: "Abstenerse" },
     voteConfirmation:
       "Tu voto cifrado ha sido enviado. Los resultados estarán disponibles después del escrutinio verificado.",
@@ -89,6 +94,12 @@ export default function PollDetailPage() {
   const [language, setLanguage] = useState("es");
   const [userVote, setUserVote] = useState<string | null>(null); // null, 'yes', 'no', 'abstain'
   const [error, setError] = useState<string | null>(null);
+  const [joined, setJoined] = useState<{
+    joinedParticipants: string;
+    indexedBlock: number;
+    indexedBlockHash: string;
+    hasIndexingError: boolean;
+  } | null>(null);
   const submitting = useRef(false);
   const maci = useMaci();
   const configured = useConfiguredPoll();
@@ -101,6 +112,12 @@ export default function PollDetailPage() {
   const schedule = configured.phase === "ready" ? configured.schedule : null;
   const isConfiguredPoll = !!descriptor && id === descriptor.pollId;
   const windowOpen = isVoteOpen(schedule?.status);
+
+  useEffect(() => {
+    if (!schedule?.pollAddress) return;
+    const backendUrl = (import.meta.env.VITE_BACKEND_URL as string | undefined) || "http://localhost:3100";
+    void fetchJoinedParticipants({ backendUrl, pollAddress: schedule.pollAddress }).then(setJoined);
+  }, [schedule?.pollAddress]);
 
   // A receipt only counts as "submission confirmed" for the wallet that owns it,
   // AND only when the chain verified it. A stored hash alone is never
@@ -243,9 +260,7 @@ export default function PollDetailPage() {
               )}
             </div>
             <p className="text-sm text-gray-400">{currentContent.metadataNote}</p>
-            {!windowOpen && (
-              <p className="text-sm text-yellow-300 mt-3">{currentContent.windowClosed}</p>
-            )}
+            {!windowOpen && <p className="text-sm text-yellow-300 mt-3">{currentContent.windowClosed}</p>}
           </section>
 
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
@@ -260,6 +275,16 @@ export default function PollDetailPage() {
                   <p className="text-xs text-gray-500 mt-3 font-mono break-all">
                     Poll {schedule.pollAddress} · start {schedule.startTime} · end {schedule.endTime} · block{" "}
                     {schedule.blockNumber}
+                  </p>
+                )}
+                {joined && joined.joinedParticipants !== "unavailable" && (
+                  <p className="text-sm text-gray-300 mt-3">
+                    {currentContent.joinedParticipants}: {joined.joinedParticipants}
+                    <span className="block text-xs text-gray-500 mt-1">
+                      {currentContent.joinedFreshness} {joined.indexedBlock}
+                      {joined.hasIndexingError ? " · indexer error" : ""}
+                    </span>
+                    <span className="block text-xs text-gray-500">{currentContent.joinedNotVotes}</span>
                   </p>
                 )}
               </section>

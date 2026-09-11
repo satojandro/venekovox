@@ -5,6 +5,8 @@ import { useMaci } from "../hooks/useMaci";
 import { isVoteOpen, pollStatusLabel } from "../polls/labels";
 import { useConfiguredPoll } from "../polls/useConfiguredPoll";
 import { fetchJoinedParticipants } from "../lib/inclusionProof";
+import { useNamedAccount } from "../ens/useNamedAccount";
+import { themeClassName } from "../ens/profile";
 
 // --- LANGUAGE CONTENT ---
 const content = {
@@ -102,6 +104,7 @@ export default function PollDetailPage() {
   } | null>(null);
   const submitting = useRef(false);
   const maci = useMaci();
+  const named = useNamedAccount(maci.account);
   const configured = useConfiguredPoll();
   const lang = language as "en" | "es";
   const currentContent = content[language];
@@ -304,9 +307,18 @@ export default function PollDetailPage() {
                         {maci.account ? (
                           <span>
                             Wallet:{" "}
-                            <span className="text-blue-300 font-mono">
-                              {maci.account.slice(0, 6)}…{maci.account.slice(-4)}
-                            </span>
+                            {named.setup?.phase === "ready" ? (
+                              <span className={`${themeClassName(named.setup.theme)} font-semibold`}>
+                                {named.setup.name}
+                              </span>
+                            ) : (
+                              <span className="text-blue-300 font-mono">
+                                {maci.account.slice(0, 6)}…{maci.account.slice(-4)}
+                              </span>
+                            )}
+                            <Link to="/names" className="ml-2 text-lime-300 underline text-xs">
+                              Names
+                            </Link>
                             {maci.status === "joining" && (
                               <span className="ml-2 text-yellow-300">Joining poll (zk-proof in browser)…</span>
                             )}

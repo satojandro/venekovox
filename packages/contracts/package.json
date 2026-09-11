@@ -45,6 +45,7 @@
     "docs": "hardhat docgen",
     "test": "hardhat test ./tests/*.test.ts ./tests/**/*.test.ts --network hardhat",
     "test:hardhat": "hardhat test --network hardhat ./e2e/hardhatTasks.test.ts",
+    "test:ens": "hardhat test --config hardhat.ens.config.ts --network hardhat ./test-ens/VenekoVoxProfiles.fork.test.ts",
     "test:maci": "pnpm run test ./tests/MACI.test.ts",
     "test:poll": "pnpm run test ./tests/Poll.test.ts",
     "test:messageProcessor": "pnpm run test ./tests/MessageProcessor.test.ts",

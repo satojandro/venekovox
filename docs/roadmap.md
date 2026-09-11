@@ -202,11 +202,16 @@ reversible implementation detail, use engineering judgment and record it. If it
 changes eligibility, public linkage, key custody or deployed policy semantics, obtain
 Alejandro's decision on a concrete proposal before final deployment.
 
-### S1.1 delivery update — 2026-09-06
+### S1.1 delivery update — 2026-09-11
 
-The first ENS slice is named-poll discovery, implemented with a read-only page and
-validated record resolution. This prioritizes shareable polls without publishing a
-participant identity link. Personal pseudonyms/registration UI remain deferred. Next:
-real ENSv2 name/record demo and browser smoke, then connect the checked reference to
-real question metadata and voting. See build.md A3; existing mock PollDetail is not
-a safe destination for arbitrary ENS-resolved references.
+Two implemented ENS slices, one deferred lane:
+
+| Lane                                                             | Status                                                                          |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Named poll discovery (`/discover`, `xyz.venekovox.poll`)         | On main; read-only; leave the parser unchanged                                  |
+| Named accounts (`/names`, Permissioned Resolver + EAC theme key) | This branch; Sepolia ENSv2; not live-registered until Alejandro deploys parents |
+| WP5 mainnet Graph composition / poll aliases / directories       | Deferred, not scheduled                                                         |
+
+Personal names are optional public labels for wallets. They are not eligibility.
+See build.md A3 and [ensv2-opportunities-2026-09-11.md](ensv2-opportunities-2026-09-11.md)
+(background research only).

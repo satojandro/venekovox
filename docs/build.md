@@ -513,6 +513,46 @@ MACI and the Poll returned by its `getPoll(pollId)`. IDs are canonical decimal s
 addresses are nonzero Ethereum addresses, and unknown fields/versions are rejected.
 The record limit is 2048 characters. `.eth` names only in this first slice.
 
+#### Implemented second slice: named accounts (2026-09-11)
+
+S1.1 now also has **wallet named-account onboarding** on Sepolia ENSv2. A name labels
+the participating wallet, not a unique human. ZKPassport remains eligibility. MACI
+remains the vote. `signUp` / `joinPoll` / `publishMessage` never look up ENS.
+
+**Who holds permission.** Name ownership is not resolver write permission. The
+participating account deploys its own Permissioned Resolver (`VerifiableFactory.deployProxy`
+with `msg.sender` in the CREATE2 salt, `initialize(admin=owner, ALL_ROLES, [])`).
+`VenekoVoxProfiles.claimProfile` only calls `UserRegistry.register` with
+`ROLE_SET_RESOLVER` for the owner. The registrar must not receive resolver roles.
+After a **fresh** resolver lookup the owner calls `setAddr` and `setText` for
+`xyz.venekovox.profile-theme`. Optional demo: owner `authorizeTextRoles` for that key
+only.
+
+**Setup states.** none / pending-op / registered-but-incomplete / ready. Reconnect
+reads `profileName` plus registry ownership plus a forward address check and resumes
+missing **owner** transactions. One claim per account means one label, not one chance
+to finish records. Never show ready from a receipt alone.
+
+**Isolation.** This worktree uses Vite **3010** and documents backend **3110**. Do not
+restart the live Mini vote instance on 3000/3100 or rotate eligibility / WP4 Graph.
+
+**Pin.** [packages/contracts/ens/sepolia-ensv2.json](../packages/contracts/ens/sepolia-ensv2.json):
+official docs table, contracts-v2 `48b3e2d`, Sepolia fork block 11684712. Ethers 6.15.0
+until a write/EAC probe fails.
+
+**DNS origin vs names.** `uxisnear.com` is the ZKPassport origin. It is not a voter
+ENS name.
+
+**Still operator work (Alejandro):** choose parent name(s), grant registry
+`ROLE_REGISTRAR` to the deployed registrar, fund disposable Sepolia accounts. Do not
+claim D04 non-transfer / no-expiry. Background research only:
+[ensv2-opportunities-2026-09-11.md](ensv2-opportunities-2026-09-11.md).
+
+Source: [VenekoVoxProfiles.sol](../packages/contracts/contracts/ens/VenekoVoxProfiles.sol),
+[registration.ts](../apps/front-end/src/ens/registration.ts),
+[Names.tsx](../apps/front-end/src/pages/Names.tsx). `/discover` poll-record parsing is
+unchanged.
+
 The reader checks the RPC chain, normalizes the name, reads the record through the
 Universal Resolver and validates the MACI against the app's configured deployment
 (`VITE_MACI_ADDRESS`). It then requires matching `MACI.getPoll`, deployed Poll code,

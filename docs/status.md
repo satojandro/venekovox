@@ -724,3 +724,19 @@ ENS verification addendum: focused strict TypeScript checking passed on Node 22.
 and the NamedPoll component bundled successfully for browsers. Full application build,
 React/browser race tests and live RPC/CCIP/name registration were not run. No dependency
 or lockfile changes are needed. Tests use ethers 6.15.0 and synthetic RPC responses.
+
+## S1.1 ENSv2 named accounts — 2026-09-11
+
+Implemented on isolated branch `feat/s11-ensv2-named-accounts` from `origin/main`
+`95e04160`. Owner-controlled Permissioned Resolver + `VenekoVoxProfiles` registrar
+that only registers. UI `/names` with public-linkage consent; PollDetail shows the
+name only when setup is **ready**. Delegated key `xyz.venekovox.profile-theme`.
+Pinned Sepolia docs-table addresses, contracts-v2 `48b3e2d`, fork block 11684712.
+
+**Local evidence (this change):** frontend ENS unit tests **19/19**; Hardhat permission/EAC
+test **1/1** against pinned Sepolia ENSv2 bytecode (etched locally; archive fork optional).
+Ethers remains **6.15.0**. Not a live named-account registration. Parent names stay
+configurable until Alejandro chooses them. Live Mini vote/tally was not restarted.
+
+**Not claimed:** on-chain parent link, registrar `ROLE_REGISTRAR` grant, prize
+signoff, D04 permanence, WP5 Graph composition.

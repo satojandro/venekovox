@@ -1,0 +1,37 @@
+{
+  "checkedAt": "2026-09-11",
+  "docsTable": "https://docs.ens.domains/learn/deployments/",
+  "appDeveloperWritePath": "https://docs.ens.domains/ensv2/tutorial-app-developers/",
+  "verifiableFactoryDocs": "https://docs.ens.domains/ensv2/verifiable-factory/",
+  "chainId": 11155111,
+  "forkBlock": 11684876,
+  "forkBlockHex": "0xb24c0c",
+  "docsCheckedBlock": 11684712,
+  "rpcUsedForPin": "https://ethereum-sepolia-rpc.publicnode.com",
+  "rpcUsedForForkTests": "https://1rpc.io/sepolia",
+  "forkNote": "Default permission tests etch the pinned Sepolia runtime bytecode onto local Hardhat (chain 11155111) so they do not need an archive node. Set ENS_FORK=1 plus SEPOLIA_RPC_URL / ENS_FORK_BLOCK to fork instead. publicnode served latest reads; 1rpc served recent historical getCode at 11684876 on 2026-09-11.",
+  "contractsRevision": {
+    "repo": "https://github.com/ensdomains/contracts-v2",
+    "sha": "48b3e2d39513b9dd32ef1850877a29009bc807b9",
+    "title": "Post Audit Changes (#301)",
+    "note": "This git revision is the contract-source pin. Its contracts/deployments/sepolia/*.json addresses differ from the official docs table (for example factory 0x118bc31a…). VenekoVox uses the official docs table for live Sepolia Beta."
+  },
+  "ethers": {
+    "repoVersion": "6.15.0",
+    "bumpTo": "6.17.0",
+    "policy": "Keep 6.15.0 until a native v2 write and EAC probe fails. A Universal Resolver read alone is not proof of native v2 registration."
+  },
+  "sepolia": {
+    "VerifiableFactory": "0x10dc6333cdfe1fcef624c6e0a8221b91804cd7ef",
+    "VerifiableFactoryProxyLogic": "0xa136bee4e37b44586242e516a39893efd54315e9",
+    "PermissionedResolverImpl": "0x9eae5c2730a7dd16bdd1dee6421a1b91e3b0365e",
+    "UserRegistryImpl": "0x624a25d67b59d587752ebec8dded8827dae52050",
+    "LabelStore": "0x532cd0cc4ac0793d838f71a67d29b2d790d18777",
+    "RootRegistry": "0x8115186e8f2e0b0281e86ab91f0f48ba90364354",
+    "UpgradableUniversalResolverProxy": "0xeeeeeeee14d718c2b47d9923deab1335e144eeee",
+    "UniversalResolverV2": "0x4a1817d13e9cf196f471725176355c1234b63c70"
+  },
+  "factoryAbiNote": "Pinned revision and the live Sepolia factory expose verifyContract(address) returns (address implementation), deployProxy(address,uint256,bytes), and proxyLogic(). Docs also mention a two-argument verifyContract; do not call that form against this deployment.",
+  "ownedResolverSalt": "keccak256(abi.encode(keccak256('OwnedResolver'), owner, uint256(0)))",
+  "create2": "outerSalt = keccak256(abi.encode(msg.sender, salt)); clone creation code is CloneProxyBytecode.creationCode(proxyLogic, outerSalt)"
+}

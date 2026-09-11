@@ -9,6 +9,8 @@ interface ImportMetaEnv {
   readonly VITE_MACI_START_BLOCK: string;
   readonly VITE_PUBLIC_RPC_URL: string;
   readonly VITE_ENS_RPC_URL: string;
+  readonly VITE_ENS_REGISTRAR: string;
+  readonly VITE_BACKEND_URL: string;
 }
 
 interface ImportMeta {

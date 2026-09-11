@@ -433,34 +433,47 @@ the recorded Poll-0 configuration is not currently votable.
 
 ---
 
-## 5. Stage 1 — ENS: nothing exists yet
+## 5. Stage 1 — ENS: poll discovery + named accounts
 
 ```
-  grep -rni "ens" apps/front-end/src apps/backend/src
-                  apps/subgraph/src packages/contracts/contracts
-      → zero matches (excluding "ensure", "Spanish", etc.)
+  Three ENS lanes (do not conflate):
 
-  ┌──────────────┐
-  │ ENS          │  [NONE] — no code, no registration, no resolution
-  └──────────────┘
+  1. Poll discovery (already on main)     apps/front-end/src/ens/pollName.ts
+  2. Named accounts (this slice)          packages/contracts/contracts/ens/VenekoVoxProfiles.sol
+                                          apps/front-end/src/pages/Names.tsx
+  3. Hermes WP5 Graph composition         deferred, not scheduled
 ```
 
-Planned role, when built:
+A name labels a **wallet**, not a unique human. Forward `addr` must match the
+connected account before the UI shows “ready.” Eligibility remains ZKPassport.
+`uxisnear.com` is the passport origin, not a named account.
 
 ```
   participating account (0x1234…)
         │
-        │  reverse resolve
+        │  1. owner deployProxy Permissioned Resolver
+        │  2. owner claimProfile → registrar register only
+        │  3. owner setAddr + setText xyz.venekovox.profile-theme
         ▼
-  alejandro.venekovox.eth          ← display name instead of 0x1234…
+  ada.<parent.eth>          ← display name instead of 0x1234…
         │
-        ├─ forward resolve must MATCH reverse resolve (else: show address)
-        ├─ no name?                → fall back to truncated address
-        └─ successful name         → NEVER grants eligibility (Self does that)
+        ├─ not ready?              → “Finish profile”; do not register again
+        ├─ no name / lookup fail?  → truncated address; vote route still works
+        └─ ready name              → NEVER grants eligibility
 ```
 
-ENS is a **naming layer on stage 1 and 5 only.** It does not touch the vote,
-the proof, or the tally.
+As-built named-account path:
+
+```
+  /names  Names.tsx
+        → injected wallet  injectedNamingWallet.ts
+        → classify none/incomplete/ready  profile.ts:20  registration.ts:176
+        → claim  VenekoVoxProfiles.sol:121
+        → records  registration.ts:writeProfileRecords
+        → PollDetail shows the name only when phase === "ready"
+```
+
+ENS is a **naming layer.** It does not touch the vote, the proof, or the tally.
 
 ---
 
@@ -662,3 +675,18 @@ Call path: App/Polls link → NamedPoll effect → `resolvePollName` → Univers
 text lookup → MACI/Poll validation → chain-details card. See [build.md A3](build.md).
 Ten RPC-double tests passed; live name registration/resolution and browser smoke remain
 unverified. A native ENSv2 demo name/record transaction must be supplied by the operator.
+
+## S1.1 ENSv2 named accounts — 2026-09-11
+
+As-built on `feat/s11-ensv2-named-accounts`:
+
+- Registrar: [VenekoVoxProfiles.sol](../packages/contracts/contracts/ens/VenekoVoxProfiles.sol:121)
+- Classify / reconnect: [profile.ts](../apps/front-end/src/ens/profile.ts:20), [registration.ts](../apps/front-end/src/ens/registration.ts:176)
+- Record writes: [registration.ts](../apps/front-end/src/ens/registration.ts:296)
+- Onboarding UI: [Names.tsx](../apps/front-end/src/pages/Names.tsx)
+- Ready display only: [PollDetail.tsx](../apps/front-end/src/pages/PollDetail.tsx) wallet chip
+- Pin: [sepolia-ensv2.json](../packages/contracts/ens/sepolia-ensv2.json)
+
+Call path: Polls `/names` → injected wallet → `readProfileSetup` → claim or finish owner
+txs → PollDetail shows the name only when `phase === "ready"`. Voting does not call ENS
+inside grant/join/vote. Parent names remain configurable.

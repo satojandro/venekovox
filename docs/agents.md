@@ -1,5 +1,28 @@
 # Agent handoff and continuity protocol
 
+## S1.1 ENSv2 named accounts — 2026-09-11
+
+- Owner: Cursor. Isolated worktree `/Users/avb/venekovox-s11-ensv2-named-accounts`,
+  branch `feat/s11-ensv2-named-accounts` from `origin/main` `95e04160`.
+- Scope: Sepolia ENSv2 named-account onboarding. Owner deploys a Permissioned
+  Resolver and writes records; `VenekoVoxProfiles` only calls `UserRegistry.register`.
+  Delegated text key is `xyz.venekovox.profile-theme`. No participant directory.
+  ENS is never a gate on `signUp` / `joinPoll` / `publishMessage`.
+- Isolation: Vite **3010**, backend **3110** in this worktree's env examples. Do
+  not restart or reconfigure the live Mini vote/tally instance (3000/3100).
+- Pin: official Sepolia deployment table + contracts-v2 `48b3e2d` + fork block
+  **11684712**. Ethers stays 6.15.0 unless the write/EAC probe fails.
+- Not claimed: live parent name, live registrar deploy, prize signoff, D04
+  permanence. Alejandro chooses parents, grants `ROLE_REGISTRAR`, and funds
+  disposable Sepolia accounts. No private keys in agent chat (D09).
+- Deferred, not scheduled: WP5 mainnet Graph composition, named poll publications,
+  aliases, translator grants, community directories.
+- Local verification: frontend `test:ens` **19/19**; contracts `test:ens` **1/1**
+  (owner deploy/register/setAddr/setText + grant/revoke/broader leftover; ethers 6.15.0).
+- Next: Alejandro picks parent name(s); deploy `VenekoVoxProfiles`; grant registry
+  `ROLE_REGISTRAR`; fund throwaway wallets; browser claim → finish → PollDetail
+  ready name. Record tx hashes before any prize claim.
+
 ## WP4 indexed voter state — 2026-09-11
 
 - Owner: Cursor. Branch `feat/wp4-subgraph-state-leaves` from main `be3665ac`.
@@ -117,7 +140,8 @@ of alternatives is authorized. Do not interpret D02 as prohibiting this comparis
 
 ## Context that must survive model changes
 
-The human polling journey is the product; agents are downstream. Self Enterprise is the selected eligibility provider (migration in progress); ENS names people publicly; MACI handles encrypted voting; the Graph reads
+The human polling journey is the product; agents are downstream. ZKPassport is the
+selected eligibility provider (D17); ENS names wallets publicly; MACI handles encrypted voting; the Graph reads
 public protocol data; Messari standardizes its shape. None substitutes for another's
 authorization or privacy responsibilities.
 
@@ -125,7 +149,8 @@ Hard facts about this codebase, verified against source:
 
 - **A vote's recipient is the POLL contract, not MACI.** `PollFactory.connect(pollAddress).publishMessage(...)` in `packages/sdk/ts/vote/submit.ts:13`.
 - **No tally-result ingestion is implemented.** `Tally.sol` has no dedicated result events; a supported ingestion strategy is still required.
-- **ENS has no code in this repository.**
+- **ENS has named-poll discovery and named-account onboarding code.** Voting
+  contracts still do not read ENS. Live parent/registrar deploy is operator work.
 - **Self / ZKPassport:** legacy `/verify` still exists. Product Auth uses ZKPassport.
   Join sends evidence as `joinPoll.sgDataArg` after an `eth_call` dry-run of
   `policy.enforce`. Signup `sgData` is still `0x`. WP0 must deploy and bind

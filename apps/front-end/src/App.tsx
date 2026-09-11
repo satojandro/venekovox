@@ -7,6 +7,7 @@ import Auth from "./pages/Auth";
 import Comments from "./pages/Comments";
 import CreatePoll from "./pages/CreatePoll";
 import NamedPoll from "./pages/NamedPoll";
+import Names from "./pages/Names";
 
 // Load the voting page only when that route is opened. It imports the MACI
 // SDK, which used to crash the entire site during startup.
@@ -17,17 +18,12 @@ function App() {
 
   return (
     <div className="min-h-screen bg-veneko-background text-veneko-text">
-      <Suspense
-        fallback={
-          <div className="min-h-screen bg-gray-900 text-white p-8 text-lg">
-            Loading the page…
-          </div>
-        }
-      >
+      <Suspense fallback={<div className="min-h-screen bg-gray-900 text-white p-8 text-lg">Loading the page…</div>}>
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/discover" element={<NamedPoll />} />
           <Route path="/p/:name" element={<NamedPoll />} />
+          <Route path="/names" element={<Names />} />
           <Route path="/polls" element={<Polls />} />
           <Route path="/polls/:id" element={<PollDetail />} />
           <Route path="/create-poll" element={<CreatePoll />} />

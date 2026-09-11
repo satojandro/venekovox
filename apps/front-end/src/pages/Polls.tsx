@@ -96,7 +96,9 @@ export default function PollExplorer() {
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2 text-sm">
-              <span className={`relative inline-flex rounded-full h-3 w-3 ${healthOk ? "bg-green-500" : "bg-gray-500"}`} />
+              <span
+                className={`relative inline-flex rounded-full h-3 w-3 ${healthOk ? "bg-green-500" : "bg-gray-500"}`}
+              />
               <span className="text-gray-300">{healthOk ? currentContent.backendUp : currentContent.backendDown}</span>
             </div>
             <button
@@ -110,9 +112,14 @@ export default function PollExplorer() {
           </div>
         </header>
 
-        <Link to="/discover" className="block mb-6 text-lime-300 underline">
-          {language === "en" ? "Find a poll by ENS name →" : "Buscar una encuesta por nombre ENS →"}
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <Link to="/discover" className="text-lime-300 underline">
+            {language === "en" ? "Find a poll by ENS name →" : "Buscar una encuesta por nombre ENS →"}
+          </Link>
+          <Link to="/names" className="text-lime-300 underline">
+            {language === "en" ? "Name your account →" : "Nombra tu cuenta →"}
+          </Link>
+        </div>
 
         {/* Search & Filters */}
         <div className="mb-10">

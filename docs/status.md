@@ -1,5 +1,52 @@
 # Current state and evidence
 
+## Stage 1 live journey — **FIRST REAL VOTE, 2026-09-11** ✅
+
+The complete Stage-1 polling journey ran end-to-end with a real passport on Sepolia.
+Every claim below is read back from the chain or an index, not from the app.
+
+| Step             | Evidence                                                                                                |
+| ---------------- | ------------------------------------------------------------------------------------------------------- |
+| Eligibility scan | ZKPassport, real AU passport, salted + strict FaceMatch (D17/D18)                                       |
+| Grant            | EIP-712 authorization issued by the backend issuer, consumed by `SelfEligibilityPolicy.enforce` at join |
+| **Join txn**     | `0x412bbbedc458eaabbc04a77cba728e5f2c36b708136dc84bb384aeaa178bd73c` — block **11683168**               |
+| **Vote txn**     | `0x9328a656bcc822fc876472d56fac7a02546733047effb0f5dd20b03947e6cb18` — block **11683170**               |
+| Voter            | `0xEA3e3612175a894362f3062785adC133D9b98f10` (Rainbow, the dedicated throwaway demo wallet)             |
+| Poll             | `0x517D42601F3c75DACD2166Af7FC9B8979b0bb709` (poll 1, France slate, 6 options, mode 2 / 1p1v)           |
+
+**Verified by decoding the receipts:**
+
+- Join emitted `PollJoined` (`topic0 0x0a572bce…`) with `pollStateIndex = 1` and
+  `voiceCreditBalance = 99` (0x63 — the standard depth-2 credit budget).
+- Vote was `publishMessage((uint256[10]),(uint256,uint256))` (`0x27bea0da`) on the
+  Poll, status `0x1` (success), 358,713 gas.
+- Vote emitted **`PublishMessage((uint256[10]),(uint256,uint256))`**
+  (`topic0 0x4be9ef9a…`, resolved via 4byte) carrying exactly **384 bytes** of data —
+  320 bytes of encrypted message (10 words) + 64 bytes of ephemeral public key. The
+  payload is identical to the tx calldata, so the event is the encrypted ballot.
+- `ChainHashUpdated(uint256)` (`0xca4eaea2…`) fired in the same tx.
+
+**Independent index agreement:**
+
+| Source                                        | Value                                                | Block    |
+| --------------------------------------------- | ---------------------------------------------------- | -------- |
+| Local graph-node (app read path)              | `joinedParticipants: 1`                              | 11683180 |
+| **Studio hosted subgraph** (prize endpoint)   | `registrationCount: "1"`, `hasIndexingErrors: false` | 11683180 |
+| Client-error log (`POST /debug/client-error`) | **zero entries for the run**                         | —        |
+
+The ballot is encrypted and non-attributable: the on-chain surface shows a
+publication from a registered state index, not which option was chosen. Tally /
+result decryption (S4.1) remains a separate, still-open gate — the UI correctly
+says results appear after the verified tally.
+
+**Root cause of the multi-day live-test blocker (fixed this session):** the receipt
+verifier resolved the poll address with `MACI.getPoll(pollId)` through
+`new BrowserProvider(wallet)` — i.e. the wallet's own RPC. Rainbow's node answered
+with JSON-RPC `-32005 Rate Limit Exceeded`, which ethers cannot decode into an ABI
+revert and therefore reported as the misleading
+`missing revert data (action="call", … code=CALL_EXCEPTION)`.
+Fixed in `6a3d3cff2`; the diagnostic channel that found it is `e5ed04caf`.
+
 ## WP4 indexed voter state — 2026-09-11
 
 Implemented on `feat/wp4-subgraph-state-leaves` from main `be3665ac`.

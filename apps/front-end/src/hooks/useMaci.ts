@@ -4,6 +4,7 @@ import { BrowserProvider, JsonRpcProvider, Wallet, isAddress, type Eip1193Provid
 import * as maciSdk from "@maci-protocol/sdk/browser";
 import * as domainobjs from "@maci-protocol/domainobjs";
 import { createVoteFlow, type SubmitResult, type VoteProgress, type VoteStatus } from "./voteFlow";
+import { reportClientError } from "../lib/clientError";
 import { createReceiptStore, applySubmittedReceipt, type VoteReceipt } from "../lib/receipts";
 import { checkReceiptStatus, isRecheckable, type ReceiptCheckStatus, type ReceiptProvider } from "../lib/receiptStatus";
 import { loadEligibilityForAccount } from "../eligibility/storage";
@@ -504,6 +505,23 @@ export function useMaci() {
         );
       },
     });
+    // Report ANY vote-path failure with its step context to the backend log.
+    // Live-test errors otherwise surface only as an unreadable ethers message in
+    // a browser console we cannot reach from here.
+    const flowInner = flow.current;
+    flow.current = (async (option: number, weight = 1n) => {
+      try {
+        return await flowInner(option, weight);
+      } catch (error) {
+        reportClientError(error, "voteFlow", {
+          option,
+          chainId: String(getConfig().chainId),
+          maciAddress: getConfig().maciAddress,
+          pollId: String(getConfig().pollId),
+        });
+        throw error;
+      }
+    }) as typeof flow.current;
   }
 
   const connect = useCallback(async () => {

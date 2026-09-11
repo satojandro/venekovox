@@ -30,17 +30,37 @@ Verified on Node 22.20.0:
 
 - subgraph Matchstick **11/11**; `test:governance` **22/22**
 - backend `test:polls` **29/29**; `typecheck:trees` clean; `git diff --check` clean
-- Live local graph-node was **not** started: `apps/subgraph/.env.local-graph`
-  missing; `127.0.0.1:18000` refused connections
+- Live local graph-node (shifted ports 18000/18020/15001) stack fully exercised:
+  `docker compose -f apps/subgraph/docker-compose.local.yaml` up, subgraph
+  `venekovox-governance-v-2` deployed, synced from `11567000` to head with
+  `_meta.hasIndexingErrors: false`; result recorded in **`apps/backend/tests/live-parity.mjs`** (run with `pnpm --filter backend test:live-parity`)
 
-Live local graph-node (shifted ports 18000/18020/15001) was **not** started:
-no `.env.local-graph`, and a full Sepolia index from `11567000` is a long
-sync. ABI/mapping evidence added: subgraph template SignUp signature matches
-`MACI.sol`; Matchstick writes two `StateLeaf` rows from the four-param event.
-Same-snapshot builder parity (PAD + StateLeaves vs `PublicKey.hash()` rebuild,
-plus clone+`insertMany` vs full rebuild) is covered by `tests/tree-parity.test.mjs`.
-That is **not** live graph-node parity (no mappings against a running node,
-no deployed ABI against indexed Sepolia logs).
+### Local indexer parity gate — **PASSED 2026-09-11** (the previously missing gate)
+
+Deployed the branch subgraph to a local graph-node (graphprotocol/graph-node +
+IPFS kubo + postgres via `docker-compose.local.yaml`, shifted ports
+18000/18020/15001; RPC `https://ethereum-sepolia-rpc.publicnode.com`) and let it
+sync Sepolia from `11567000` to head. Then compared three independent sources at
+one pinned block:
+
+| Check                                                                           | Result                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pinned block (first pass — was head at run time)                                | `11680562` (`0xd6fdeed984f45177dd1fb977708109d0c09de584a9b9053438db33ac3dcc115f`)                                                                                                                           |
+| Re-run at later head                                                            | `11680580` — served-block semantics: graph-node falls back to current head for a block:number already outside its block cache; all three sources share the served block and the immutable root is unchanged |
+| Indexed `StateLeaf` rows (local graph-node, `state-leaves` query, block-pinned) | 1 row: `stateIndex=1`, `publicKeyX=1469127…05539`, `publicKeyY=5380539…73210`, `timestamp=1789076412` (`0x99686f82…` SignUp tx)                                                                             |
+| RPC rebuild leaves (SignUp logs to same block)                                  | 1 row — **row-for-row identical** (stateIndex, X, Y, ts)                                                                                                                                                    |
+| `stateRootIndex` (`tree.size - 1`, PAD + 1 leaf)                                | `1`                                                                                                                                                                                                         |
+| Indexed tree root (`buildSignUpTree`: `PAD_KEY_HASH` + `hashLeftRight(x,y)`)    | `0x160818aa7af04782c6e28e4bd73abe17cfdc5485433d77b3e5d6a9c652f9f450`                                                                                                                                        |
+| RPC rebuild root                                                                | `0x160818aa7af04782c6e28e4bd73abe17cfdc5485433d77b3e5d6a9c652f9f450` — **equal**                                                                                                                            |
+| On-chain pinned root `getStateRootOnIndexedSignUp(1)` @ same block              | `0x160818aa7af04782c6e28e4bd73abe17cfdc5485433d77b3e5d6a9c652f9f450` — **equal**                                                                                                                            |
+| `_meta.hasIndexingErrors`                                                       | `false`; `padKey.hash() == PAD_KEY_HASH` confirmed                                                                                                                                                          |
+
+This is real live graph-node parity: the production mapping ran against a
+running node over real Sepolia logs, and the indexed `StateLeaf` rows + PAD
+rebuild the exact state root the MACI contract pins at the same block.
+`live-parity.mjs` re-runs the whole gate from env (`GRAPH_URL`, `RPC`, `BLOCK`,
+`MACI_ADDRESS`); it is intentionally NOT part of `test:polls` (needs a live
+local graph-node).
 
 ### Studio / live (separate gate — not claimed)
 

@@ -70,6 +70,20 @@ interface VoteFlowOptions {
    * signer is used (tests). Production wires makeReadProvider via useMaci.
    */
   getReadAccess?: (chainId: bigint) => VoteReadAccess | Promise<VoteReadAccess>;
+  /**
+   * Preferred join path: backend inclusion proof + pinned stateRootIndex.
+   * Return null to let joinPoll try subgraph StateLeaves, then RPC.
+   * Both fallbacks still pin stateRootIndex from the tree that built the proof.
+   */
+  prepareJoinWitness?: (args: { maciAddress: string; publicKey: string; privateKey: string }) => Promise<{
+    inclusionProof: {
+      root: bigint;
+      leaf: bigint;
+      index: number;
+      siblings: bigint[];
+    };
+    stateRootIndex: number;
+  } | null>;
 }
 
 /** Retry a read-only SDK step. Free public RPCs load-balance across backend
@@ -108,6 +122,7 @@ export function createVoteFlow({
   getSignUpPolicyData,
   dryRunJoin,
   getReadAccess,
+  prepareJoinWitness,
 }: VoteFlowOptions) {
   let busy = false;
 
@@ -183,6 +198,21 @@ export function createVoteFlow({
         // failure after success. SDK retries reads/proof prep internally;
         // here we only reconcile membership if the call throws.
         try {
+          let witness: {
+            inclusionProof?: {
+              root: bigint;
+              leaf: bigint;
+              index: number;
+              siblings: bigint[];
+            };
+            stateRootIndex?: number;
+          } = {};
+          if (prepareJoinWitness) {
+            const prepared = await prepareJoinWitness({ maciAddress, publicKey, privateKey });
+            if (prepared) {
+              witness = { inclusionProof: prepared.inclusionProof, stateRootIndex: prepared.stateRootIndex };
+            }
+          }
           const result = await sdk.joinPoll({
             maciAddress,
             pollId,
@@ -193,9 +223,8 @@ export function createVoteFlow({
             pollWasm: "/zkeys/PollJoining_10_test/PollJoining_10_test.wasm",
             sgDataArg,
             ivcpDataArg: "0x",
-            // State-tree event scan rides the fallback read providers when
-            // wired; wallet Infura rate-limits the eth_getLogs burst.
             ...(readAccess.provider ? { provider: readAccess.provider } : {}),
+            ...witness,
           });
           pollStateIndex = result.pollStateIndex;
         } catch (error) {

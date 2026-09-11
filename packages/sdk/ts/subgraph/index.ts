@@ -1,2 +1,2 @@
 export * from "./maciSubgraph";
-export type { GraphQLResponse } from "./types";
+export type { GraphQLResponse, GraphQLMeta, StateLeafRecord } from "./types";

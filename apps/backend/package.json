@@ -8,21 +8,25 @@
     "dev": "ts-node-dev src/index.ts",
     "build": "tsc",
     "serve": "node dist/index.js",
-    "test:polls": "node --test tests/polls.test.mjs",
+    "test:polls": "node --test tests/polls.test.mjs tests/trees.test.mjs tests/maciSubgraph.test.mjs tests/join-pin.test.mjs tests/join-witness.test.mjs tests/browser-joinPoll.test.mjs tests/tree-service.test.mjs tests/tree-parity.test.mjs tests/signup-abi.test.mjs",
     "test:p2": "node --test tests/p2/*.test.mjs",
     "typecheck:p2": "tsc -p tsconfig.p2.json --noEmit",
-    "trial": "node --loader ./tests/p2/run-trial.mjs ./tests/p2/run-trial-entry.mjs"
+    "typecheck:trees": "tsc -p tsconfig.trees.json --noEmit",
+    "trial": "node --loader ./tests/p2/run-trial.mjs ./tests/p2/run-trial-entry.mjs",
+    "test:live-parity": "node --test tests/live-parity.mjs"
   },
   "dependencies": {
+    "@maci-protocol/crypto": "workspace:*",
     "@selfxyz/core": "^1.0.8",
+    "@selfxyz/enterprise-sdk": "0.4.1",
+    "@zk-kit/lean-imt": "^2.2.4",
     "@zkpassport/sdk": "0.16.2",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
+    "ethers": "^6.15.0",
     "express": "^4.18.2",
     "express-rate-limit": "^7.5.0",
-    "helmet": "^8.1.0",
-    "ethers": "^6.15.0",
-    "@selfxyz/enterprise-sdk": "0.4.1"
+    "helmet": "^8.1.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.13",

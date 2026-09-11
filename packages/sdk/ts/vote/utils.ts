@@ -2,7 +2,7 @@ import { Poll__factory as PollFactory } from "@maci-protocol/contracts/typechain
 import { SNARK_FIELD_SIZE } from "@maci-protocol/crypto";
 import { PublicKey } from "@maci-protocol/domainobjs";
 
-import type { Signer } from "ethers";
+import type { Provider, Signer } from "ethers";
 
 /**
  * Run both format check and size check on a salt value
@@ -14,10 +14,11 @@ export const validateSalt = (salt: bigint): boolean => salt < SNARK_FIELD_SIZE;
 /**
  * Get the coordinator public key for a poll
  * @param pollAddress - the address of the poll
- * @param signer - the signer to use
+ * @param signer - the signer or provider to use (read-only call; a Provider
+ *   avoids the wallet RPC's stripped-revert-data failure mode)
  * @returns the coordinator public key
  */
-export const getCoordinatorPublicKey = async (pollAddress: string, signer: Signer): Promise<PublicKey> => {
+export const getCoordinatorPublicKey = async (pollAddress: string, signer: Signer | Provider): Promise<PublicKey> => {
   const pollContract = PollFactory.connect(pollAddress, signer);
 
   const coordinatorPublicKey = await pollContract.coordinatorPublicKey();

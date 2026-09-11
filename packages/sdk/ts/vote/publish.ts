@@ -24,6 +24,7 @@ export const publish = async ({
   publicKey: serializedPublicKey,
   privateKey: serializedPrivateKey,
   signer,
+  provider,
 }: IPublishArgs): Promise<IPublishData> => {
   if (!PublicKey.isValidSerialized(serializedPublicKey)) {
     throw new Error("Invalid MACI public key");
@@ -33,13 +34,18 @@ export const publish = async ({
     throw new Error("Invalid MACI private key");
   }
 
-  const { poll: pollContract } = await getPollContracts({ maciAddress, pollId, signer });
+  // Reads ride the read-optimized provider when provided (same rationale as
+  // joinPoll's readSigner): wallet RPCs intermittently revert view calls with
+  // stripped revert data. The wallet signer is used ONLY for submitVote below.
+  const { poll: pollContract } = provider
+    ? await getPollContracts({ maciAddress, pollId, provider })
+    : await getPollContracts({ maciAddress, pollId, signer });
 
   const votePublicKey = PublicKey.deserialize(serializedPublicKey);
   const privateKey = PrivateKey.deserialize(serializedPrivateKey);
 
   const [maxVoteOption, pollAddress] = await Promise.all([pollContract.voteOptions(), pollContract.getAddress()]);
-  const coordinatorPublicKey = await getCoordinatorPublicKey(pollAddress, signer);
+  const coordinatorPublicKey = await getCoordinatorPublicKey(pollAddress, provider ?? signer);
 
   const vote = generateVote({
     pollId,

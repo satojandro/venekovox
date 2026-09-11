@@ -28,6 +28,18 @@ Read in this order.
 | [data-and-tally-architecture.md](data-and-tally-architecture.md) | Concrete storage, processing, demographic binding and result-delivery architecture                                           |
 | [live-test-runbook.md](live-test-runbook.md)                     | **Operational:** topology, the failure modes we actually hit, the diagnostic channel, CLI recipes, demo-day procedure        |
 | [privy-migration-analysis.md](privy-migration-analysis.md)       | Replacing the injected EOA with a Privy embedded/sponsored wallet: what changes per layer, what breaks, what to decide first |
+| [blog/](blog/)                                                   | **Publishable write-ups** (journal + lesson format, reusable for the website or a talk) — see below                          |
+
+## Blog drafts (`docs/blog/`)
+
+Reusable, self-contained write-ups. Short sections, plain claims, honest limits stated in the
+same document as the claim.
+
+| File                                                                                                    | What it covers                                                                                                                                                                                                                          |
+| ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [2026-09-11-maci-state-tree-scaling.md](blog/2026-09-11-maci-state-tree-scaling.md)                     | **MACI scaling:** why a join costs ~2,300 `eth_getLogs` calls, why an indexer alone doesn't fix it, the incremental tree service, and how the client validates a served proof against the on-chain root instead of trusting the service |
+| [2026-09-11-wallet-rpc-is-not-a-read-endpoint.md](blog/2026-09-11-wallet-rpc-is-not-a-read-endpoint.md) | **Debugging:** ethers v6 misreporting a JSON-RPC rate limit as `CALL_EXCEPTION / missing revert data`; selector-first diagnosis; instrumenting a client you cannot see                                                                  |
+| [2026-09-07-maci-messari-governance-schema.md](blog/2026-09-07-maci-messari-governance-schema.md)       | **Schema:** what MACI stores publicly vs privately, what a subgraph should index for a private-voting protocol, and the Messari governance extension                                                                                    |
 
 ## Authority
 

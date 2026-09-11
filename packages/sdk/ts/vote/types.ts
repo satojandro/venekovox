@@ -1,5 +1,5 @@
 import type { IMessageContractParams, Keypair, Message, PrivateKey, PublicKey } from "@maci-protocol/domainobjs";
-import type { Signer } from "ethers";
+import type { Provider, Signer } from "ethers";
 
 /**
  * Interface for the arguments for the generateVote function
@@ -230,6 +230,15 @@ export interface IPublishArgs extends IPublishMessage {
    * A signer object
    */
   signer: Signer;
+
+  /**
+   * Optional read-optimized provider. When set, all on-chain READS (getPoll,
+   * voteOptions, coordinatorPublicKey, contractExists) ride this provider
+   * instead of the wallet signer's RPC — wallet RPCs (Rainbow's locked Sepolia
+   * node, MetaMask's default) intermittently revert view calls with stripped
+   * revert data. The wallet signer is still used for the single submitVote tx.
+   */
+  provider?: Provider;
 }
 
 /**

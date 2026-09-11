@@ -244,6 +244,7 @@ export function createVoteFlow({
         maciAddress,
         pollId,
         signer,
+        provider: readAccess.provider,
         privateKey,
         publicKey,
         stateIndex: BigInt(pollStateIndex),

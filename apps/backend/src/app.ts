@@ -6,6 +6,7 @@ import pollsRoute from "./routes/polls";
 import treesRoute from "./routes/trees";
 import graphRoute from "./routes/graph";
 import { createEligibilityRouter } from "./routes/eligibility";
+import { createDebugRouter } from "./routes/debug";
 import { createProductEligibility } from "./eligibility/product";
 import { startBackgroundRefresh } from "./trees/service";
 
@@ -76,6 +77,9 @@ app.use("/verify", verifyRoute);
 app.use("/polls", pollsRoute);
 app.use("/trees", treesRoute);
 app.use("/graph", graphRoute);
+// Client-error intake: makes live-test failures readable from the server log
+// instead of the test machine's browser devtools. Error text only, scrubbed.
+app.use("/debug", createDebugRouter(eligibility.mode));
 app.use(
   "/eligibility",
   createEligibilityRouter({
@@ -101,6 +105,7 @@ app.use("*", (req, res) => {
       "GET /trees/inclusion-proof",
       "GET /trees/joined-count",
       "POST /graph/query",
+      "POST /debug/client-error",
       "GET /",
     ],
   });

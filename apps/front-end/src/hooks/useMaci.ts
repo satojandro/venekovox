@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { BrowserProvider, JsonRpcProvider, Wallet, isAddress, type Eip1193Provider } from "ethers";
+import { BrowserProvider, FallbackProvider, JsonRpcProvider, Wallet, isAddress, type Eip1193Provider } from "ethers";
 // Namespace imports are required for the workspace packages' CommonJS exports.
 import * as maciSdk from "@maci-protocol/sdk/browser";
 import * as domainobjs from "@maci-protocol/domainobjs";
@@ -119,11 +119,41 @@ async function getWallet() {
   return { wallet, signer, account, assertChain };
 }
 
-function asReceiptProvider(wallet: WalletProvider): ReceiptProvider {
-  const provider = new BrowserProvider(wallet);
+function asReceiptProvider(wallet: WalletProvider, chainId: bigint): ReceiptProvider {
+  const walletProvider = new BrowserProvider(wallet);
+  // Reads must NOT ride the wallet's RPC. Rainbow's built-in Sepolia node
+  // rate-limits eth_call with JSON-RPC -32005, and ethers cannot decode that —
+  // it surfaces as a bogus `missing revert data / CALL_EXCEPTION`. That is what
+  // broke the vote path on getPoll(1): the same call answered correctly on a
+  // public RPC the whole time, which is why CLI probes kept looking healthy.
+  let readProvider: FallbackProvider | null = null;
+  try {
+    readProvider = makeReadProvider(chainId);
+  } catch {
+    readProvider = null; // no read RPC configured: the wallet is all we have
+  }
+
+  /** Prefer public RPCs; fall back to the wallet only if every read RPC fails. */
+  async function preferRead<T>(
+    viaRead: (p: FallbackProvider) => Promise<T>,
+    viaWallet: (p: BrowserProvider) => Promise<T>,
+  ): Promise<T> {
+    if (readProvider) {
+      try {
+        return await viaRead(readProvider);
+      } catch {
+        /* fall through to the wallet */
+      }
+    }
+    return viaWallet(walletProvider);
+  }
+
   return {
     async getTransactionReceipt(hash) {
-      const receipt = await provider.getTransactionReceipt(hash);
+      const receipt = await preferRead(
+        (p) => p.getTransactionReceipt(hash),
+        (p) => p.getTransactionReceipt(hash),
+      );
       if (!receipt) return null;
       return {
         status: receipt.status,
@@ -134,12 +164,20 @@ function asReceiptProvider(wallet: WalletProvider): ReceiptProvider {
       };
     },
     async getTransaction(hash) {
-      const tx = await provider.getTransaction(hash);
+      const tx = await preferRead(
+        (p) => p.getTransaction(hash),
+        (p) => p.getTransaction(hash),
+      );
       if (!tx) return null;
       return { to: tx.to, from: tx.from, data: tx.data };
     },
+    // The call that actually broke: MACI.getPoll(pollId) to resolve the poll
+    // address. It is a read — it must go through the read provider.
     async call(to, data) {
-      return provider.call({ to, data });
+      return preferRead(
+        (p) => p.call({ to, data }),
+        (p) => p.call({ to, data }),
+      );
     },
   };
 }
@@ -338,7 +376,7 @@ export function useMaci() {
         const wallet = window.ethereum;
         if (!wallet) throw new Error("No wallet found.");
         return checkReceiptStatus({
-          provider: asReceiptProvider(wallet),
+          provider: asReceiptProvider(wallet, getConfig().chainId),
           txHash,
           maciAddress,
           pollId,
@@ -369,7 +407,7 @@ export function useMaci() {
       if (!wallet || !stillThisReceipt()) return;
       try {
         const result = await checkReceiptStatus({
-          provider: asReceiptProvider(wallet),
+          provider: asReceiptProvider(wallet, getConfig().chainId),
           txHash: args.txHash,
           maciAddress: args.maciAddress,
           pollId: args.pollId,

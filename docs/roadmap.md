@@ -90,7 +90,7 @@ recovery. Do not block M1 on a discussion board or broad automated creation.
 ## M3: standardized data and agents
 
 - **S5.1:** v2 schema, mappings, compatibility note and shared-query tests implemented in the S5 patch; WP4 adds MACI `StateLeaf` (SignUp) for join proofs. Upstream acceptance not claimed.
-- **S5.2:** comparative read client implemented. **Studio/live deploy remains a separate gate** (WP4 version-label `wp4-state-leaves`). Local correctness for StateLeaves is the subgraph/backend/frontend tests above; do not treat them as a synced Studio block.
+- **S5.2:** comparative read client implemented. **Studio/live deploy COMPLETE 2026-09-11** — deployment `QmeBkGteYdc7bQeHD2FneLBG1dm5MHcMbvgYPiKxAfqDeM`, version label `wp4-state-leaves`, endpoint `https://api.studio.thegraph.com/query/1758839/venekovox-governance-v-2/wp4-state-leaves`, synced with `hasIndexingErrors: false` and serving indexed `StateLeaf` rows that match the on-chain root (see [status.md](status.md)). Local correctness for StateLeaves is the subgraph/backend/frontend tests above.
 - **S5.3:** read agent/MCP answers a real question using live Graph data with citations, finality and methodology limits. Compare useful behavior against a baseline.
 - **S5.4:** constrained creation API, payment/idempotency handling, then actual Bazantic gateway/Recipe integration and controlled comparison evidence.
 

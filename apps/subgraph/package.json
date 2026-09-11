@@ -20,7 +20,7 @@
     "generate:schema": "cp ./schemas/schema.${VERSION:-v2}.graphql schema.graphql",
     "prebuild": "pnpm codegen",
     "build": "graph build",
-    "deploy": "graph deploy --studio venekovox-governance-v-2",
+    "deploy": "graph deploy venekovox-governance-v-2 --node https://api.studio.thegraph.com/deploy/ --version-label ${VERSION_LABEL:-wp4-state-leaves}",
     "create-local": "graph create --node http://localhost:8020/ venekovox-governance-v-2",
     "remove-local": "graph remove --node http://localhost:8020/ venekovox-governance-v-2",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 venekovox-governance-v-2 --network localhost",
@@ -32,7 +32,7 @@
     "test:governance": "node --test tests/governance/*.test.mjs tests/state-leaves.test.mjs",
     "demo:governance": "node client/compare.mjs",
     "test:coverage": "graph test && graph test -c",
-    "deploy:studio": "graph deploy --studio venekovox-governance-v-2 --version-label ${VERSION_LABEL:-wp4-state-leaves}"
+    "deploy:studio": "graph deploy venekovox-governance-v-2 --node https://api.studio.thegraph.com/deploy/ --version-label ${VERSION_LABEL:-wp4-state-leaves}"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "^0.97.1",

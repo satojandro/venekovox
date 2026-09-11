@@ -8,7 +8,7 @@ import { Poll as PollContract } from "../generated/templates/Poll/Poll";
 
 import { createProposal } from "./governance";
 import { ONE_BIG_INT } from "./utils/constants";
-import { createOrLoadMACI, createOrLoadUser, createOrLoadAccount } from "./utils/entity";
+import { createOrLoadMACI, createOrLoadUser, createOrLoadAccount, createStateLeaf } from "./utils/entity";
 
 export function handleDeployPoll(event: DeployPollEvent): void {
   const maci = createOrLoadMACI(event);
@@ -59,6 +59,13 @@ export function handleDeployPoll(event: DeployPollEvent): void {
 export function handleSignUp(event: SignUpEvent): void {
   const user = createOrLoadUser(event.params._userPublicKeyX, event.params._userPublicKeyY, event);
   createOrLoadAccount(event.params._stateIndex, event, user.id);
+  createStateLeaf(
+    event,
+    event.params._stateIndex,
+    event.params._userPublicKeyX,
+    event.params._userPublicKeyY,
+    event.params._timestamp,
+  );
 
   const maci = createOrLoadMACI(event);
   maci.totalSignups = maci.totalSignups.plus(ONE_BIG_INT);

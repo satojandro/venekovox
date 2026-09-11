@@ -8,6 +8,7 @@ import { createReceiptStore, applySubmittedReceipt, type VoteReceipt } from "../
 import { checkReceiptStatus, isRecheckable, type ReceiptCheckStatus, type ReceiptProvider } from "../lib/receiptStatus";
 import { loadEligibilityForAccount } from "../eligibility/storage";
 import { dryRunJoinGate } from "../eligibility/dryRunJoin";
+import { fetchJoinWitness } from "../lib/inclusionProof";
 import { makeReadProvider } from "../eligibility/readProvider";
 import {
   createFlightAnchor,
@@ -20,7 +21,7 @@ import {
   type WalletPeek,
 } from "../lib/hydration";
 
-const { Keypair, PrivateKey } = domainobjs as typeof import("@maci-protocol/domainobjs");
+const { Keypair, PrivateKey, PublicKey } = domainobjs as typeof import("@maci-protocol/domainobjs");
 const KEYPAIR_STORAGE_KEY = "venekovox_maci_keypair";
 
 function getConfig() {
@@ -412,7 +413,16 @@ export function useMaci() {
 
   if (!flow.current) {
     flow.current = createVoteFlow({
-      sdk: maciSdk,
+      sdk: {
+        ...maciSdk,
+        joinPoll: (args) => {
+          const backendUrl = (import.meta.env.VITE_BACKEND_URL as string | undefined) || "http://localhost:3100";
+          return maciSdk.joinPoll({
+            ...args,
+            subgraphUrl: `${backendUrl.replace(/\/$/, "")}/graph/query`,
+          });
+        },
+      },
       getConfig,
       getSession: async () => {
         const snapshot = activeGeneration.current;
@@ -454,6 +464,18 @@ export function useMaci() {
       getReadAccess: async (chainId) => {
         const provider = makeReadProvider(chainId);
         return { signer: await Wallet.createRandom().connect(provider), provider };
+      },
+      prepareJoinWitness: async ({ maciAddress, publicKey }) => {
+        const backendUrl = (import.meta.env.VITE_BACKEND_URL as string | undefined) || "http://localhost:3100";
+        const parsed = PublicKey.deserialize(publicKey);
+        const witness = await fetchJoinWitness({
+          backendUrl,
+          maci: maciAddress,
+          publicKeyX: parsed.raw[0].toString(),
+          publicKeyY: parsed.raw[1].toString(),
+        });
+        if (!witness) return null;
+        return { inclusionProof: witness.inclusionProof, stateRootIndex: witness.stateRootIndex };
       },
       onProgress: (progress) => {
         if (mounted.current && activeGeneration.current === generation.current) setProgress(progress);

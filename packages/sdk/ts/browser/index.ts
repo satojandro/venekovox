@@ -13,9 +13,12 @@ export {
   hasUserJoinedPoll,
   generateMaciStateTree,
   getPollJoiningCircuitEvents,
+  preparePollJoiningFromEvents,
+  preparePollJoiningFromSubgraph,
   joiningCircuitInputs,
   generateMaciStateTreeWithEndKey,
 } from "../user/utils";
+export { resolvePinnedJoinInputs, validateAndBuildJoinInputs } from "../user/joinWitness";
 
 export * from "./joinPoll";
 

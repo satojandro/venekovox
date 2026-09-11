@@ -3,8 +3,11 @@ import cors from "cors";
 import helmet from "helmet";
 import verifyRoute from "./routes/verify";
 import pollsRoute from "./routes/polls";
+import treesRoute from "./routes/trees";
+import graphRoute from "./routes/graph";
 import { createEligibilityRouter } from "./routes/eligibility";
 import { createProductEligibility } from "./eligibility/product";
+import { startBackgroundRefresh } from "./trees/service";
 
 const app: import("express").Express = express();
 
@@ -59,6 +62,9 @@ app.get("/", (req, res) => {
       "GET /eligibility/health": "Eligibility adapter health",
       "GET /health": "Service health check",
       "GET /polls/configured": "Configured poll on-chain voting window",
+      "GET /trees/inclusion-proof": "Pinned MACI signup inclusion proof",
+      "GET /trees/joined-count": "Indexed joined-participant count (not votes)",
+      "POST /graph/query": "Proxied subgraph GraphQL",
       "GET /": "This API information",
     },
     documentation: "See README.md for setup and testing instructions",
@@ -68,6 +74,8 @@ app.get("/", (req, res) => {
 const eligibility = createProductEligibility(process.env as import("./eligibility/product").ProductEnv);
 app.use("/verify", verifyRoute);
 app.use("/polls", pollsRoute);
+app.use("/trees", treesRoute);
+app.use("/graph", graphRoute);
 app.use(
   "/eligibility",
   createEligibilityRouter({
@@ -90,6 +98,9 @@ app.use("*", (req, res) => {
       "GET /eligibility/health",
       "GET /health",
       "GET /polls/configured",
+      "GET /trees/inclusion-proof",
+      "GET /trees/joined-count",
+      "POST /graph/query",
       "GET /",
     ],
   });
@@ -102,5 +113,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     message: process.env.NODE_ENV === "development" ? err.message : "Something went wrong",
   });
 });
+
+startBackgroundRefresh();
 
 export default app;

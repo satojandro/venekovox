@@ -101,12 +101,18 @@ importers:
 
   apps/backend:
     dependencies:
+      '@maci-protocol/crypto':
+        specifier: workspace:*
+        version: link:../../packages/crypto
       '@selfxyz/core':
         specifier: ^1.0.8
         version: 1.0.8
       '@selfxyz/enterprise-sdk':
         specifier: 0.4.1
         version: 0.4.1(react-native@0.81.1(@babel/core@7.28.3)(react@18.3.1))
+      '@zk-kit/lean-imt':
+        specifier: ^2.2.4
+        version: 2.2.4
       '@zkpassport/sdk':
         specifier: 0.16.2
         version: 0.16.2(typescript@5.9.2)

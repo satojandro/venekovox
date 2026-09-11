@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 import { BigInt as GraphBN, Bytes, ethereum } from "@graphprotocol/graph-ts";
 
-import { Account, MACI, User } from "../../generated/schema";
+import { Account, MACI, StateLeaf, User } from "../../generated/schema";
 
 export const createOrLoadMACI = (event: ethereum.Event, stateTreeDepth: GraphBN = GraphBN.fromI32(10)): MACI => {
   let maci = MACI.load(event.address);
@@ -50,4 +50,22 @@ export const createOrLoadAccount = (
   }
 
   return account;
+};
+
+export const createStateLeaf = (
+  event: ethereum.Event,
+  stateIndex: GraphBN,
+  publicKeyX: GraphBN,
+  publicKeyY: GraphBN,
+  timestamp: GraphBN,
+): StateLeaf => {
+  const id = event.transaction.hash.concatI32(event.logIndex.toI32());
+  const leaf = new StateLeaf(id);
+  leaf.stateIndex = stateIndex;
+  leaf.publicKeyX = publicKeyX;
+  leaf.publicKeyY = publicKeyY;
+  leaf.timestamp = timestamp;
+  leaf.maci = event.address;
+  leaf.save();
+  return leaf;
 };

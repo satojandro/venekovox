@@ -6,8 +6,11 @@ export {
   generateMaciStateTree,
   generateMaciStateTreeWithEndKey,
   getPollJoiningCircuitEvents,
+  preparePollJoiningFromEvents,
+  preparePollJoiningFromSubgraph,
   joiningCircuitInputs,
 } from "./utils";
+export { resolvePinnedJoinInputs, validateAndBuildJoinInputs } from "./joinWitness";
 export type {
   IJoinedUserArgs,
   IIsRegisteredUser,

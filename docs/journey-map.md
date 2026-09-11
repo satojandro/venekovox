@@ -1,5 +1,34 @@
 # VenekoVox technical journey map
 
+## WP4 indexed join — as-built 2026-09-10 (local correctness; not Studio/live)
+
+Preferred join after signup. Private key never leaves the browser. `joinPoll` is
+submitted once with a **pinned** `stateRootIndex`. The backend clones the published
+LeanIMT and `insertMany`s only new SignUp hashes, then publishes the snapshot
+after `getStateRootOnIndexedSignUp` matches. Click proofs keep reading the old
+tree until that swap. A later signup does not change the pin already chosen for
+the join transaction.
+
+```
+  voteFlow prepareJoinWitness
+    └─ GET {backend}/trees/inclusion-proof?maci=&publicKeyX=&publicKeyY=
+         backend in-memory LeanIMT (rehydrated from subgraph StateLeaves)
+         returns { leafIndex, stateRootIndex, inclusionProof, provenance }
+    └─ sdk.joinPoll({ inclusionProof, stateRootIndex })
+         validate leaf vs this device's MACI pubkey
+         validate proof.root vs getStateRootOnIndexedSignUp(stateRootIndex)
+         do NOT re-read totalSignups() after the proof
+         circuit padding copies siblings (does not mutate the LeanIMT proof)
+         browser ZK, then Poll.joinPoll(..., stateRootIndex, proof, ...) once
+  fallback: each source prepares AND validates before the next
+           subgraph StateLeaves via POST /graph/query then local generateProof(leafIndex);
+           last: RPC generateSignUpTree. Each path pins stateRootIndex from that tree.
+  Poll page GET /trees/joined-count → joined participants + indexed block
+         (not votes, not turnout, not a vote-window signal)
+```
+
+The ~200 `eth_getLogs` cost is scanned block span / 51, not signup count.
+
 ## C product mount — as-built 2026-09-09 (not live-join evidence)
 
 Product path (this branch). Trial `/trial/zkpassport/*` still exists; new UI uses `/eligibility`.
@@ -212,25 +241,15 @@ This stage has an orchestrated code path; browser proving and live acceptance re
         │   sdk.getJoinedUserData({...})                    voteFlow.ts:91 │
         │                                                                  │
         │   if NOT joined:                                                 │
-        │   sdk.joinPoll({...})                             voteFlow.ts:102│
-        │     │                                                            │
-        │     ├─> contractExists(provider, maciAddress)   user/joinPoll.ts:36
-        │     ├─> hasUserJoinedPoll({...})                              :55│
-        │     ├─> maciContract.getPoll(pollId)                          :67│
-        │     │      returns (poll, messageProcessor, tally)   MACI.sol:210│
-        │     ├─> maciContract.getStateIndex(pubKey.hash())             :71│
-        │     ├─> generateAndVerifyProof(circuitInputs, pollJoiningZkey) :98│
-        │     │      ── ZK PROOF IN BROWSER ──  proves "I am in the       │
-        │     │         signup tree" WITHOUT revealing WHICH leaf         │
-        │     │         needs /zkeys/PollJoining_10_test/  [GAP G08 —     │
-        │     │         assets not in apps/front-end/public]              │
-        │     └─> pollContract.joinPoll(                                :108│
-        │             nullifier,                                           │
-        │             userMaciPublicKey.asContractParam(),                 │
-        │             currentStateRootIndex,                               │
-        │             proof, sgDataArg, ivcpDataArg)                       │
-        │         ── ON-CHAIN TX ──> Poll.sol:361                          │
-        │         emits  PollJoined(...)                       Poll.sol:126 │
+        │   optional GET /trees/inclusion-proof              inclusionProof.ts
+        │   sdk.joinPoll({ inclusionProof, stateRootIndex }) voteFlow.ts
+        │     │  browser/joinPoll.ts submits the PINNED index; never latest
+        │     ├─> hasUserJoinedPoll({...})
+        │     ├─> assertInclusionProof vs getStateRootOnIndexedSignUp(index)
+        │     ├─> generateProofSnarkjs (private key stays in the browser)
+        │     └─> pollContract.joinPoll(nullifier, pubKey, stateRootIndex, proof, sgDataArg, ivcpDataArg)
+        │         ── ON-CHAIN TX once ──> Poll.sol
+        │         emits  PollJoined(...)
         └──────────────────────────────────────────────────────────────────┘
         │
         └─ STEP 3 ── publish the encrypted vote ──────────────────────────┐

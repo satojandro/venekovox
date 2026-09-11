@@ -24,7 +24,9 @@ import type { IGenerateSignUpTree } from "../trees/types";
 import type { TCircuitInputs } from "../utils/types";
 import type { LeanIMTMerkleProof } from "@zk-kit/lean-imt";
 
-import { generateSignUpTree, generateSignUpTreeWithEndKey } from "../trees/stateTree";
+import { MaciSubgraph } from "../subgraph/maciSubgraph";
+import { paddedSiblings } from "../trees/inclusionProof";
+import { generateSignUpTree, generateSignUpTreeWithEndKey, generateSignUpTreeFromKeys } from "../trees/stateTree";
 import { BLOCKS_STEP } from "../utils/constants";
 
 /**
@@ -211,15 +213,9 @@ export const joiningCircuitInputs = (
   pollPublicKey: PublicKey,
   pollId: bigint,
 ): TCircuitInputs => {
-  // calculate the path elements for the state tree given the original state tree
-  const { siblings, index, root: stateRoot } = inclusionProof;
-  const siblingsLength = siblings.length;
-
-  for (let i = 0; i < stateTreeDepth; i += 1) {
-    if (i >= siblingsLength) {
-      siblings[i] = BigInt(0);
-    }
-  }
+  const siblingsLength = inclusionProof.siblings.length;
+  const siblings = paddedSiblings(inclusionProof, stateTreeDepth);
+  const { index, root: stateRoot } = inclusionProof;
 
   const siblingsArray = siblings.map((sibling) => [sibling]);
 
@@ -362,7 +358,7 @@ export const generateMaciStateTreeWithEndKey = async ({
  * @param signer - The signer
  * @returns The poll joining circuit events
  */
-export const getPollJoiningCircuitEvents = async ({
+export const preparePollJoiningFromEvents = async ({
   maciContract,
   stateIndex,
   pollId,
@@ -374,7 +370,12 @@ export const getPollJoiningCircuitEvents = async ({
   // Optional read-optimized provider for the state-tree event scan (see
   // generateMaciStateTree) — keeps the burst of eth_getLogs off the wallet RPC.
   provider: readProvider,
-}: IGetPollJoiningCircuitEventsArgs & { provider?: Provider }): Promise<TCircuitInputs> => {
+}: IGetPollJoiningCircuitEventsArgs & { provider?: Provider }): Promise<{
+  inputs: TCircuitInputs;
+  inclusionProof: LeanIMTMerkleProof;
+  stateRootIndex: number;
+  leafIndex: number;
+}> => {
   const [stateTreeDepth, maciContractAddress] = await Promise.all([
     maciContract.stateTreeDepth(),
     maciContract.getAddress(),
@@ -401,12 +402,82 @@ export const getPollJoiningCircuitEvents = async ({
 
   // calculate the path elements for the state tree given the original state tree
   const inclusionProof = stateTree.generateProof(Number(loadedStateIndex));
+  const stateRootIndex = Number(stateTree.size) - 1;
 
-  return joiningCircuitInputs(
+  return {
+    inputs: joiningCircuitInputs(
+      inclusionProof,
+      stateTreeDepth,
+      userMaciPrivateKey,
+      userPublicKey,
+      pollId,
+    ) as unknown as TCircuitInputs,
     inclusionProof,
-    stateTreeDepth,
-    userMaciPrivateKey,
-    userPublicKey,
-    pollId,
-  ) as unknown as TCircuitInputs;
+    stateRootIndex,
+    leafIndex: Number(loadedStateIndex),
+  };
+};
+
+/**
+ * Join-tree inputs from pinned-block StateLeaves. PAD is prepended by MaciSubgraph.getKeys.
+ * Pin stateRootIndex from this tree's size; do not re-read totalSignups() later.
+ */
+export const preparePollJoiningFromSubgraph = async ({
+  subgraphUrl,
+  maciAddress,
+  maciContract,
+  stateIndex,
+  pollId,
+  userMaciPrivateKey,
+}: {
+  subgraphUrl: string;
+  maciAddress: string;
+  maciContract: MACI;
+  stateIndex: bigint;
+  pollId: bigint;
+  userMaciPrivateKey: PrivateKey;
+}): Promise<{
+  inputs: TCircuitInputs;
+  inclusionProof: LeanIMTMerkleProof;
+  stateRootIndex: number;
+  leafIndex: number;
+}> => {
+  const subgraph = new MaciSubgraph(subgraphUrl);
+  const publicKeys = await subgraph.getKeys(maciAddress);
+  const stateTree = generateSignUpTreeFromKeys(publicKeys);
+  const { publicKey: userPublicKey } = new Keypair(userMaciPrivateKey);
+  const lookupIndex = stateIndex >= 1n ? stateIndex : undefined;
+  const loadedStateIndex = getStateIndex(publicKeys, userPublicKey, lookupIndex);
+
+  if (loadedStateIndex! < 1) {
+    throw new Error("Invalid state index");
+  }
+
+  const inclusionProof = stateTree.generateProof(Number(loadedStateIndex));
+  const stateRootIndex = Number(stateTree.size) - 1;
+  const stateTreeDepth = await maciContract.stateTreeDepth();
+
+  return {
+    inputs: joiningCircuitInputs(
+      inclusionProof,
+      stateTreeDepth,
+      userMaciPrivateKey,
+      userPublicKey,
+      pollId,
+    ) as unknown as TCircuitInputs,
+    inclusionProof,
+    stateRootIndex,
+    leafIndex: Number(loadedStateIndex),
+  };
+};
+
+/**
+ * Get the poll joining circuit inputs from SignUp events (RPC scan).
+ * Prefer preparePollJoiningFromEvents when the submit path must pin stateRootIndex.
+ */
+export const getPollJoiningCircuitEvents = async (
+  args: IGetPollJoiningCircuitEventsArgs & { provider?: Provider },
+): Promise<TCircuitInputs> => {
+  const prepared = await preparePollJoiningFromEvents(args);
+  return prepared.inputs;
 };

@@ -356,14 +356,27 @@ export interface IJoinPollArgs {
  */
 export interface IJoinPollBrowserArgs extends IJoinPollArgs {
   /**
-   * Whether to use of not the latest state index
+   * Unused on the WP4 join path. Do not submit totalSignups()-1 after proof prep.
    */
   useLatestStateIndex?: boolean;
+
+  /**
+   * Proxied GraphQL endpoint for StateLeaves fallback (backend /graph/query).
+   * Used only when inclusionProof is omitted.
+   */
+  subgraphUrl?: string;
 
   /**
    * The inclusion proof
    */
   inclusionProof?: LeanIMTMerkleProof;
+
+  /**
+   * Exact MACI stateRootsOnSignUp index this proof was built against.
+   * Required when inclusionProof is set. Never recompute from totalSignups()
+   * after the proof is prepared — a later signup would name a different root.
+   */
+  stateRootIndex?: number | bigint;
 
   /**
    * Optional read-optimized provider for the state-tree event scan. Wallet

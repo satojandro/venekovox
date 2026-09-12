@@ -22,8 +22,10 @@ Browser QA on 3012: landing, polls (honest unconfigured), names, eligibility,
 `/polls/1` unknown-poll, journal, light theme, ~390px mobile nav. No live wallet
 or passport.
 
-See [flagship-poll-manifest.md](flagship-poll-manifest.md) and
-[blog/2026-09-12-a-name-is-not-a-person.md](blog/2026-09-12-a-name-is-not-a-person.md).
+Hero copy is now “Real Polls. Real People. Private & Censorship Resistant.”
+Landing supporting copy is concrete (eligibility, encryption, checkable tally),
+not the earlier “belong here” slogans. Video intro is local-only and not in this
+push.
 
 ## Stage 1 live journey — **FIRST REAL VOTE, 2026-09-11** ✅
 

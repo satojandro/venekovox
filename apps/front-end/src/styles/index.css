@@ -321,6 +321,12 @@ h1, h2 {
   text-wrap: balance;
 }
 h1 { font-size: clamp(2.8rem, 7vw, 5.4rem); margin: 12px 0 18px; }
+.hero-title {
+  font-size: clamp(2.15rem, 5.4vw, 4.35rem);
+  max-width: 18ch;
+}
+.hero-title span { color: var(--lime); }
+[data-theme="light"] .hero-title span { color: var(--forest); }
 h2 { font-size: clamp(2rem, 4.4vw, 3.4rem); margin: 0 0 16px; }
 h3 { font-size: 1.25rem; letter-spacing: -0.03em; margin: 0 0 8px; }
 

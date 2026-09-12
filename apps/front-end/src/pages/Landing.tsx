@@ -8,16 +8,18 @@ export default function Landing() {
       <section className="hero section-wrap">
         <div className="hero-copy">
           <p className="eyebrow">
-            <span className="signal-dot" /> HUMAN VOICES. CHECKABLE RESULTS.
+            <span className="signal-dot" /> MACI · ZKPASSPORT · ENS
           </p>
-          <h1>
-            Your voice.
+          <h1 className="hero-title">
+            Real Polls.
             <br />
-            <span>On your terms.</span>
+            Real People.
+            <br />
+            <span>Private &amp; Censorship Resistant.</span>
           </h1>
           <p className="hero-description">
-            You don’t have to agree to belong here. A place for real people to answer the questions that
-            matter—with encrypted ballots and evidence you can inspect.
+            One person, one vote. Encrypted in the browser. Posted where it cannot be quietly deleted.
+            Counted with evidence you can check.
           </p>
           <div className="action-row">
             <Link className="action-primary" to="/polls">
@@ -54,24 +56,24 @@ export default function Landing() {
             <span className="art-check">↗</span>
           </div>
           <p className="art-caption">
-            MANY PERSPECTIVES.
+            ONE PERSON. ONE VOTE.
             <br />
-            <strong>ONE SHARED SPACE.</strong>
+            <strong>NOBODY READS THE BALLOT.</strong>
           </p>
         </div>
       </section>
 
       <section className="featured-band section-wrap">
         <div>
-          <p className="eyebrow">THE NEXT CONVERSATION / AI & SOCIETY</p>
+          <p className="eyebrow">FLAGSHIP POLL · AI &amp; SOCIETY</p>
           <h2>
-            Who gets a say
+            Do you support a global ban
             <br />
-            in what comes next?
+            on artificial superintelligence?
           </h2>
           <p>
-            The debate about superintelligence belongs to people, too. Read the question, explore the
-            context, and make up your own mind.
+            Citizens of the US, Canada, Australia, and the EU, age 18 and over. Three options. Equal
+            weight. Encrypted until the verified tally.
           </p>
         </div>
         <Link className="feature-link" to="/polls">
@@ -82,19 +84,19 @@ export default function Landing() {
 
       <section className="section-wrap process-section">
         <div className="section-heading">
-          <p className="eyebrow">A LITTLE LESS NOISE. A LITTLE MORE VOICE.</p>
+          <p className="eyebrow">HOW A VOTE ACTUALLY WORKS</p>
           <h2>
-            From your perspective
+            Name. Eligibility.
             <br />
-            to a shared picture.
+            Encrypted ballot. Checkable tally.
           </h2>
         </div>
         <div className="process-grid">
           {[
-            ["01", "A name you own", "Choose a public ENS name for your wallet. Keep control of your profile. A name is not proof that you are a unique person."],
-            ["02", "A place at the table", "Use ZKPassport to prove you meet this poll’s requirements. Eligibility is separate from your public name."],
-            ["03", "A ballot with privacy", "Your browser encrypts your choice. A transaction receipt lets you check that the message was submitted."],
-            ["04", "A count worth checking", "After closing and proof verification, published results can be inspected. A submitted ballot is not yet a counted vote."],
+            ["01", "A name you control", "Register a public ENS name on the wallet. A name is a handle. It is not proof that you are a unique person."],
+            ["02", "Prove you are eligible", "ZKPassport checks this poll’s age and nationality rules. Eligibility is separate from the public name."],
+            ["03", "Encrypt the ballot", "The browser encrypts the choice. The chain records a message, not a readable vote. Nobody can quietly delete that publication."],
+            ["04", "Check the tally", "After close and proof verification, published results can be inspected. A submitted ballot is not yet a counted vote."],
           ].map(([n, title, body]) => (
             <article key={n}>
               <span className="step-number">{n}</span>
@@ -116,20 +118,20 @@ export default function Landing() {
 
       <section className="story-band section-wrap">
         <div>
-          <p className="eyebrow">WHY WE’RE BUILDING</p>
+          <p className="eyebrow">WHY THIS STACK</p>
           <h2>
-            Being heard shouldn’t
+            Speech gets silenced.
             <br />
-            depend on being loud.
+            Counts get faked.
           </h2>
           <p>
-            When speaking up feels costly and online noise drowns people out, it becomes harder to know
-            what anyone actually thinks. We’re building a space for the outspoken, the overlooked, and
-            the quietly unconvinced.
+            Printers were licensed. Mail was opened. Ballots were stuffed. Feeds are filtered. The
+            answer is not a nicer comment section. It is a unique human, an encrypted ballot, and a
+            tally that can be checked.
           </p>
         </div>
         <Link className="text-link" to="/journal">
-          Our story, and what we’ve learned <ArrowUpRight size={18} />
+          Our argument, in writing <ArrowUpRight size={18} />
         </Link>
       </section>
     </main>

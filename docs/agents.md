@@ -1,5 +1,25 @@
 # Agent handoff and continuity protocol
 
+## S1.1 named-account review fixes — 2026-09-12
+
+- Owner: Cursor. Worktree `/Users/avb/venekovox-s11-ensv2-named-accounts`,
+  branch `feat/s11-ensv2-named-accounts` (hold merge of `0962da7e`).
+- Scope: five review findings, plus pending-tx fingerprints. Type the profile
+  `theme` union and accept `string | null` in `useNamedAccount`. Ready
+  requires Universal Resolver success. Hide the previous account's name on
+  switch. Keep the in-flight lock until receipt confirmation. Persist pending
+  hash with chain, target, calldata and value; resume confirmation only for
+  an identical request, otherwise reconcile then submit the new call. Detect
+  RPC `eth_chainId` instead of `staticNetwork` Sepolia.
+- Not claimed: live registration, parent name, prize signoff. Contract suite
+  not re-run; the pinned etch test is not a Universal Resolver round trip.
+- Local verification: frontend `test:ens` **27/27** (includes grant-then-revoke).
+  Named-account `tsc` errors from this slice are gone. Pre-existing SDK
+  `IPublishArgs.provider` mismatch remains and is not part of this slice.
+- Next: Hermes deploys parent/registrar and validates claim → finish →
+  PollDetail on Sepolia. Merge after that live check, not from unit tests
+  alone.
+
 ## S1.1 ENSv2 named accounts — 2026-09-11
 
 - Owner: Cursor. Isolated worktree `/Users/avb/venekovox-s11-ensv2-named-accounts`,

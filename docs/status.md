@@ -738,5 +738,13 @@ test **1/1** against pinned Sepolia ENSv2 bytecode (etched locally; archive fork
 Ethers remains **6.15.0**. Not a live named-account registration. Parent names stay
 configurable until Alejandro chooses them. Live Mini vote/tally was not restarted.
 
+**Review hold (2026-09-12):** five frontend issues on `0962da7e`, plus a sixth:
+pending hashes were keyed only by account+op, so a later revoke could return an
+earlier grant receipt. Pending records now store chain, target, calldata and
+value; confirmation resumes only for an identical request. Frontend ENS tests
+include grant-then-revoke (**27/27**). The pinned contract etch test was not re-run and is
+not Universal Resolver evidence. Pre-existing SDK `IPublishArgs.provider`
+mismatch is not attributed to this slice.
+
 **Not claimed:** on-chain parent link, registrar `ROLE_REGISTRAR` grant, prize
 signoff, D04 permanence, WP5 Graph composition.

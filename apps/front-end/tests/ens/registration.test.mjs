@@ -33,20 +33,49 @@ function setupProvider({
   resolverCode = false,
   actualResolver = ZeroAddress,
   forward = ZeroAddress,
+  storedAddr,
   chainId = 11155111n,
+  rpcChainId,
   theme = "",
+  universalFails = false,
+  holdReceipt = false,
 } = {}) {
   const calls = [];
   const sent = [];
   const provider = {
     getNetwork: async () => ({ chainId }),
+    send:
+      rpcChainId !== undefined
+        ? async (method) => {
+            if (method === "eth_chainId") return "0x" + rpcChainId.toString(16);
+            throw new Error("unexpected send " + method);
+          }
+        : undefined,
     getBlock: async () => ({ number: 10, hash: "0xabc", timestamp: 100 }),
     getCode: async (address) => {
       if (getAddress(address) === getAddress(predicted) && resolverCode) return "0x6000";
       if (getAddress(address) === getAddress(registrar)) return "0x6000";
       return "0x";
     },
-    waitForTransaction: async (hash) => ({ hash, status: 1 }),
+    waitForTransaction: async (hash) => {
+      if (holdReceipt) {
+        return await new Promise((resolve, reject) => {
+          const previousRelease = provider.releaseReceipt;
+          const previousFail = provider.failReceipt;
+          provider.releaseReceipt = () => {
+            previousRelease();
+            resolve({ hash, status: 1 });
+          };
+          provider.failReceipt = (err) => {
+            previousFail(err);
+            reject(err);
+          };
+        });
+      }
+      return { hash, status: 1 };
+    },
+    releaseReceipt: () => undefined,
+    failReceipt: () => undefined,
     call: async (tx) => {
       calls.push(tx);
       const data = tx.data;
@@ -92,12 +121,12 @@ function setupProvider({
         return ensv2.registryAbi.encodeFunctionResult("getResolver", [actualResolver]);
       }
       if (tx.to && getAddress(tx.to) === getAddress(pollName.UNIVERSAL_RESOLVER)) {
-        if (!forward || forward === ZeroAddress) throw new Error("no addr");
+        if (universalFails) throw new Error("universal resolver down");
         const encoded = ensv2.addressAbi.encodeFunctionResult("addr", [forward]);
         return pollName.universalAbi.encodeFunctionResult("resolve", [encoded, actualResolver]);
       }
       if (data.startsWith(ensv2.addressAbi.getFunction("addr").selector)) {
-        return ensv2.addressAbi.encodeFunctionResult("addr", [forward]);
+        return ensv2.addressAbi.encodeFunctionResult("addr", [storedAddr ?? forward]);
       }
       if (data.startsWith(ensv2.textAbi.getFunction("text").selector)) {
         return ensv2.textAbi.encodeFunctionResult("text", [theme]);
@@ -229,4 +258,133 @@ test("unavailable labels are rejected", async () => {
     ens.claimProfile(wallet, provider, config(), { account, chainId: 11155111n }, "ada"),
     /NAME_UNAVAILABLE/,
   );
+});
+
+test("a Universal Resolver failure is not ready even if the resolver stores an address", async () => {
+  ens.resetInFlightForTests();
+  const { provider } = setupProvider({
+    claimed: name,
+    resolverCode: true,
+    actualResolver: predicted,
+    forward: ZeroAddress,
+    storedAddr: account,
+    universalFails: true,
+  });
+  await assert.rejects(ens.readProfileSetup(provider, config(), account), /LOOKUP_FAILED/);
+});
+
+test("a stored resolver addr without Universal Resolver success is incomplete, not ready", async () => {
+  ens.resetInFlightForTests();
+  const { provider } = setupProvider({
+    claimed: name,
+    resolverCode: true,
+    actualResolver: predicted,
+    forward: ZeroAddress,
+    storedAddr: account,
+  });
+  const setup = await ens.readProfileSetup(provider, config(), account);
+  assert.equal(setup.phase, "incomplete");
+  assert.equal(setup.forwardAddr, ZeroAddress);
+});
+
+test("eth_chainId is required even when getNetwork claims Sepolia", async () => {
+  ens.resetInFlightForTests();
+  const { provider } = setupProvider({
+    claimed: name,
+    resolverCode: true,
+    actualResolver: predicted,
+    forward: account,
+    chainId: 11155111n,
+    rpcChainId: 1n,
+  });
+  await assert.rejects(ens.readProfileSetup(provider, config(), account), /WRONG_CHAIN/);
+});
+
+test("a second claim is rejected while the first receipt is still pending", async () => {
+  ens.resetInFlightForTests();
+  const { provider, wallet, sent } = setupProvider({
+    claimed: "",
+    resolverCode: true,
+    available: true,
+    holdReceipt: true,
+  });
+  const first = ens.claimProfile(wallet, provider, config(), { account, chainId: 11155111n }, "ada");
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.equal(sent.length, 1);
+  assert.equal(ens.isInFlight(account, "claimProfile"), true);
+  await assert.rejects(
+    ens.claimProfile(wallet, provider, config(), { account, chainId: 11155111n }, "ada"),
+    /IN_FLIGHT/,
+  );
+  assert.equal(sent.length, 1);
+  provider.releaseReceipt();
+  await first;
+});
+
+test("remount keeps the pending hash and does not submit a second claim", async () => {
+  ens.resetInFlightForTests();
+  const { provider, wallet, sent } = setupProvider({
+    claimed: "",
+    resolverCode: true,
+    available: true,
+    holdReceipt: true,
+  });
+  const first = ens.claimProfile(wallet, provider, config(), { account, chainId: 11155111n }, "ada");
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.ok(ens.pendingHash(account, "claimProfile"));
+  ens.dropInFlightLocksForTests();
+  assert.equal(ens.isInFlight(account, "claimProfile"), false);
+  const second = ens.claimProfile(wallet, provider, config(), { account, chainId: 11155111n }, "ada");
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.equal(sent.length, 1);
+  provider.releaseReceipt();
+  await first;
+  await second;
+});
+
+test("a pending grant receipt cannot satisfy a later revoke", async () => {
+  ens.resetInFlightForTests();
+  const { provider, wallet, sent } = setupProvider({
+    claimed: name,
+    resolverCode: true,
+    actualResolver: predicted,
+    forward: account,
+    theme: "lime",
+  });
+  let nextHash = 1;
+  wallet.send = async (call, context) => {
+    sent.push({ call, context });
+    const hash = `0x${nextHash.toString(16).padStart(64, "0")}`;
+    nextHash += 1;
+    return hash;
+  };
+  const waited = [];
+  provider.waitForTransaction = async (hash) => {
+    waited.push(hash);
+    if (waited.length === 1) throw new Error("receipt lookup failed");
+    return { hash, status: 1 };
+  };
+  const grantHash = `0x${"1".padStart(64, "0")}`;
+  await assert.rejects(
+    ens.authorizeProfileTheme(wallet, provider, config(), { account, chainId: 11155111n }, other, true),
+    /LOOKUP_FAILED/,
+  );
+  assert.equal(sent.length, 1);
+  assert.equal(ensv2.resolverWriteAbi.decodeFunctionData("authorizeTextRoles", sent[0].call.data)[3], true);
+  assert.equal(ens.pendingHash(account, "authorizeTheme"), grantHash);
+  ens.dropInFlightLocksForTests();
+
+  const revokeHash = await ens.authorizeProfileTheme(
+    wallet,
+    provider,
+    config(),
+    { account, chainId: 11155111n },
+    other,
+    false,
+  );
+  assert.equal(sent.length, 2);
+  assert.notEqual(revokeHash, grantHash);
+  assert.equal(ensv2.resolverWriteAbi.decodeFunctionData("authorizeTextRoles", sent[1].call.data)[3], false);
+  assert.equal(waited[1], grantHash);
+  assert.equal(waited[2], revokeHash);
 });

@@ -15,6 +15,52 @@ test("forbidden ENS keys cannot be written by this app", () => {
   labels.assertSafeTextKey("xyz.venekovox.profile-theme");
 });
 
+test("theme is stored as a ProfileTheme or empty string", () => {
+  const account = "0x1111111111111111111111111111111111111111";
+  const resolver = "0x2222222222222222222222222222222222222222";
+  const ready = profile.classifyProfileSetup({
+    account,
+    claimedName: "ada.people.venekovox.eth",
+    predictedResolver: resolver,
+    actualResolver: resolver,
+    forwardAddr: account,
+    theme: "lime",
+    resolverCode: true,
+  });
+  assert.equal(ready.theme, "lime");
+  const unknown = profile.classifyProfileSetup({
+    account,
+    claimedName: "ada.people.venekovox.eth",
+    predictedResolver: resolver,
+    actualResolver: resolver,
+    forwardAddr: account,
+    theme: "not-a-theme",
+    resolverCode: true,
+  });
+  assert.equal(unknown.theme, "");
+});
+
+test("a delayed lookup for account B does not keep rendering account A's name", () => {
+  const accountA = "0x1111111111111111111111111111111111111111";
+  const accountB = "0x2222222222222222222222222222222222222222";
+  const resolver = "0x3333333333333333333333333333333333333333";
+  const setupA = profile.classifyProfileSetup({
+    account: accountA,
+    claimedName: "ada.people.venekovox.eth",
+    predictedResolver: resolver,
+    actualResolver: resolver,
+    forwardAddr: accountA,
+    theme: "lime",
+    resolverCode: true,
+  });
+  const delayed = profile.lookupView(setupA, accountB, false);
+  assert.equal(delayed.setup, null);
+  assert.equal(delayed.loading, true);
+  const same = profile.lookupView(setupA, accountA, false);
+  assert.equal(same.setup?.name, "ada.people.venekovox.eth");
+  assert.equal(same.loading, false);
+});
+
 test("none / incomplete / ready follow on-chain facts, not receipts", () => {
   const account = "0x1111111111111111111111111111111111111111";
   const resolver = "0x2222222222222222222222222222222222222222";

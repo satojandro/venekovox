@@ -20,7 +20,9 @@ import { NamingError, assertSafeTextKey, normalizeLabel } from "./labels";
 import { classifyProfileSetup, type ProfileSetup, type SetupOp } from "./profile";
 import { UNIVERSAL_RESOLVER, universalAbi } from "./pollName";
 
-export type NamingProvider = Pick<Provider, "getNetwork" | "getBlock" | "getCode" | "call" | "waitForTransaction">;
+export type NamingProvider = Pick<Provider, "getNetwork" | "getBlock" | "getCode" | "call" | "waitForTransaction"> & {
+  send?: (method: string, params: unknown[]) => Promise<unknown>;
+};
 
 export interface NamingContext {
   account: string;
@@ -44,7 +46,18 @@ export interface NamingConfig {
   proxyLogic: string;
 }
 
+interface PendingTx {
+  hash: string;
+  chainId: string;
+  to: string;
+  data: string;
+  value: string;
+}
+
 const inflight = new Set<string>();
+const pending = new Map<string, PendingTx>();
+const PENDING_STORAGE = "venekovox.ens.pendingTx";
+let pendingHydrated = false;
 
 export function inflightKey(account: string, op: SetupOp): string {
   return `${getAddress(account)}:${op}`;
@@ -54,7 +67,85 @@ export function isInFlight(account: string, op: SetupOp): boolean {
   return inflight.has(inflightKey(account, op));
 }
 
+export function pendingHash(account: string, op: SetupOp): string | undefined {
+  ensurePendingHydrated();
+  return pending.get(inflightKey(account, op))?.hash;
+}
+
+function parsePendingTx(value: unknown): PendingTx | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const row = value as Record<string, unknown>;
+  if (typeof row.hash !== "string" || !row.hash.startsWith("0x")) return undefined;
+  if (typeof row.chainId !== "string" || typeof row.to !== "string") return undefined;
+  if (typeof row.data !== "string" || typeof row.value !== "string") return undefined;
+  return { hash: row.hash, chainId: row.chainId, to: row.to, data: row.data, value: row.value };
+}
+
+function samePendingRequest(
+  stored: PendingTx,
+  chainId: bigint,
+  call: { to: string; data: string; value: bigint },
+): boolean {
+  return (
+    stored.chainId === chainId.toString() &&
+    getAddress(stored.to) === getAddress(call.to) &&
+    stored.data.toLowerCase() === call.data.toLowerCase() &&
+    stored.value === call.value.toString()
+  );
+}
+
+function toPendingTx(hash: string, chainId: bigint, call: { to: string; data: string; value: bigint }): PendingTx {
+  return {
+    hash,
+    chainId: chainId.toString(),
+    to: getAddress(call.to),
+    data: call.data.toLowerCase(),
+    value: call.value.toString(),
+  };
+}
+
+function ensurePendingHydrated(): void {
+  if (pendingHydrated) return;
+  pendingHydrated = true;
+  try {
+    const raw = globalThis.sessionStorage?.getItem(PENDING_STORAGE);
+    if (!raw) return;
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    for (const [key, value] of Object.entries(parsed)) {
+      const record = parsePendingTx(value);
+      if (record) pending.set(key, record);
+    }
+  } catch {
+    /* private mode or node tests */
+  }
+}
+
+function persistPending(): void {
+  try {
+    globalThis.sessionStorage?.setItem(PENDING_STORAGE, JSON.stringify(Object.fromEntries(pending)));
+  } catch {
+    /* private mode or node tests */
+  }
+}
+
+function clearPending(key: string): void {
+  pending.delete(key);
+  persistPending();
+}
+
 export function resetInFlightForTests(): void {
+  inflight.clear();
+  pending.clear();
+  pendingHydrated = true;
+  try {
+    globalThis.sessionStorage?.removeItem(PENDING_STORAGE);
+  } catch {
+    /* node tests */
+  }
+}
+
+/** Simulate a React remount: in-memory busy flags drop, pending hashes remain. */
+export function dropInFlightLocksForTests(): void {
   inflight.clear();
 }
 
@@ -74,10 +165,25 @@ function requireSepolia(chainId: bigint): void {
   if (chainId !== ENS_CHAIN_ID) throw new NamingError("WRONG_CHAIN");
 }
 
+export async function rpcChainId(provider: NamingProvider): Promise<bigint> {
+  if (typeof provider.send === "function") {
+    const raw = await provider.send("eth_chainId", []);
+    if (typeof raw === "string" || typeof raw === "number" || typeof raw === "bigint") {
+      return BigInt(raw);
+    }
+    throw new NamingError("WRONG_CHAIN");
+  }
+  return (await provider.getNetwork()).chainId;
+}
+
+export async function assertSepoliaRpc(provider: NamingProvider): Promise<void> {
+  requireSepolia(await rpcChainId(provider));
+}
+
 export async function readNamingConfig(provider: NamingProvider, registrarAddress: string): Promise<NamingConfig> {
   const registrar = getAddress(registrarAddress);
   if (registrar === ZeroAddress) throw new NamingError("NOT_CONFIGURED");
-  requireSepolia((await provider.getNetwork()).chainId);
+  await assertSepoliaRpc(provider);
   const block = await provider.getBlock("latest");
   if (!block?.hash || (await provider.getCode(registrar, block.number)) === "0x")
     throw new NamingError("NOT_CONFIGURED");
@@ -156,7 +262,7 @@ async function resolveForward(
       result && result !== "0x" ? getAddress(addressAbi.decodeFunctionResult("addr", result)[0]) : ZeroAddress;
     return { addr, resolver: getAddress(resolver) };
   } catch {
-    return { addr: ZeroAddress, resolver: ZeroAddress };
+    throw new NamingError("LOOKUP_FAILED");
   }
 }
 
@@ -179,7 +285,7 @@ export async function readProfileSetup(
   config: NamingConfig,
   account: string,
 ): Promise<ProfileSetup> {
-  requireSepolia((await provider.getNetwork()).chainId);
+  await assertSepoliaRpc(provider);
   const owner = getAddress(account);
   const predicted = predictOwnedResolver({
     factory: config.factory,
@@ -207,19 +313,6 @@ export async function readProfileSetup(
     }
     const resolved = await resolveForward(provider, claimedName, block.number);
     forwardAddr = resolved.addr;
-    if (forwardAddr === ZeroAddress && actualResolver !== ZeroAddress) {
-      try {
-        const raw = await provider.call({
-          to: actualResolver,
-          data: addressAbi.encodeFunctionData("addr", [namehash(claimedName)]),
-          blockTag: block.number,
-        });
-        const direct = getAddress(addressAbi.decodeFunctionResult("addr", raw)[0]);
-        if (direct !== ZeroAddress) forwardAddr = direct;
-      } catch {
-        /* keep zero; ready still requires a successful forward read */
-      }
-    }
     theme = await readTheme(provider, claimedName, actualResolver, block.number);
   }
   return classifyProfileSetup({
@@ -233,18 +326,69 @@ export async function readProfileSetup(
   });
 }
 
-async function sendOnce(
+async function confirmHash(provider: NamingProvider, hash: string): Promise<void> {
+  const receipt = await provider.waitForTransaction(hash);
+  if (!receipt || receipt.status !== 1) throw new NamingError("TX_FAILED", hash);
+}
+
+async function confirmOrLookupFailed(provider: NamingProvider, hash: string): Promise<void> {
+  try {
+    await confirmHash(provider, hash);
+  } catch (err) {
+    if (err instanceof NamingError) throw err;
+    throw new NamingError("LOOKUP_FAILED", hash);
+  }
+}
+
+async function sendAndConfirm(
   wallet: NamingWallet,
+  provider: NamingProvider,
   context: NamingContext,
   op: SetupOp,
   call: { to: string; data: string },
 ): Promise<string> {
+  await assertSepoliaRpc(provider);
   requireSepolia(context.chainId);
+  const request = { to: call.to, data: call.data, value: 0n };
   const key = inflightKey(context.account, op);
+  ensurePendingHydrated();
   if (inflight.has(key)) throw new NamingError("IN_FLIGHT");
   inflight.add(key);
   try {
-    return await wallet.send({ ...call, value: 0n }, context);
+    const existing = pending.get(key);
+    if (existing && samePendingRequest(existing, context.chainId, request)) {
+      try {
+        await confirmOrLookupFailed(provider, existing.hash);
+      } catch (err) {
+        if (err instanceof NamingError && err.code === "TX_FAILED") clearPending(key);
+        throw err;
+      }
+      clearPending(key);
+      return existing.hash;
+    }
+    if (existing) {
+      try {
+        await confirmOrLookupFailed(provider, existing.hash);
+      } catch (err) {
+        if (err instanceof NamingError && err.code === "TX_FAILED") {
+          clearPending(key);
+        } else {
+          throw err;
+        }
+      }
+      clearPending(key);
+    }
+    const hash = await wallet.send({ ...call, value: 0n }, context);
+    pending.set(key, toPendingTx(hash, context.chainId, request));
+    persistPending();
+    try {
+      await confirmOrLookupFailed(provider, hash);
+    } catch (err) {
+      if (err instanceof NamingError && err.code === "TX_FAILED") clearPending(key);
+      throw err;
+    }
+    clearPending(key);
+    return hash;
   } finally {
     inflight.delete(key);
   }
@@ -256,6 +400,7 @@ export async function deployOwnedResolver(
   config: NamingConfig,
   context: NamingContext,
 ): Promise<string> {
+  await assertSepoliaRpc(provider);
   const predicted = predictOwnedResolver({
     factory: config.factory,
     proxyLogic: config.proxyLogic,
@@ -268,9 +413,7 @@ export async function deployOwnedResolver(
     salt,
     resolverInitializeData(context.account),
   ]);
-  const hash = await sendOnce(wallet, context, "deployResolver", { to: config.factory, data });
-  const receipt = await provider.waitForTransaction(hash);
-  if (!receipt || receipt.status !== 1) throw new NamingError("TX_FAILED", hash);
+  await sendAndConfirm(wallet, provider, context, "deployResolver", { to: config.factory, data });
   return predicted;
 }
 
@@ -281,6 +424,7 @@ export async function claimProfile(
   context: NamingContext,
   rawLabel: string,
 ): Promise<string> {
+  await assertSepoliaRpc(provider);
   const label = normalizeLabel(rawLabel);
   const existing = await lookupProfileName(provider, config.registrar, context.account);
   if (existing) throw new NamingError("ALREADY_NAMED");
@@ -288,10 +432,7 @@ export async function claimProfile(
   if (!available) throw new NamingError("NAME_UNAVAILABLE");
   const resolver = await deployOwnedResolver(wallet, provider, config, context);
   const data = profilesAbi.encodeFunctionData("claimProfile", [label, resolver]);
-  const hash = await sendOnce(wallet, context, "claimProfile", { to: config.registrar, data });
-  const receipt = await provider.waitForTransaction(hash);
-  if (!receipt || receipt.status !== 1) throw new NamingError("TX_FAILED", hash);
-  return hash;
+  return sendAndConfirm(wallet, provider, context, "claimProfile", { to: config.registrar, data });
 }
 
 export async function writeProfileRecords(
@@ -317,10 +458,7 @@ export async function writeProfileRecords(
   }
   calls.push(resolverWriteAbi.encodeFunctionData("setText", [node, PROFILE_THEME_KEY, theme]));
   const data = calls.length === 1 ? calls[0] : resolverWriteAbi.encodeFunctionData("multicall", [calls]);
-  const hash = await sendOnce(wallet, context, "writeRecords", { to: resolver, data });
-  const receipt = await provider.waitForTransaction(hash);
-  if (!receipt || receipt.status !== 1) throw new NamingError("TX_FAILED", hash);
-  return hash;
+  return sendAndConfirm(wallet, provider, context, "writeRecords", { to: resolver, data });
 }
 
 export async function authorizeProfileTheme(
@@ -340,10 +478,7 @@ export async function authorizeProfileTheme(
     getAddress(delegate),
     grant,
   ]);
-  const hash = await sendOnce(wallet, context, "authorizeTheme", { to: resolver, data });
-  const receipt = await provider.waitForTransaction(hash);
-  if (!receipt || receipt.status !== 1) throw new NamingError("TX_FAILED", hash);
-  return hash;
+  return sendAndConfirm(wallet, provider, context, "authorizeTheme", { to: resolver, data });
 }
 
 export { NamingError, normalizeLabel, PROFILE_THEME_KEY };

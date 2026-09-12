@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { JsonRpcProvider } from "ethers";
 import { readNamingConfig, readProfileSetup, type NamingConfig } from "./registration";
-import type { ProfileSetup } from "./profile";
+import { lookupView, type ProfileSetup } from "./profile";
 
 export function namingEnv(): { registrar: string; rpc: string } {
   const env = import.meta.env as Record<string, string | undefined>;
@@ -11,13 +11,14 @@ export function namingEnv(): { registrar: string; rpc: string } {
   };
 }
 
+/** Detect the RPC's chain; do not stamp Sepolia with staticNetwork. */
 export function namingProvider(): JsonRpcProvider | null {
   const { rpc } = namingEnv();
   if (!rpc) return null;
-  return new JsonRpcProvider(rpc, Number(11155111), { staticNetwork: true });
+  return new JsonRpcProvider(rpc);
 }
 
-export function useNamedAccount(account?: string): {
+export function useNamedAccount(account?: string | null): {
   configured: boolean;
   loading: boolean;
   error: string;
@@ -43,9 +44,12 @@ export function useNamedAccount(account?: string): {
     const provider = namingProvider();
     if (!provider) {
       setError("LOOKUP_FAILED");
+      setSetup(null);
+      setLoading(false);
       return;
     }
     let cancelled = false;
+    setSetup(null);
     setLoading(true);
     (async () => {
       try {
@@ -70,12 +74,13 @@ export function useNamedAccount(account?: string): {
     };
   }, [registrar, account, nonce]);
 
+  const view = lookupView(setup, account, loading);
   return {
     configured: Boolean(registrar),
-    loading,
+    loading: view.loading,
     error,
     config,
-    setup,
+    setup: view.setup,
     reload: () => setNonce((n) => n + 1),
   };
 }

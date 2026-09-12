@@ -31,10 +31,10 @@ export function classifyProfileSetup(input: {
   const actual =
     input.actualResolver && input.actualResolver !== ZeroAddress ? getAddress(input.actualResolver) : ZeroAddress;
   const forward = input.forwardAddr && input.forwardAddr !== ZeroAddress ? getAddress(input.forwardAddr) : ZeroAddress;
-  const theme = isProfileTheme(input.theme) ? input.theme : "";
+  const theme: ProfileTheme | "" = isProfileTheme(input.theme) ? input.theme : "";
   const name = input.claimedName;
   const label = name ? name.split(".")[0] : "";
-  const base = {
+  const base: Omit<ProfileSetup, "phase" | "nextOp"> = {
     account,
     name,
     label,
@@ -65,6 +65,26 @@ export function themeClassName(theme: string): string {
   if (theme === "rose") return "text-rose-300";
   if (theme === "slate") return "text-slate-300";
   return "text-lime-300";
+}
+
+/** Hide another wallet's profile on the first render after an account switch. */
+export function visibleProfileSetup(setup: ProfileSetup | null, account?: string | null): ProfileSetup | null {
+  if (!setup || !account) return null;
+  try {
+    return getAddress(setup.account) === getAddress(account) ? setup : null;
+  } catch {
+    return null;
+  }
+}
+
+export function lookupView(
+  setup: ProfileSetup | null,
+  account?: string | null,
+  loading = false,
+): { setup: ProfileSetup | null; loading: boolean } {
+  const visible = visibleProfileSetup(setup, account);
+  const stale = Boolean(account && setup && !visible);
+  return { setup: visible, loading: loading || stale };
 }
 
 export const UNIVERSAL_RESOLVER = SEPOLIA_ENSV2.UniversalResolver;

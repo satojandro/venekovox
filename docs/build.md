@@ -529,9 +529,14 @@ After a **fresh** resolver lookup the owner calls `setAddr` and `setText` for
 only.
 
 **Setup states.** none / pending-op / registered-but-incomplete / ready. Reconnect
-reads `profileName` plus registry ownership plus a forward address check and resumes
-missing **owner** transactions. One claim per account means one label, not one chance
-to finish records. Never show ready from a receipt alone.
+reads `profileName` plus registry ownership plus a **Universal Resolver** forward
+address. A stored resolver `addr` is not enough for **ready**. Universal Resolver
+failure is `LOOKUP_FAILED`, not incomplete. Resumes missing **owner** transactions.
+One claim per account means one label, not one chance to finish records. Never show
+ready from a receipt or a failed resolution. In-flight writes stay locked until the
+receipt confirms. Pending hashes store chain, target, calldata and value, survive a
+remount, and resume confirmation only for that exact request. RPC `eth_chainId` is
+checked; the client does not stamp Sepolia with `staticNetwork`.
 
 **Isolation.** This worktree uses Vite **3010** and documents backend **3110**. Do not
 restart the live Mini vote instance on 3000/3100 or rotate eligibility / WP4 Graph.

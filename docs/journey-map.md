@@ -688,5 +688,7 @@ As-built on `feat/s11-ensv2-named-accounts`:
 - Pin: [sepolia-ensv2.json](../packages/contracts/ens/sepolia-ensv2.json)
 
 Call path: Polls `/names` → injected wallet → `readProfileSetup` → claim or finish owner
-txs → PollDetail shows the name only when `phase === "ready"`. Voting does not call ENS
-inside grant/join/vote. Parent names remain configurable.
+txs → PollDetail shows the name only when `phase === "ready"` **and** Universal Resolver
+forward resolution succeeded for the **current** account. Voting does not call ENS
+inside grant/join/vote. Parent names remain configurable. Review fixes (2026-09-12):
+no ready-from-failed-UR, in-flight until receipt, RPC `eth_chainId`.

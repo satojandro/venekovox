@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { JsonRpcProvider } from "ethers";
 import { ENS_CHAIN_ID, PROFILE_THEMES, type ProfileTheme } from "../ens/ensv2";
 import { themeClassName } from "../ens/profile";
 import {
@@ -9,10 +8,11 @@ import {
   writeProfileRecords,
   type NamingConfig,
   type NamingContext,
+  type NamingProvider,
 } from "../ens/registration";
 import { NamingError, normalizeLabel } from "../ens/labels";
 import { createInjectedNamingWallet, requestInjectedAccount } from "../ens/injectedNamingWallet";
-import { namingEnv, useNamedAccount } from "../ens/useNamedAccount";
+import { namingEnv, namingProvider, useNamedAccount } from "../ens/useNamedAccount";
 
 const wallet = createInjectedNamingWallet();
 
@@ -77,12 +77,13 @@ export default function Names() {
   }
 
   async function withProvider(
-    fn: (provider: JsonRpcProvider, config: NamingConfig, ctx: NamingContext) => Promise<unknown>,
+    fn: (provider: NamingProvider, config: NamingConfig, ctx: NamingContext) => Promise<unknown>,
   ) {
     if (!context) throw new NamingError("WALLET_MISSING");
     if (context.chainId !== ENS_CHAIN_ID) throw new NamingError("WRONG_CHAIN");
     if (!named.config) throw new NamingError("NOT_CONFIGURED");
-    const provider = new JsonRpcProvider(env.rpc, Number(ENS_CHAIN_ID), { staticNetwork: true });
+    const provider = namingProvider();
+    if (!provider) throw new NamingError("LOOKUP_FAILED");
     await fn(provider, named.config, context);
   }
 

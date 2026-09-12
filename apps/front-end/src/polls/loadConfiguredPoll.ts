@@ -1,5 +1,5 @@
 import type { PollDescriptor } from "./descriptor";
-import { readBackendSchedule } from "./backendSchedule";
+import { readBackendSchedule, scheduleFitsManifest } from "./backendSchedule";
 import { createReadProvider } from "./rpc";
 import { readPollSchedule, ScheduleError, type PollSchedule, type ScheduleProvider } from "./schedule";
 import { BACKEND_TIMEOUT_MS } from "./timeout";
@@ -47,6 +47,7 @@ export async function resolveConfiguredSchedule(deps: ResolveScheduleDeps): Prom
       descriptor.pollId,
       descriptor.chainId,
     );
+    if (!scheduleFitsManifest(schedule, descriptor)) return { error: "POLL_MISMATCH" };
     return { schedule };
   } catch (error) {
     return { error: error instanceof ScheduleError ? error.code : "LOOKUP_FAILED" };

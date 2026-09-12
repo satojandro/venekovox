@@ -20,7 +20,7 @@ const timeoutUrl =
 const source = transpile(new URL("../../src/polls/backendSchedule.ts", import.meta.url))
   .replaceAll('from "ethers"', `from "${ethersUrl}"`)
   .replaceAll('from "./timeout"', `from "${timeoutUrl}"`);
-const { parseBackendSchedule, readBackendSchedule, scheduleMatchesDescriptor } = await import(
+const { parseBackendSchedule, readBackendSchedule, scheduleFitsManifest, scheduleMatchesDescriptor } = await import(
   "data:text/javascript;base64," + Buffer.from(source).toString("base64")
 );
 
@@ -28,6 +28,8 @@ const descriptor = {
   chainId: "11155111",
   maciAddress: "0x44F31f3823ceFE00C2FA5acEB2576F119143Fe3a",
   pollId: "0",
+  expectedVoteOptions: 6,
+  expectedMode: 2,
 };
 
 const valid = {
@@ -35,8 +37,11 @@ const valid = {
   maciAddress: "0x44F31f3823ceFE00C2FA5acEB2576F119143Fe3a",
   pollId: "0",
   pollAddress: "0x29D39dD442c91dAc51a292fd04a9A7Edd16c22CB",
+  tallyAddress: "0x4444444444444444444444444444444444444444",
   startTime: "3600",
   endTime: "3600",
+  voteOptions: "6",
+  mode: "2",
   status: "INVALID_WINDOW",
   blockNumber: 99,
   blockHash: "0xabc",
@@ -67,6 +72,19 @@ test("matches identity even when the MACI address casing differs", () => {
   );
   assert.equal(scheduleMatchesDescriptor(parseBackendSchedule({ ...valid, pollId: "99" }), descriptor), false);
   assert.equal(scheduleMatchesDescriptor(parseBackendSchedule({ ...valid, chainId: "1" }), descriptor), false);
+});
+
+test("rejects a deployment whose option count or mode does not match the manifest", () => {
+  assert.equal(scheduleFitsManifest(parseBackendSchedule(valid), descriptor), true);
+  assert.equal(scheduleFitsManifest(parseBackendSchedule({ ...valid, voteOptions: "3" }), descriptor), false);
+  assert.equal(scheduleFitsManifest(parseBackendSchedule({ ...valid, mode: "0" }), descriptor), false);
+  assert.equal(
+    scheduleFitsManifest(parseBackendSchedule(valid), {
+      ...descriptor,
+      expectedPollAddress: "0x5555555555555555555555555555555555555555",
+    }),
+    false,
+  );
 });
 
 test("reads /polls/configured from the verify origin", async () => {

@@ -1,5 +1,23 @@
 # Agent handoff and continuity protocol
 
+## Judge experience frontend — 2026-09-12
+
+- Owner: Cursor. Worktree `/private/tmp/venekovox-judge-experience`, branch
+  `codex/judge-experience`. Integrated ENS review repairs `c92153a3` (fast-forward)
+  and kept namingProvider / Universal Resolver behaviour in Names.tsx.
+- Goal: one coherent judge journey (landing → polls → names → eligibility → ballot
+  → receipt) plus journal article. Flagship metadata is code-ready; deployment is not.
+- Do not wait on Hermes; do not invent poll IDs; do not message Hermes or publish
+  without Alejandro. Do not disturb Mini 3000/3100 or ENS 3010.
+- Next: Hermes supplies the flagship manifest and public HTTPS. Isolated preview
+  is on **3012**. Frontend unit **122/122**, build passed. Browser QA of the
+  journey screens completed without a live wallet.
+- Hermes checklist for Alejandro: native ENSv2 config; fresh 3-option poll;
+  US/CAN/AUS/EU27 allowlist with SDK **Czech Republic**; age 18+; strict FaceMatch;
+  fresh configId; keep a judge round open and a separately identified rehearsal;
+  retain coordinator key; public HTTPS; test ETH instructions; rebuild served
+  artifacts.
+
 ## S1.1 named-account review fixes — 2026-09-12
 
 - Owner: Cursor. Worktree `/Users/avb/venekovox-s11-ensv2-named-accounts`,

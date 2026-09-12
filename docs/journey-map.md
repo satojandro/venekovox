@@ -1,5 +1,24 @@
 # VenekoVox technical journey map
 
+## Judge experience ballot — as-built 2026-09-12 (UI + metadata; not a new deployment)
+
+```
+  Polls.tsx / PollDetail.tsx
+    └─ readConfiguredDescriptor(vite env)
+         France default, or superintelligence-v1 if preset set
+         preset + original MACI poll 0/1 → unconfigured (never relabel)
+    └─ resolveConfiguredSchedule
+         GET /polls/configured (chain, MACI, poll, voteOptions, mode, tally)
+         else RPC readPollSchedule (pollName.ts pollAbi + tallyAbi)
+         scheduleFitsManifest: expectedVoteOptions + expectedMode + optional poll address
+    └─ PollDetail radio group uses descriptor.options[].index
+         assertBallotIndex → maci.vote(index) → voteFlow publish voteOptionIndex
+         no Yes/No remap; no default selection; receipt does not store the choice
+```
+
+Baseline SHA for this path: worktree `codex/judge-experience` on `c92153a3` plus
+uncommitted presentation. Live flagship addresses are still Hermes-owned.
+
 ## WP4 indexed join — as-built 2026-09-10 (local correctness; not Studio/live)
 
 Preferred join after signup. Private key never leaves the browser. `joinPoll` is

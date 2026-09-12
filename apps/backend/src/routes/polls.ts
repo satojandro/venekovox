@@ -6,7 +6,11 @@ const router: import("express").Router = express.Router();
 const maciAbi = new Interface([
   "function getPoll(uint256) view returns(address poll,address messageProcessor,address tally)",
 ]);
-const pollAbi = new Interface(["function getStartAndEndDate() view returns(uint256,uint256)"]);
+const pollAbi = new Interface([
+  "function getStartAndEndDate() view returns(uint256,uint256)",
+  "function voteOptions() view returns(uint256)",
+]);
+const tallyAbi = new Interface(["function mode() view returns(uint8)"]);
 
 function votingWindow(start: bigint, end: bigint, now: bigint): "OPEN" | "UPCOMING" | "CLOSED" | "INVALID_WINDOW" {
   if (start <= 0n || end <= start) return "INVALID_WINDOW";
@@ -55,7 +59,11 @@ router.get("/configured", async (_req: Request, res: Response) => {
       }),
     );
     const pollAddress = getAddress(contracts[0]);
+    const tallyAddress = getAddress(contracts[2]);
     if (pollAddress === ZeroAddress || (await provider.getCode(pollAddress, block.number)) === "0x") {
+      return res.status(502).json({ error: "POLL_MISMATCH" });
+    }
+    if (tallyAddress === ZeroAddress || (await provider.getCode(tallyAddress, block.number)) === "0x") {
       return res.status(502).json({ error: "POLL_MISMATCH" });
     }
     const [start, end] = pollAbi.decodeFunctionResult(
@@ -66,13 +74,32 @@ router.get("/configured", async (_req: Request, res: Response) => {
         blockTag: block.number,
       }),
     );
+    const voteOptions = pollAbi.decodeFunctionResult(
+      "voteOptions",
+      await provider.call({
+        to: pollAddress,
+        data: pollAbi.encodeFunctionData("voteOptions"),
+        blockTag: block.number,
+      }),
+    )[0];
+    const mode = tallyAbi.decodeFunctionResult(
+      "mode",
+      await provider.call({
+        to: tallyAddress,
+        data: tallyAbi.encodeFunctionData("mode"),
+        blockTag: block.number,
+      }),
+    )[0];
     return res.json({
       chainId: network.chainId.toString(),
       maciAddress: getAddress(maciAddress),
       pollId,
       pollAddress,
+      tallyAddress,
       startTime: start.toString(),
       endTime: end.toString(),
+      voteOptions: voteOptions.toString(),
+      mode: mode.toString(),
       status: votingWindow(start, end, BigInt(block.timestamp)),
       blockNumber: block.number,
       blockHash: block.hash,

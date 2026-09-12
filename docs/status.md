@@ -1,5 +1,30 @@
 # Current state and evidence
 
+## Judge experience frontend — 2026-09-12
+
+Owner: Cursor. Worktree `/private/tmp/venekovox-judge-experience`, branch
+`codex/judge-experience` (ENS `c92153a3` plus presentation).
+
+Shared Experience frame, forest/porcelain theme, `/journal` article, descriptor-driven
+ballot, and flagship preset `superintelligence-v1`. The preset **cannot** relabel
+original MACI polls 0/1. Schedule reads now include `voteOptions` and tally `mode`
+and fail closed on mismatch. France metadata remains the default without the preset.
+
+Not claimed: Hermes flagship deployment, live named-account claim, public HTTPS
+judge journey, or verified tally display. No live Mini (3000/3100) or ENS (3010)
+process was restarted. Preview: Vite **3012**.
+
+Local verification (Node 22.20.0): frontend `test:unit` **122/122**; `test:vote-flow`
+**20/20**; `pnpm --dir apps/front-end build` passed (existing SDK export and
+chunk-size warnings remain). Backend `tests/polls.test.mjs` was not executed here:
+this worktree has no backend `node_modules` (symlink convenience only; no reinstall).
+Browser QA on 3012: landing, polls (honest unconfigured), names, eligibility,
+`/polls/1` unknown-poll, journal, light theme, ~390px mobile nav. No live wallet
+or passport.
+
+See [flagship-poll-manifest.md](flagship-poll-manifest.md) and
+[blog/2026-09-12-a-name-is-not-a-person.md](blog/2026-09-12-a-name-is-not-a-person.md).
+
 ## Stage 1 live journey — **FIRST REAL VOTE, 2026-09-11** ✅
 
 The complete Stage-1 polling journey ran end-to-end with a real passport on Sepolia.

@@ -62,9 +62,9 @@ export function classifyProfileSetup(input: {
 }
 
 export function themeClassName(theme: string): string {
-  if (theme === "rose") return "text-rose-300";
-  if (theme === "slate") return "text-slate-300";
-  return "text-lime-300";
+  if (theme === "rose") return "profile-theme-rose";
+  if (theme === "slate") return "profile-theme-slate";
+  return "profile-theme-lime";
 }
 
 /** Hide another wallet's profile on the first render after an account switch. */

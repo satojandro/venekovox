@@ -7,6 +7,8 @@ import App from "./App.tsx";
 import { BootErrorBoundary } from "./BootErrorBoundary";
 import { installGlobalErrorReporting } from "./lib/clientError";
 import "./styles/index.css";
+import "./styles/editorial.css";
+import "./styles/collage-boards.css";
 
 // Route uncaught client errors to the backend log: the test machine's devtools
 // are not readily reachable, and a raw ethers error there is unreadable anyway.

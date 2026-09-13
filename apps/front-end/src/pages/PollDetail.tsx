@@ -1,3 +1,4 @@
+import { EditorialArt } from "../components/EditorialArt";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { FieldNote, JourneySteps } from "../components/Experience";
@@ -137,8 +138,14 @@ export default function PollDetailPage() {
       {!isConfiguredPoll && configured.phase !== "loading" && (
         <div className="banner warn">This URL is not the poll configured in the app.</div>
       )}
-      <p className="eyebrow">{descriptor?.topic || "BALLOT"}</p>
-      <h1>{descriptor ? descriptor.question.en : "This poll is not configured."}</h1>
+      <header className="journey-cover">
+        <div className="journey-cover-copy">
+          <p className="eyebrow">03 / {descriptor?.topic || "YOUR BALLOT"}</p>
+          <h1>{descriptor ? descriptor.question.en : "This poll is not configured."}</h1>
+          <p>Your own opinion. An encrypted ballot.</p>
+        </div>
+        <EditorialArt scene="ballot" />
+      </header>
       <div className="status-row">
         <span className="chip">{statusText}</span>
         {descriptor && <span className="chip">Poll {descriptor.pollId}</span>}
@@ -148,10 +155,9 @@ export default function PollDetailPage() {
       {descriptor?.preset === "superintelligence-v1" && (
         <FieldNote title="Read the context">
           <p>
-            Sanders and Casar announced forthcoming US legislation on 3 September 2026 that would mix a
-            permanent development ban with a temporary advanced-AI pause. This poll asks only about a
-            global development ban. It is not an endorsement of that bill, and it does not treat a pause
-            as the same as a ban.
+            Sanders and Casar announced forthcoming US legislation on 3 September 2026 that would mix a permanent
+            development ban with a temporary advanced-AI pause. This poll asks only about a global development ban. It
+            is not an endorsement of that bill, and it does not treat a pause as the same as a ban.
           </p>
           <p>
             <a href="https://www.sanders.senate.gov/press-releases/news-sanders-casar-introduce-legislation-to-ban-artificial-superintelligence-and-temporarily-pause-advanced-ai-development/">
@@ -172,7 +178,12 @@ export default function PollDetailPage() {
       <div className="explorer-grid" style={{ marginTop: 28 }}>
         <section className="panel">
           {!maci.account ? (
-            <button className="action-primary" type="button" disabled={maci.isBusy} onClick={() => maci.connect().catch((e) => setError(e.message))}>
+            <button
+              className="action-primary"
+              type="button"
+              disabled={maci.isBusy}
+              onClick={() => maci.connect().catch((e) => setError(e.message))}
+            >
               Connect wallet
             </button>
           ) : (
@@ -216,9 +227,8 @@ export default function PollDetailPage() {
             <>
               <FieldNote title="What your wallet will ask">
                 <p>
-                  One click runs signup if needed, join if needed, then publish. Those are separate
-                  on-chain steps inside one flow. A pending or unknown send cannot be duplicated from
-                  this page.
+                  One click runs signup if needed, join if needed, then publish. Those are separate on-chain steps
+                  inside one flow. A pending or unknown send cannot be duplicated from this page.
                 </p>
               </FieldNote>
               <div className="option-group" role="radiogroup" aria-label="Ballot options">
@@ -260,11 +270,13 @@ export default function PollDetailPage() {
           )}
         </section>
 
-        <aside className="panel">
+        <aside className="panel results-panel">
+          <p className="eyebrow">THE RECORD / AFTER THE VOTE</p>
+          <EditorialArt scene="records" />
           <h2>Verified results</h2>
           <p>
-            Verified results are not published yet. Encrypted message counts and joined-participant
-            counts are not vote totals.
+            Verified results are not published yet. Encrypted message counts and joined-participant counts are not vote
+            totals.
           </p>
           {schedule && (
             <p className="mono">
@@ -277,8 +289,8 @@ export default function PollDetailPage() {
           )}
           {joined && joined.joinedParticipants !== "unavailable" && (
             <p className="quiet-note">
-              Joined participants (indexed): {joined.joinedParticipants} at block {joined.indexedBlock}.
-              This is not turnout and not a result.
+              Joined participants (indexed): {joined.joinedParticipants} at block {joined.indexedBlock}. This is not
+              turnout and not a result.
             </p>
           )}
         </aside>

@@ -1,3 +1,4 @@
+import { EditorialArt } from "../components/EditorialArt";
 import { useState } from "react";
 import { Shield, Globe, Plus, Trash2, Calendar, Clock, CheckCircle } from "lucide-react";
 
@@ -154,7 +155,8 @@ export default function CreatePollPage() {
   };
 
   return (
-    <div className="bg-gray-900 text-gray-200 min-h-screen font-sans">
+    <div className="legacy-editorial bg-gray-900 text-gray-200 min-h-screen font-sans">
+      <p className="prototype-note">Poll creation preview · this form does not deploy a poll.</p>
       {/* Header */}
       <header className="w-full">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -178,6 +180,7 @@ export default function CreatePollPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-4xl mx-auto">
+          <EditorialArt scene="ai-objects" compact />
           <div className="text-center mb-10">
             <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-2">{currentContent.pageTitle}</h1>
             <p className="text-gray-400">{currentContent.subTitle}</p>

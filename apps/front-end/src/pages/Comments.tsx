@@ -1,3 +1,4 @@
+import { EditorialArt } from "../components/EditorialArt";
 import { useState } from "react";
 import { ThumbsUp, ThumbsDown, ChevronDown, Send } from "lucide-react";
 
@@ -158,8 +159,10 @@ export default function CommentsSection() {
   const currentContent = content[language];
 
   return (
-    <div className="bg-gray-900 text-gray-200 font-sans p-4 sm:p-6 lg:p-8">
+    <div className="legacy-editorial bg-gray-900 text-gray-200 font-sans p-4 sm:p-6 lg:p-8">
+      <p className="prototype-note">Discussion preview · sample comments, not live participation.</p>
       <div className="max-w-3xl mx-auto">
+          <EditorialArt scene="gathering" compact />
         {/* Header */}
         <div className="mb-6">
           <h2 className="text-2xl sm:text-3xl font-bold text-white">{currentContent.title}</h2>

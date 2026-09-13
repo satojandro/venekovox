@@ -1,3 +1,4 @@
+import { EditorialArt } from "../components/EditorialArt";
 import { Link } from "react-router-dom";
 
 export default function Journal() {
@@ -9,6 +10,7 @@ export default function Journal() {
         What we learned building a place for real voices and checkable votes — and what is still
         waiting on a deployment we can point to.
       </p>
+      <EditorialArt scene="gathering" />
       <nav aria-label="Article contents">
         <ol className="journal-toc">
           <li><a href="#voice">Why civic voice needs more than loudness</a></li>
@@ -60,6 +62,7 @@ export default function Journal() {
         optional. It is not personhood, and voting contracts do not read ENS.
       </p>
 
+      <EditorialArt scene="proof" />
       <h2 id="trust">3. ZKPassport: prove the requirement rather than publish a document</h2>
       <p>
         The phone creates a proof. Our server verifies it and issues a short-lived permission for
@@ -78,6 +81,7 @@ export default function Journal() {
         IP address or residence. The United Kingdom is not included.
       </p>
 
+      <EditorialArt scene="ballot" />
       <h2 id="maci">4. MACI: seal the ballot, then prove the count</h2>
       <p>
         We did not invent this cryptography.{" "}

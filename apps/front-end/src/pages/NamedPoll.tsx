@@ -1,3 +1,4 @@
+import { EditorialArt } from "../components/EditorialArt";
 import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { JsonRpcProvider, FetchRequest } from "ethers";
@@ -131,7 +132,7 @@ export default function NamedPoll() {
     };
   }, [name, attempt]);
   return (
-    <main className="min-h-screen bg-black text-white px-6 py-12">
+    <main className="legacy-editorial section-wrap">
       <div className="max-w-3xl mx-auto space-y-8">
         <header className="flex justify-between">
           <Link to="/polls" className="text-lime-300">
@@ -146,6 +147,7 @@ export default function NamedPoll() {
           <h1 className="text-4xl font-bold my-4">{t.title}</h1>
           <p className="text-gray-300">{t.intro}</p>
         </div>
+        <EditorialArt scene="records" compact />
         <form
           className="flex flex-wrap gap-3"
           onSubmit={(event) => {

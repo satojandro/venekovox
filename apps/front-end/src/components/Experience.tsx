@@ -58,7 +58,7 @@ export function Experience({ children }: { children: ReactNode }) {
         <nav aria-label="Main">
           <NavLink to="/polls">Polls</NavLink>
           <NavLink to="/journal">Our journal</NavLink>
-          <Link to="/journal#trust">How it works</Link>
+          <Link to="/#how-it-works">How it works</Link>
         </nav>
         <div className="nav-actions">
           <button
@@ -88,7 +88,7 @@ export function Experience({ children }: { children: ReactNode }) {
         <div className="mobile-panel" id="mobile-nav">
           <NavLink to="/polls">Polls</NavLink>
           <NavLink to="/journal">Our journal</NavLink>
-          <Link to="/journal#trust">How it works</Link>
+          <Link to="/#how-it-works">How it works</Link>
           <Link className="action-primary" to="/names">
             Get started
           </Link>

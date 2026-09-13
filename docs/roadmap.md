@@ -1,5 +1,63 @@
 # Roadmap, acceptance gates and decisions
 
+## Full journey presentation and merge gate — 2026-09-13
+
+Extended accepted collage styling through naming, passport verification, ballot/
+receipt/results, ENS discovery and the legacy creation/discussion previews.
+Only markup/styles and illustration imports changed; existing handlers, account
+binding, verification, storage, receipt recovery and tally logic are preserved.
+Legacy sample pages explicitly disclose their prototype status.
+
+Build passed and frontend unit tests passed 122/122. Browser checked naming,
+eligibility (including 390px overflow/disclosures), unconfigured ballot/results,
+and discovery validation/dark theme. This is local UI evidence, not a live vote.
+Existing optional SDK export and bundle/Browserslist warnings remain.
+
+User authorized commit and push of the design branch. Merge compatibility against
+`origin/main` at `cef72d13` found existing ENS registration/wallet/naming, App routes,
+environment example, ENS tests and canonical-doc conflicts. Do not resolve these
+by blindly choosing ours/theirs. The tally closing is not a prerequisite for the
+presentation merge; reconciling concurrent ENS implementations is. Preserve the
+operator's live configuration and do not overwrite the other worktree.
+
+## Accepted collage direction — 2026-09-13
+
+Alejandro approved the new object-led resistance collages. This supersedes the
+cheerful companion imagery and tabbed homepage described below. The original hero
+is preserved. The homepage now leads with the flagship and three teaser cards,
+then separate ENSv2, ZKPassport, MACI/Ethereum and The Graph chapters, followed by
+the problem section. Eight new labeled AI illustrations replace earlier companion
+art through the shared component. [Handoff and evidence](design/civic-story-2026-09-12/README.md#accepted-collage-direction--2026-09-13).
+
+Worldwide participation is the requested product direction, superseding the prior
+restricted flagship audience as a design requirement. It remains **planned**, not
+live: neither backend eligibility nor the existing descriptor was changed. Align
+and validate the actual policy/configuration before advertising availability.
+The local explorer remains unconfigured. Frontend build passed; desktop/mobile
+layout, disclosure keyboard activation and CTA navigation checked. No live proof,
+vote, tally, deployment or publishing. Judge worktree changes remain uncommitted;
+other work, original images and video assets are preserved.
+
+## S3.2 imagery extension — 2026-09-12
+
+User approved the editorial cover and asked to extend its imagery. Astra added
+four original companion collages, a shared accessible/lazy-loaded EditorialArt
+component, and warm light/dark tokens across the poll explorer, naming,
+eligibility, ballot and journal. Homepage gains two further illustrated sections.
+Build passed with existing warnings; desktop/mobile browser review passed. Real
+unconfigured states remain. No protocol logic, deployment, live vote or publishing.
+Uncommitted judge worktree delivery; existing cover/video work preserved.
+[Details, provenance and pickup](design/civic-story-2026-09-12/README.md#imagery-extension--2026-09-12).
+
+## Presentation decision — 2026-09-12
+
+User requested an authored, quirky civic storytelling experience inspired by y-n10.
+S3.2 now has a local editorial cover candidate: authority → collective voice →
+technology exhibits → existing poll explorer. Original AI illustration is labeled;
+no invented historical attribution, poll availability or verified results. This
+reversible presentation choice changes no Stage 1 gates or technical boundaries.
+[Implementation and verification](design/civic-story-2026-09-12/README.md).
+
 Status authority: [status.md](status.md). Call-by-call map: [journey-map.md](journey-map.md).
 Dependencies below prevent parallel implementations from making incompatible
 identity, wallet or schema assumptions. Milestones are outcome gates, not claims of

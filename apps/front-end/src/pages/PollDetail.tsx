@@ -20,7 +20,7 @@ const content = {
     joinedParticipants: "Joined participants (indexed)",
     joinedFreshness: "Indexed at block",
     joinedNotVotes: "This is PollJoined count, not votes or final turnout. It does not open the voting window.",
-    voteOptions: { yes: "Yes", no: "No", abstain: "Abstain" },
+    voteOptions: { 0: "Yes", 1: "No", 2: "Abstain" },
     voteConfirmation: "Your encrypted vote has been submitted. Results will be available after the verified tally.",
     submissionRecorded: "Your encrypted vote was recorded. Awaiting on-chain confirmation…",
     submissionPending: "Submission found on chain — awaiting confirmation.",
@@ -58,7 +58,7 @@ const content = {
     joinedParticipants: "Participantes unidos (índice)",
     joinedFreshness: "Indexado en el bloque",
     joinedNotVotes: "Es el recuento de PollJoined, no votos ni escrutinio. No autoriza a votar.",
-    voteOptions: { yes: "Sí", no: "No", abstain: "Abstenerse" },
+    voteOptions: { 0: "Sí", 1: "No", 2: "No estoy seguro" },
     voteConfirmation:
       "Tu voto cifrado ha sido enviado. Los resultados estarán disponibles después del escrutinio verificado.",
     submissionRecorded: "Tu voto cifrado fue registrado. Esperando confirmación on-chain…",
@@ -169,7 +169,26 @@ export default function PollDetailPage() {
               : null;
 
   // vote options mapped to MACI vote option indices
-  const VOTE_OPTIONS: Record<string, number> = { yes: 0, no: 1, abstain: 2 };
+  const VOTE_OPTIONS: Record<string, number> = {};
+  // Build dynamic vote options from content or descriptor
+  const voteButtonDefs =
+    descriptor && descriptor.options.length > 0
+      ? descriptor.options.map((opt) => ({
+          key: String(opt.index),
+          index: opt.index,
+          label: opt.label[lang],
+          // Preserve backwards-compatible vote key for VOTE_OPTIONS
+          voteKey: String(opt.index),
+        }))
+      : Object.entries(currentContent.voteOptions).map(([key]) => ({
+          key,
+          index: Number(key),
+          label: currentContent.voteOptions[key as unknown as keyof typeof currentContent.voteOptions] as string,
+          voteKey: key,
+        }));
+  voteButtonDefs.forEach((b) => {
+    VOTE_OPTIONS[b.voteKey] = b.index;
+  });
 
   // Re-read the chain window at click time. A tab opened before the poll
   // opens (or left open after it closes) must not use the first paint.
@@ -295,7 +314,11 @@ export default function PollDetailPage() {
                   receiptState === "confirmed" ? (
                     <div className="bg-blue-900/40 border border-blue-500/50 text-center p-6 rounded-lg">
                       <p className="font-semibold text-blue-200 mb-3">{currentContent.voteConfirmation}</p>
-                      {userVote && <p className="text-lg text-white mb-4">{currentContent.voteOptions[userVote]}</p>}
+                      {userVote && (
+                        <p className="text-lg text-white mb-4">
+                          {descriptor?.options[Number(userVote)]?.label[lang] ?? userVote}
+                        </p>
+                      )}
                       <p className="text-xs text-blue-200 break-all">Tx: {ownedReceipt!.txHash}</p>
                     </div>
                   ) : (
@@ -355,27 +378,24 @@ export default function PollDetailPage() {
                         </div>
                       )}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <button
-                          disabled={votesLocked || maci.isBusy}
-                          onClick={() => handleVote("yes")}
-                          className="w-full py-3 px-4 rounded-lg font-semibold bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-105"
-                        >
-                          {currentContent.voteOptions.yes}
-                        </button>
-                        <button
-                          disabled={votesLocked || maci.isBusy}
-                          onClick={() => handleVote("no")}
-                          className="w-full py-3 px-4 rounded-lg font-semibold bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-105"
-                        >
-                          {currentContent.voteOptions.no}
-                        </button>
-                        <button
-                          disabled={votesLocked || maci.isBusy}
-                          onClick={() => handleVote("abstain")}
-                          className="w-full py-3 px-4 rounded-lg font-semibold bg-gray-600 hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-105"
-                        >
-                          {currentContent.voteOptions.abstain}
-                        </button>
+                        {voteButtonDefs.map((opt, _i) => {
+                          const color =
+                            opt.index === 0
+                              ? "bg-green-600 hover:bg-green-500"
+                              : opt.index === 1
+                                ? "bg-red-600 hover:bg-red-500"
+                                : "bg-gray-600 hover:bg-gray-500";
+                          return (
+                            <button
+                              key={opt.key}
+                              disabled={votesLocked || maci.isBusy}
+                              onClick={() => handleVote(opt.voteKey)}
+                              className={`w-full py-3 px-4 rounded-lg font-semibold ${color} disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-105`}
+                            >
+                              {opt.label}
+                            </button>
+                          );
+                        })}
                       </div>
                     </>
                   )

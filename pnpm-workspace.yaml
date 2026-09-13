@@ -2,16 +2,17 @@ packages:
   - "packages/*"
   - "apps/*"
 allowBuilds:
-  '@ipshipyard/node-datachannel': set this to true or false
-  '@nestjs/core': set this to true or false
-  '@scarf/scarf': set this to true or false
-  blake-hash: set this to true or false
-  cpu-features: set this to true or false
-  esbuild: set this to true or false
-  keccak: set this to true or false
-  mongodb-memory-server: set this to true or false
-  nx: set this to true or false
-  protobufjs: set this to true or false
-  secp256k1: set this to true or false
-  ssh2: set this to true or false
-  unrs-resolver: set this to true or false
+  "@ipshipyard/node-datachannel": true
+  "@nestjs/core": true
+  "@scarf/scarf": true
+  blake-hash: true
+  cpu-features: true
+  esbuild: true
+  keccak: true
+  mongodb-memory-server: true
+  msgpackr-extract: set this to true or false
+  nx: true
+  protobufjs: true
+  secp256k1: true
+  ssh2: true
+  unrs-resolver: true

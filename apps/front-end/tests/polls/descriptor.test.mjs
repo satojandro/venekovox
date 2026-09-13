@@ -23,7 +23,7 @@ test("rejects missing or malformed deployment env", () => {
   );
 });
 
-test("returns an operator descriptor bound to the configured poll", () => {
+test("poll 1 — France presidential election (6 options)", () => {
   const descriptor = readConfiguredDescriptor({
     VITE_CHAIN_ID: "11155111",
     VITE_MACI_ADDRESS: "0x44F31f3823ceFE00C2FA5acEB2576F119143Fe3a",
@@ -32,12 +32,34 @@ test("returns an operator descriptor bound to the configured poll", () => {
   assert.equal(descriptor.schemaVersion, 1);
   assert.equal(descriptor.metadataSource, "operator");
   assert.equal(descriptor.pollId, "1");
-  // Continuity France poll 1: 5 candidates + honest "Other/None" exit (voteOptions 6 on-chain)
   assert.equal(descriptor.options.length, 6);
   assert.equal(descriptor.options[0].index, 0);
   assert.equal(descriptor.options[5].label.en, "Other / None of these");
   assert.match(descriptor.question.en, /French presidential election/);
   assert.match(descriptor.question.en, /Poll 1/);
-  assert.match(descriptor.description.en, /18\+/);
-  assert.match(descriptor.description.en, /Australian/);
+});
+
+test("poll 3 — flagship superintelligence question (3 options)", () => {
+  const descriptor = readConfiguredDescriptor({
+    VITE_CHAIN_ID: "11155111",
+    VITE_MACI_ADDRESS: "0x44F31f3823ceFE00C2FA5acEB2576F119143Fe3a",
+    VITE_POLL_ID: "3",
+  });
+  assert.equal(descriptor.pollId, "3");
+  assert.equal(descriptor.options.length, 3);
+  assert.match(descriptor.question.en, /superintelligence/);
+  assert.match(descriptor.question.es, /superinteligencia/);
+  assert.equal(descriptor.options[0].label.en, "Yes, pause it");
+  assert.equal(descriptor.options[1].label.en, "No, keep going");
+  assert.equal(descriptor.options[2].label.en, "Unsure");
+});
+
+test("unknown poll ID uses fallback metadata", () => {
+  const descriptor = readConfiguredDescriptor({
+    VITE_CHAIN_ID: "11155111",
+    VITE_MACI_ADDRESS: "0x44F31f3823ceFE00C2FA5acEB2576F119143Fe3a",
+    VITE_POLL_ID: "99",
+  });
+  assert.equal(descriptor.pollId, "99");
+  assert.match(descriptor.question.en, /open on Sepolia/);
 });

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
-const require = createRequire(import.meta.url),
+const require = createRequire(process.env.ENS_TOOLCHAIN_PACKAGE_JSON || import.meta.url),
   ts = require("typescript");
 const source = readFileSync(new URL("../../src/ens/pollName.ts", import.meta.url), "utf8");
 let js = ts.transpileModule(source, {

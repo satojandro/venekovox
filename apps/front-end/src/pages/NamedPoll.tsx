@@ -222,6 +222,11 @@ export default function NamedPoll() {
           </button>
         )}
         <p className="text-sm text-gray-400">{t.note}</p>
+        <Link className="text-lime-300 underline" to="/names">
+          {language === "en"
+            ? "Choose an account name or name a poll"
+            : "Elegir un nombre de cuenta o nombrar una encuesta"}
+        </Link>
       </div>
     </main>
   );

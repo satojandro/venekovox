@@ -1,0 +1,7 @@
+{
+  "rootDirectory": "apps/front-end",
+  "framework": "vite",
+  "buildCommand": "cd ../.. && pnpm install --frozen-lockfile && cd apps/front-end && pnpm build",
+  "outputDirectory": "dist",
+  "installCommand": "echo 'handled in buildCommand'"
+}

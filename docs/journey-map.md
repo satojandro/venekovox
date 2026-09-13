@@ -662,3 +662,25 @@ Call path: App/Polls link → NamedPoll effect → `resolvePollName` → Univers
 text lookup → MACI/Poll validation → chain-details card. See [build.md A3](build.md).
 Ten RPC-double tests passed; live name registration/resolution and browser smoke remain
 unverified. A native ENSv2 demo name/record transaction must be supplied by the operator.
+
+## S1.1 registration call-path overlay — 2026-09-07
+
+Baseline: `81950b4215a313649ab7f5d6b0b6dedc6269a96f`; working branch
+`codex/ens-registration-v2`. `[OK]` below means locally implemented/tested, not live ENS evidence.
+
+| Marker | Call path | Boundary / evidence |
+| --- | --- | --- |
+| `[OK]` | `/names` → `Names.submit` (`apps/front-end/src/pages/Names.tsx:130`) → `registerName` (`apps/front-end/src/ens/registration.ts:172`) | Optional public-name consent; account/chain snapshot, duplicate-submit and cancellation guards |
+| `[OK]` | `readNamingConfig` (`apps/front-end/src/ens/registration.ts:82`) → Sepolia root `getSubregistry` traversal | ENS parent hierarchy must reach the configured profile/poll registries; RPC snapshot/hash checked |
+| `[OK]` | `NamingWallet.send` → `VenekoVoxNames.claimProfile` (`packages/contracts/contracts/ens/VenekoVoxNames.sol:132`) → `_register` | Actual caller becomes ENSv2 registry owner; custom resolver/address state created atomically |
+| `[OK]` | `VenekoVoxNames.namePoll` (`packages/contracts/contracts/ens/VenekoVoxNames.sol:140`) → `MACI.getPoll` → `_register` | Operator-only; deployed Poll address is used to construct the existing text-record schema |
+| `[OK]` | Receipt → matching registrar event → `recoverProfile` (`apps/front-end/src/ens/registration.ts:138`) or `resolvePollName` | No success from an outer bundle receipt alone; fresh resolution and current context required |
+| `[OK]` | Mount/reconnect → `Names` effect (`apps/front-end/src/pages/Names.tsx:110`) → `profileName(account)` → Universal Resolver `addr` | Original ENS resource/owner/expiry/resolver and forward address checked; no browser profile cache or global reverse-name write |
+| `[GAP]` | W1 Privy onboarding → supplied `NamingWallet` adapter | Interface provided; Privy account sender, sponsorship policy and mounted onboarding still separate |
+| `[GAP]` | Named discovery → real metadata/voting target | `/p/:name` remains a checked discovery page; mock `PollDetail` is not used as a destination |
+
+Source links: [page](../apps/front-end/src/pages/Names.tsx),
+[client](../apps/front-end/src/ens/registration.ts),
+[contract](../packages/contracts/contracts/ens/VenekoVoxNames.sol).
+See [registration handoff](ens-registration.md) for test limitations, operator setup,
+candidate ownership/expiry semantics and the absence of live deployment evidence.

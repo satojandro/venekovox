@@ -2,9 +2,8 @@
   "framework": "vite",
   "buildCommand": "pnpm install --frozen-lockfile && cd apps/front-end && pnpm build",
   "outputDirectory": "apps/front-end/dist",
-  "installCommand": "corepack enable",
+  "installCommand": "npm i -g pnpm@9.15.9",
   "env": {
-    "NODE_VERSION": "22",
-    "ENABLE_EXPERIMENTAL_COREPACK": "1"
+    "NODE_VERSION": "22"
   }
 }

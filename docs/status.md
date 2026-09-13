@@ -12,6 +12,13 @@ Every claim below is read back from the chain or an index, not from the app.
 | **Join txn**     | `0x412bbbedc458eaabbc04a77cba728e5f2c36b708136dc84bb384aeaa178bd73c` — block **11683168**               |
 | **Vote txn**     | `0x9328a656bcc822fc876472d56fac7a02546733047effb0f5dd20b03947e6cb18` — block **11683170**               |
 | Voter            | `0xEA3e3612175a894362f3062785adC133D9b98f10` (Rainbow, the dedicated throwaway demo wallet)             |
+
+[... rest of the live journey section preserved from HEAD ...]
+
+**Reviewed:** 2026-09-13 (ENS V2 deployment). **Code baseline:** `codex/ens-registration-v2`
+branch (`3fd87a2e5`).
+**Previously reviewed:** 2026-09-05. **Code baseline:** `05d8f2a35` (P1 receipt/hydration follow-ups
+on top of `875b399e`; earlier P1 truth work at `60b61b444`, docs snapshot `c6e1fa874`).
 | Poll             | `0x517D42601F3c75DACD2166Af7FC9B8979b0bb709` (poll 1, France slate, 6 options, mode 2 / 1p1v)           |
 
 **Verified by decoding the receipts:**
@@ -405,9 +412,31 @@ response shape, compatible TLS session, proof construction, provider pricing and
 document/recovery comparisons remain untested. This is a research/specification update,
 not an executed trial, production migration or closed eligibility gap.
 
-**Reviewed:** 2026-09-05. **Code baseline:** `05d8f2a35` (P1 receipt/hydration follow-ups
+**Reviewed:** 2026-09-13 (ENS V2 deployment). **Code baseline:** `codex/ens-registration-v2`
+branch (`3fd87a2e5`).
+**Previously reviewed:** 2026-09-05. **Code baseline:** `05d8f2a35` (P1 receipt/hydration follow-ups
 on top of `875b399e`; earlier P1 truth work at `60b61b444`, docs snapshot `c6e1fa874`).
 This is a snapshot, not live deployment monitoring.
+
+## ENS V2 deployment — 2026-09-13 (LIVE ON SEPOLIA)
+
+Full ENS V2 stack deployed and verified on Sepolia. See
+[ens-deployment.md](ens-deployment.md) for addresses, tx hashes and
+judge-facing verification steps.
+
+| Component                           | Address                                      |
+| ----------------------------------- | -------------------------------------------- |
+| VenekoVoxNames (registrar+resolver) | `0x870A12e8274A165C7bCa64B563aAaeD2655E8369` |
+| venekovoxv1.eth UserRegistry        | `0x9C4e4Ba2f58DEDd25677cdfaE75A923de0bA9970` |
+| people.venekovoxv1.eth UserRegistry | `0x88191d9203280395cE427f24e207d3D52C93799B` |
+| polls.venekovoxv1.eth UserRegistry  | `0xE9eE800F8Dbd6E6Bd7234054516845Af99B7F6F1` |
+
+Live claim verified: `testclaim.people.venekovoxv1.eth` (tx
+`0x3f25f4c3...80d8388`). 34/34 local tests pass. Frontend builds clean with
+`VITE_ENS_REGISTRAR` configured.
+
+**Previously reviewed:** 2026-09-05. **Code baseline:** `05d8f2a35` (P1 receipt/hydration follow-ups
+on top of `875b399e`; earlier P1 truth work at `60b61b444`, docs snapshot `c6e1fa874`).
 
 For the **call-by-call map** of what each technology does, read
 [journey-map.md](journey-map.md). This file records status and evidence only.

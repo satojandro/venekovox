@@ -1,0 +1,17 @@
+node_modules
+.vercel
+zkeys
+*.zkey
+*.ptau
+pnpm-lock.yaml
+apps/backend
+apps/coordinator
+apps/relayer
+apps/subgraph
+packages/circuits
+packages/testing
+packages/cli
+*.log
+.env
+.env.*
+!.env.example

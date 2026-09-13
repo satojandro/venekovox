@@ -23,10 +23,13 @@ packages/circuits/circom/test.bak
 
 packages/cli/artifacts
 packages/contracts/artifacts
+packages/contracts/artifacts-ens
 packages/contracts/compiled
 packages/cli/cache
 packages/contracts/cache
+packages/contracts/cache-ens
 packages/contracts/typechain-types/
+packages/contracts/typechain-ens/
 **/cache
 
 node_modules

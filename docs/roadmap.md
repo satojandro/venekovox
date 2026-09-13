@@ -1,5 +1,87 @@
 # Roadmap, acceptance gates and decisions
 
+## Design integration with current ENS — 2026-09-13
+
+Integration verification: production build passed; frontend unit 116/116, ENS UI
+3/3 and backend poll/tree suite 29/29 passed. The old profile-theme tests were
+removed with the superseded modules. Built preview on 3014 renders the main ENS
+naming page with collage and eligibility navigation. Ballot displays the wallet
+address without the obsolete theme/profile hook. No live wallet, proof or tally
+operation was performed. Existing SDK optional-export and bundle warnings remain.
+
+
+User authorized merging the accepted design into main. Integration starts from
+main cef72d13 and merges judge-experience 67097e1b. Main's ENS registration,
+injected wallet, discovery primitives and ENS tests remain authoritative. The
+naming page wraps that implementation in the shared collage design; old optional
+resolver/theme onboarding modules and their unused contract/test scaffolding
+are excluded. Homepage and journal copy now describe atomic name/address
+registration and fixed records. Main's default Vite port remains 3000.
+
+The judge experience's descriptor-driven ballot, schedule guards and receipt
+presentation are retained. This merge does not configure a poll, change running
+services or establish a live identity/vote/tally result. Existing environment
+files and operator credentials were not copied or modified. Earlier separate
+branch and editable-profile descriptions below are historical, superseded here.
+
+## Full journey presentation and merge gate — 2026-09-13
+
+Extended accepted collage styling through naming, passport verification, ballot/
+receipt/results, ENS discovery and the legacy creation/discussion previews.
+Only markup/styles and illustration imports changed; existing handlers, account
+binding, verification, storage, receipt recovery and tally logic are preserved.
+Legacy sample pages explicitly disclose their prototype status.
+
+Build passed and frontend unit tests passed 122/122. Browser checked naming,
+eligibility (including 390px overflow/disclosures), unconfigured ballot/results,
+and discovery validation/dark theme. This is local UI evidence, not a live vote.
+Existing optional SDK export and bundle/Browserslist warnings remain.
+
+User authorized commit and push of the design branch. Merge compatibility against
+`origin/main` at `cef72d13` found existing ENS registration/wallet/naming, App routes,
+environment example, ENS tests and canonical-doc conflicts. Do not resolve these
+by blindly choosing ours/theirs. The tally closing is not a prerequisite for the
+presentation merge; reconciling concurrent ENS implementations is. Preserve the
+operator's live configuration and do not overwrite the other worktree.
+
+## Accepted collage direction — 2026-09-13
+
+Alejandro approved the new object-led resistance collages. This supersedes the
+cheerful companion imagery and tabbed homepage described below. The original hero
+is preserved. The homepage now leads with the flagship and three teaser cards,
+then separate ENSv2, ZKPassport, MACI/Ethereum and The Graph chapters, followed by
+the problem section. Eight new labeled AI illustrations replace earlier companion
+art through the shared component. [Handoff and evidence](design/civic-story-2026-09-12/README.md#accepted-collage-direction--2026-09-13).
+
+Worldwide participation is the requested product direction, superseding the prior
+restricted flagship audience as a design requirement. It remains **planned**, not
+live: neither backend eligibility nor the existing descriptor was changed. Align
+and validate the actual policy/configuration before advertising availability.
+The local explorer remains unconfigured. Frontend build passed; desktop/mobile
+layout, disclosure keyboard activation and CTA navigation checked. No live proof,
+vote, tally, deployment or publishing. Judge worktree changes remain uncommitted;
+other work, original images and video assets are preserved.
+
+## S3.2 imagery extension — 2026-09-12
+
+User approved the editorial cover and asked to extend its imagery. Astra added
+four original companion collages, a shared accessible/lazy-loaded EditorialArt
+component, and warm light/dark tokens across the poll explorer, naming,
+eligibility, ballot and journal. Homepage gains two further illustrated sections.
+Build passed with existing warnings; desktop/mobile browser review passed. Real
+unconfigured states remain. No protocol logic, deployment, live vote or publishing.
+Uncommitted judge worktree delivery; existing cover/video work preserved.
+[Details, provenance and pickup](design/civic-story-2026-09-12/README.md#imagery-extension--2026-09-12).
+
+## Presentation decision — 2026-09-12
+
+User requested an authored, quirky civic storytelling experience inspired by y-n10.
+S3.2 now has a local editorial cover candidate: authority → collective voice →
+technology exhibits → existing poll explorer. Original AI illustration is labeled;
+no invented historical attribution, poll availability or verified results. This
+reversible presentation choice changes no Stage 1 gates or technical boundaries.
+[Implementation and verification](design/civic-story-2026-09-12/README.md).
+
 Status authority: [status.md](status.md). Call-by-call map: [journey-map.md](journey-map.md).
 Dependencies below prevent parallel implementations from making incompatible
 identity, wallet or schema assumptions. Milestones are outcome gates, not claims of
@@ -72,7 +154,7 @@ referenced in commits and code comments.
 | S2.2 wallet compatibility | Separate W1 experiment branch; not merged into this baseline                                                                                                         | EOA and candidate smart account use actual caller consistently; viable sponsorship and SDK path demonstrated before S2.1 binding is frozen                                                                                                                                                                              |
 | S2.1 eligibility          | Product HTTP + Auth mounted on this branch; D18 real-document grant still trial-server evidence; join `sgDataArg` plumbed; WP0 policy undeployed; in-memory sessions | G01 durability still open; eligible HTTP negatives on the mounted router; G/H (on-chain tag consume + second-wallet) gated on WP0                                                                                                                                                                                       |
 | Deployment/proving assets | Existing poll unsuitable for current demo                                                                                                                            | G07/G08 resolved; explicit windows/mode/policy; browser assets served; public manifest verified                                                                                                                                                                                                                         |
-| S3.2 real poll experience | Partial: one operator descriptor + on-chain window; identity-matched schedule; results unavailable                                                                   | G05 resolved for one poll; correct options, schedule, eligibility and loading/error states                                                                                                                                                                                                                              |
+| S3.2 real poll experience | Partial: operator descriptor + on-chain window, option count and mode; flagship preset ready, not deployed | G05: one configured poll; correct options; unconfigured/mismatch/unavailable distinct from Closed |
 | S4.1 verified results     | Protocol machinery exists, integrated path pending                                                                                                                   | G06/G13 resolved; on-chain verified aggregate → live query → UI, with provenance and finality                                                                                                                                                                                                                           |
 
 M1 signoff requires one real-document Self verification, one eligible submission,
@@ -202,7 +284,7 @@ reversible implementation detail, use engineering judgment and record it. If it
 changes eligibility, public linkage, key custody or deployed policy semantics, obtain
 Alejandro's decision on a concrete proposal before final deployment.
 
-### S1.1 delivery update — 2026-09-06
+### S1.1 delivery update — 2026-09-11
 
 The first ENS slice is named-poll discovery, implemented with a read-only page and
 validated record resolution. This prioritizes shareable polls without publishing a
@@ -231,3 +313,15 @@ sponsorship policy; mount the optional naming step in onboarding; integrate real
 S3.2 metadata and the resolved poll target into voting. Discovery stays read-only
 until the real target is consumed safely. Graph/tally and Self are not registration
 dependencies and are not marked complete by this patch.
+
+Two implemented ENS slices, one deferred lane:
+
+| Lane                                                             | Status                                                                          |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Named poll discovery (`/discover`, `xyz.venekovox.poll`)         | On main; read-only; leave the parser unchanged                                  |
+| Named accounts (`/names`, Permissioned Resolver + EAC theme key) | This branch; Sepolia ENSv2; not live-registered until Alejandro deploys parents |
+| WP5 mainnet Graph composition / poll aliases / directories       | Deferred, not scheduled                                                         |
+
+Personal names are optional public labels for wallets. They are not eligibility.
+See build.md A3 and [ensv2-opportunities-2026-09-11.md](ensv2-opportunities-2026-09-11.md)
+(background research only).

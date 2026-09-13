@@ -1,3 +1,4 @@
+import { env } from "node:process";
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
@@ -30,7 +31,9 @@ function nodeBuiltinShimPlugin(): Plugin {
 export default defineConfig({
   plugins: [nodeBuiltinShimPlugin(), react()],
   server: {
-    port: 3000,
+    // Keep the main deployment port; isolated previews may override it.
+    port: Number(env.VITE_DEV_PORT || 3000),
+    strictPort: true,
     host: true,
     // D10 lesson: ZKPassport live proofs require the dashboard-allowed origin.
     // app.uxisnear.com (CNAME → this Mini's Tailscale name) is the allowlisted

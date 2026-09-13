@@ -12,7 +12,8 @@ export const textAbi = new Interface(["function text(bytes32 node,string key) vi
 export const maciAbi = new Interface([
   "function getPoll(uint256) view returns(address poll,address messageProcessor,address tally)",
 ]);
-export const pollAbi = new Interface(["function getStartAndEndDate() view returns(uint256,uint256)"]);
+export const pollAbi = new Interface(["function getStartAndEndDate() view returns(uint256,uint256)", "function voteOptions() view returns(uint256)"]);
+export const tallyAbi = new Interface(["function mode() view returns(uint8)"]);
 export type LookupCode =
   | "INVALID_NAME"
   | "MISSING_RECORD"

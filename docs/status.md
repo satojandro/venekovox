@@ -1,5 +1,118 @@
 # Current state and evidence
 
+## Design integration with current ENS — 2026-09-13
+
+Integration verification: production build passed; frontend unit 116/116, ENS UI
+3/3 and backend poll/tree suite 29/29 passed. The old profile-theme tests were
+removed with the superseded modules. Built preview on 3014 renders the main ENS
+naming page with collage and eligibility navigation. Ballot displays the wallet
+address without the obsolete theme/profile hook. No live wallet, proof or tally
+operation was performed. Existing SDK optional-export and bundle warnings remain.
+
+
+User authorized merging the accepted design into main. Integration starts from
+main cef72d13 and merges judge-experience 67097e1b. Main's ENS registration,
+injected wallet, discovery primitives and ENS tests remain authoritative. The
+naming page wraps that implementation in the shared collage design; old optional
+resolver/theme onboarding modules and their unused contract/test scaffolding
+are excluded. Homepage and journal copy now describe atomic name/address
+registration and fixed records. Main's default Vite port remains 3000.
+
+The judge experience's descriptor-driven ballot, schedule guards and receipt
+presentation are retained. This merge does not configure a poll, change running
+services or establish a live identity/vote/tally result. Existing environment
+files and operator credentials were not copied or modified. Earlier separate
+branch and editable-profile descriptions below are historical, superseded here.
+
+## Full journey presentation and merge gate — 2026-09-13
+
+Extended accepted collage styling through naming, passport verification, ballot/
+receipt/results, ENS discovery and the legacy creation/discussion previews.
+Only markup/styles and illustration imports changed; existing handlers, account
+binding, verification, storage, receipt recovery and tally logic are preserved.
+Legacy sample pages explicitly disclose their prototype status.
+
+Build passed and frontend unit tests passed 122/122. Browser checked naming,
+eligibility (including 390px overflow/disclosures), unconfigured ballot/results,
+and discovery validation/dark theme. This is local UI evidence, not a live vote.
+Existing optional SDK export and bundle/Browserslist warnings remain.
+
+User authorized commit and push of the design branch. Merge compatibility against
+`origin/main` at `cef72d13` found existing ENS registration/wallet/naming, App routes,
+environment example, ENS tests and canonical-doc conflicts. Do not resolve these
+by blindly choosing ours/theirs. The tally closing is not a prerequisite for the
+presentation merge; reconciling concurrent ENS implementations is. Preserve the
+operator's live configuration and do not overwrite the other worktree.
+
+## Accepted collage direction — 2026-09-13
+
+Alejandro approved the new object-led resistance collages. This supersedes the
+cheerful companion imagery and tabbed homepage described below. The original hero
+is preserved. The homepage now leads with the flagship and three teaser cards,
+then separate ENSv2, ZKPassport, MACI/Ethereum and The Graph chapters, followed by
+the problem section. Eight new labeled AI illustrations replace earlier companion
+art through the shared component. [Handoff and evidence](design/civic-story-2026-09-12/README.md#accepted-collage-direction--2026-09-13).
+
+Worldwide participation is the requested product direction, superseding the prior
+restricted flagship audience as a design requirement. It remains **planned**, not
+live: neither backend eligibility nor the existing descriptor was changed. Align
+and validate the actual policy/configuration before advertising availability.
+The local explorer remains unconfigured. Frontend build passed; desktop/mobile
+layout, disclosure keyboard activation and CTA navigation checked. No live proof,
+vote, tally, deployment or publishing. Judge worktree changes remain uncommitted;
+other work, original images and video assets are preserved.
+
+## S3.2 imagery extension — 2026-09-12
+
+User approved the editorial cover and asked to extend its imagery. Astra added
+four original companion collages, a shared accessible/lazy-loaded EditorialArt
+component, and warm light/dark tokens across the poll explorer, naming,
+eligibility, ballot and journal. Homepage gains two further illustrated sections.
+Build passed with existing warnings; desktop/mobile browser review passed. Real
+unconfigured states remain. No protocol logic, deployment, live vote or publishing.
+Uncommitted judge worktree delivery; existing cover/video work preserved.
+[Details, provenance and pickup](design/civic-story-2026-09-12/README.md#imagery-extension--2026-09-12).
+
+## S3.2 editorial landing iteration — 2026-09-12
+
+Astra implemented the user-requested storytelling direction in the judge worktree:
+“Power loves a monologue. Give it a conversation.” Original labeled AI collage,
+paper/ink/vermilion styling, four interactive technical exhibits, and existing
+product links. [Design, provenance and checks](design/civic-story-2026-09-12/README.md).
+
+Local build passed with existing SDK/chunk/Browserslist warnings. Browser checked
+at 1440px and 390px; all exhibit controls, keyboard activation and mobile menu route
+passed. No horizontal overflow at those widths. No live-chain or deployment claim.
+Local explorer is unconfigured. Changes uncommitted; existing video assets preserved.
+This supersedes the earlier landing-copy description below for this worktree.
+
+## Judge experience frontend — 2026-09-12
+
+Owner: Cursor. Worktree `/private/tmp/venekovox-judge-experience`, branch
+`codex/judge-experience` (ENS `c92153a3` plus presentation).
+
+Shared Experience frame, forest/porcelain theme, `/journal` article, descriptor-driven
+ballot, and flagship preset `superintelligence-v1`. The preset **cannot** relabel
+original MACI polls 0/1. Schedule reads now include `voteOptions` and tally `mode`
+and fail closed on mismatch. France metadata remains the default without the preset.
+
+Not claimed: Hermes flagship deployment, live named-account claim, public HTTPS
+judge journey, or verified tally display. No live Mini (3000/3100) or ENS (3010)
+process was restarted. Preview: Vite **3012**.
+
+Local verification (Node 22.20.0): frontend `test:unit` **122/122**; `test:vote-flow`
+**20/20**; `pnpm --dir apps/front-end build` passed (existing SDK export and
+chunk-size warnings remain). Backend `tests/polls.test.mjs` was not executed here:
+this worktree has no backend `node_modules` (symlink convenience only; no reinstall).
+Browser QA on 3012: landing, polls (honest unconfigured), names, eligibility,
+`/polls/1` unknown-poll, journal, light theme, ~390px mobile nav. No live wallet
+or passport.
+
+Hero copy is now “Real Polls. Real People. Private & Censorship Resistant.”
+Landing supporting copy is concrete (eligibility, encryption, checkable tally),
+not the earlier “belong here” slogans. Video intro is local-only and not in this
+push.
+
 ## Stage 1 live journey — **FIRST REAL VOTE, 2026-09-11** ✅
 
 The complete Stage-1 polling journey ran end-to-end with a real passport on Sepolia.
@@ -781,3 +894,27 @@ onboarding, and named voting with real metadata. EVM tests use a registry double
 the upstream ENSv2 implementation. The parent name and expiry still require Alejandro's
 selection, deployment policy review and private signing. G01/G05/G08 and W1 gates stay open.
 Current changes are local and uncommitted; no remote branch, PR or deployment is claimed.
+
+## S1.1 ENSv2 named accounts — 2026-09-11
+
+Implemented on isolated branch `feat/s11-ensv2-named-accounts` from `origin/main`
+`95e04160`. Owner-controlled Permissioned Resolver + `VenekoVoxProfiles` registrar
+that only registers. UI `/names` with public-linkage consent; PollDetail shows the
+name only when setup is **ready**. Delegated key `xyz.venekovox.profile-theme`.
+Pinned Sepolia docs-table addresses, contracts-v2 `48b3e2d`, fork block 11684712.
+
+**Local evidence (this change):** frontend ENS unit tests **19/19**; Hardhat permission/EAC
+test **1/1** against pinned Sepolia ENSv2 bytecode (etched locally; archive fork optional).
+Ethers remains **6.15.0**. Not a live named-account registration. Parent names stay
+configurable until Alejandro chooses them. Live Mini vote/tally was not restarted.
+
+**Review hold (2026-09-12):** five frontend issues on `0962da7e`, plus a sixth:
+pending hashes were keyed only by account+op, so a later revoke could return an
+earlier grant receipt. Pending records now store chain, target, calldata and
+value; confirmation resumes only for an identical request. Frontend ENS tests
+include grant-then-revoke (**27/27**). The pinned contract etch test was not re-run and is
+not Universal Resolver evidence. Pre-existing SDK `IPublishArgs.provider`
+mismatch is not attributed to this slice.
+
+**Not claimed:** on-chain parent link, registrar `ROLE_REGISTRAR` grant, prize
+signoff, D04 permanence, WP5 Graph composition.

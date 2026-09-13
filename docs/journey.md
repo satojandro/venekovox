@@ -3,8 +3,8 @@
 **What this is:** the product journey, the system architecture, the trust
 boundaries, and the reasoning behind the design.
 
-- For **what exists in code right now**, read [journey-map.md](journey-map.md) and [status.md](status.md).
-- For **what to build next**, read [roadmap.md](roadmap.md) and [build.md](build.md).
+- For **what exists in code right now**, read [journey-map.md](archive/journey-map.md) and [status.md](archive/status.md).
+- For **what to build next**, read [roadmap.md](roadmap.md) and [build.md](archive/build.md).
 
 A design described here is not automatically implemented.
 
@@ -62,7 +62,7 @@ decided together before a final M1 policy deployment.
 ## Target journey — proposed
 
 **Design intent, not shipped behavior.** The as-built counterpart remains
-[journey-map.md](journey-map.md). Stage IDs refer to [roadmap.md](roadmap.md).
+[journey-map.md](archive/journey-map.md). Stage IDs refer to [roadmap.md](roadmap.md).
 ENS and community features are extensions; they are not extra requirements for M1.
 
 ### Onboarding and the optional public profile
@@ -296,7 +296,7 @@ not enforce verified-human eligibility.
 ```
 
 This diagram is a target. It does not select a Self bridge design, wallet vendor, or
-tally-indexing strategy. [build.md](build.md) defines those choices and acceptance gates.
+tally-indexing strategy. [build.md](archive/build.md) defines those choices and acceptance gates.
 
 ### Responsibilities
 

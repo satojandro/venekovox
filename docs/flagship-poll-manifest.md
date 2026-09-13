@@ -65,4 +65,4 @@ unavailable until then.
 ## France continuity poll
 
 Original MACI poll 1 keeps France metadata when `VITE_POLL_PRESET` is unset.
-See [continuity-french-poll-manifest.md](continuity-french-poll-manifest.md).
+See [continuity-french-poll-manifest.md](archive/continuity-french-poll-manifest.md).

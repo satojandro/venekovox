@@ -1,3 +1,5 @@
+<!-- MOVED 2026-09-13: this file now lives at docs/archive/build.md. Source comments that say "see docs/build.md" mean this file. -->
+
 # Integration specifications and runbook
 
 **Design contract, not an implementation claim.** Baseline and gaps:

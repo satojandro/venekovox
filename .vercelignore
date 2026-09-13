@@ -3,7 +3,6 @@ node_modules
 zkeys
 *.zkey
 *.ptau
-pnpm-lock.yaml
 apps/backend
 apps/coordinator
 apps/relayer

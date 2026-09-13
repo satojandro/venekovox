@@ -178,5 +178,5 @@ pnpm --dir apps/front-end test:ens-ui
 
 - [`docs/ens-registration.md`](ens-registration.md) — Full implementation spec,
   ownership policy, operator setup runbook, and W1 integration gates
-- [`docs/status.md`](status.md) — Project-wide deployment status
+- [`docs/status.md`](archive/status.md) — Project-wide deployment status
 - [`docs/technology.md`](technology.md) — Technology stack overview

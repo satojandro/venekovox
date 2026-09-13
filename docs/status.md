@@ -1,5 +1,67 @@
 # Current state and evidence
 
+## Full journey presentation and merge gate — 2026-09-13
+
+Extended accepted collage styling through naming, passport verification, ballot/
+receipt/results, ENS discovery and the legacy creation/discussion previews.
+Only markup/styles and illustration imports changed; existing handlers, account
+binding, verification, storage, receipt recovery and tally logic are preserved.
+Legacy sample pages explicitly disclose their prototype status.
+
+Build passed and frontend unit tests passed 122/122. Browser checked naming,
+eligibility (including 390px overflow/disclosures), unconfigured ballot/results,
+and discovery validation/dark theme. This is local UI evidence, not a live vote.
+Existing optional SDK export and bundle/Browserslist warnings remain.
+
+User authorized commit and push of the design branch. Merge compatibility against
+`origin/main` at `cef72d13` found existing ENS registration/wallet/naming, App routes,
+environment example, ENS tests and canonical-doc conflicts. Do not resolve these
+by blindly choosing ours/theirs. The tally closing is not a prerequisite for the
+presentation merge; reconciling concurrent ENS implementations is. Preserve the
+operator's live configuration and do not overwrite the other worktree.
+
+## Accepted collage direction — 2026-09-13
+
+Alejandro approved the new object-led resistance collages. This supersedes the
+cheerful companion imagery and tabbed homepage described below. The original hero
+is preserved. The homepage now leads with the flagship and three teaser cards,
+then separate ENSv2, ZKPassport, MACI/Ethereum and The Graph chapters, followed by
+the problem section. Eight new labeled AI illustrations replace earlier companion
+art through the shared component. [Handoff and evidence](design/civic-story-2026-09-12/README.md#accepted-collage-direction--2026-09-13).
+
+Worldwide participation is the requested product direction, superseding the prior
+restricted flagship audience as a design requirement. It remains **planned**, not
+live: neither backend eligibility nor the existing descriptor was changed. Align
+and validate the actual policy/configuration before advertising availability.
+The local explorer remains unconfigured. Frontend build passed; desktop/mobile
+layout, disclosure keyboard activation and CTA navigation checked. No live proof,
+vote, tally, deployment or publishing. Judge worktree changes remain uncommitted;
+other work, original images and video assets are preserved.
+
+## S3.2 imagery extension — 2026-09-12
+
+User approved the editorial cover and asked to extend its imagery. Astra added
+four original companion collages, a shared accessible/lazy-loaded EditorialArt
+component, and warm light/dark tokens across the poll explorer, naming,
+eligibility, ballot and journal. Homepage gains two further illustrated sections.
+Build passed with existing warnings; desktop/mobile browser review passed. Real
+unconfigured states remain. No protocol logic, deployment, live vote or publishing.
+Uncommitted judge worktree delivery; existing cover/video work preserved.
+[Details, provenance and pickup](design/civic-story-2026-09-12/README.md#imagery-extension--2026-09-12).
+
+## S3.2 editorial landing iteration — 2026-09-12
+
+Astra implemented the user-requested storytelling direction in the judge worktree:
+“Power loves a monologue. Give it a conversation.” Original labeled AI collage,
+paper/ink/vermilion styling, four interactive technical exhibits, and existing
+product links. [Design, provenance and checks](design/civic-story-2026-09-12/README.md).
+
+Local build passed with existing SDK/chunk/Browserslist warnings. Browser checked
+at 1440px and 390px; all exhibit controls, keyboard activation and mobile menu route
+passed. No horizontal overflow at those widths. No live-chain or deployment claim.
+Local explorer is unconfigured. Changes uncommitted; existing video assets preserved.
+This supersedes the earlier landing-copy description below for this worktree.
+
 ## Judge experience frontend — 2026-09-12
 
 Owner: Cursor. Worktree `/private/tmp/venekovox-judge-experience`, branch

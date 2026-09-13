@@ -1,138 +1,89 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, Fingerprint, LockKeyhole, ScanLine } from "lucide-react";
-import { FieldNote } from "../components/Experience";
+import { ArrowDown, ArrowUpRight, Asterisk } from "lucide-react";
+import { PollBoard } from "../components/PollBoard";
+import { TechnologyStory } from "../components/TechnologyStory";
+import { ProblemCollage } from "../components/ProblemCollage";
+import "../styles/story.css";
 
 export default function Landing() {
   return (
-    <main className="landing-page">
-      <section className="hero section-wrap">
-        <div className="hero-copy">
-          <p className="eyebrow">
-            <span className="signal-dot" /> MACI · ZKPASSPORT · ENS
-          </p>
-          <h1 className="hero-title">
-            Real Polls.
-            <br />
-            Real People.
-            <br />
-            <span>Private &amp; Censorship Resistant.</span>
-          </h1>
-          <p className="hero-description">
-            One person, one vote. Encrypted in the browser. Posted where it cannot be quietly deleted.
-            Counted with evidence you can check.
-          </p>
-          <div className="action-row">
-            <Link className="action-primary" to="/polls">
-              Find a poll <ArrowUpRight size={20} />
-            </Link>
-            <Link className="text-link" to="/names">
-              Get started <ArrowRight size={16} />
-            </Link>
-          </div>
-          <div className="hero-notes">
-            <span>
-              <Fingerprint size={15} /> Eligibility checked
-            </span>
-            <span>
-              <LockKeyhole size={15} /> Ballots encrypted
-            </span>
-            <span>
-              <ScanLine size={15} /> Tally evidence
-            </span>
-          </div>
+    <main className="civic-story">
+      <section className="story-opening" aria-labelledby="story-title">
+        <div className="story-kicker">
+          <span>INDEPENDENT VOICES. SHARED QUESTIONS.</span>
+          <span>AN EXPERIMENT IN CIVIC TECHNOLOGY</span>
         </div>
-        <div className="voice-art" aria-hidden="true">
-          <div className="art-orbit orbit-one" />
-          <div className="art-orbit orbit-two" />
-          <div className="art-cross cross-one">+</div>
-          <div className="art-cross cross-two">+</div>
-          <div className="ballot-glass glass-back" />
-          <div className="ballot-glass glass-front">
-            <span className="ballot-lines">
-              ● ━━━━━
-              <br />○ ━━━━
-              <br />○ ━━━━━
-            </span>
-            <span className="art-check">↗</span>
-          </div>
-          <p className="art-caption">
-            ONE PERSON. ONE VOTE.
-            <br />
-            <strong>NOBODY READS THE BALLOT.</strong>
-          </p>
-        </div>
-      </section>
-
-      <section className="featured-band section-wrap">
-        <div>
-          <p className="eyebrow">FLAGSHIP POLL · AI &amp; SOCIETY</p>
-          <h2>
-            Do you support a global ban
-            <br />
-            on artificial superintelligence?
-          </h2>
-          <p>
-            Citizens of the US, Canada, Australia, and the EU, age 18 and over. Three options. Equal
-            weight. Encrypted until the verified tally.
-          </p>
-        </div>
-        <Link className="feature-link" to="/polls">
-          <span>Explore the flagship poll</span>
-          <ArrowUpRight size={28} />
-        </Link>
-      </section>
-
-      <section className="section-wrap process-section">
-        <div className="section-heading">
-          <p className="eyebrow">HOW A VOTE ACTUALLY WORKS</p>
-          <h2>
-            Name. Eligibility.
-            <br />
-            Encrypted ballot. Checkable tally.
-          </h2>
-        </div>
-        <div className="process-grid">
-          {[
-            ["01", "A name you control", "Register a public ENS name on the wallet. A name is a handle. It is not proof that you are a unique person."],
-            ["02", "Prove you are eligible", "ZKPassport checks this poll’s age and nationality rules. Eligibility is separate from the public name."],
-            ["03", "Encrypt the ballot", "The browser encrypts the choice. The chain records a message, not a readable vote. Nobody can quietly delete that publication."],
-            ["04", "Check the tally", "After close and proof verification, published results can be inspected. A submitted ballot is not yet a counted vote."],
-          ].map(([n, title, body]) => (
-            <article key={n}>
-              <span className="step-number">{n}</span>
-              <h3>{title}</h3>
-              <p>{body}</p>
-            </article>
-          ))}
-        </div>
-        <div className="setup-list">
-          <FieldNote title="What you’ll need (Sepolia testnet)">
-            <p>
-              A browser wallet on Sepolia, a little test ETH for network fees, the ZKPassport phone app,
-              and a supported identity document. You must meet this poll’s age and nationality rules to
-              vote. You can read the question without connecting a wallet.
+        <div className="story-hero-grid">
+          <div className="story-hero-copy">
+            <p className="story-label">A SMALL REBELLION AGAINST THE MONOLOGUE</p>
+            <h1 id="story-title">
+              Power loves
+              <br />a <em>monologue.</em>
+            </h1>
+            <p className="hero-reply">
+              Give it a conversation<span className="red-period">.</span>
             </p>
-          </FieldNote>
+            <p className="story-intro">
+              Real people. Encrypted ballots. A count you can question.
+              <br />
+              VenekoVox is a place to disagree — and still be heard.
+            </p>
+            <div className="story-actions">
+              <Link className="story-button" to="/polls">
+                Explore the polls <ArrowUpRight size={21} />
+              </Link>
+              <a className="story-text-link" href="#poll-board">
+                See the polls <ArrowDown size={17} />
+              </a>
+            </div>
+          </div>
+          <figure className="story-collage">
+            <img
+              src="/story/voices-collage.png"
+              width="1536"
+              height="1024"
+              alt="Editorial collage: a lone authoritarian figure with a red strip across his eyes faces a diverse gathering of people, encircled in red."
+            />
+            <figcaption>
+              <span>FROM ONE VOICE → TO MANY</span>
+              <span>AI-GENERATED EDITORIAL ILLUSTRATION</span>
+            </figcaption>
+            <div className="collage-stamp" aria-hidden="true">
+              MORE
+              <br />
+              <b>VOICES.</b>
+              <Asterisk size={30} />
+            </div>
+          </figure>
+        </div>
+        <div className="story-bottom-line">
+          <span>PRIVATE, VERIFIABLE CIVIC POLLING</span>
+          <span>SCROLL TO OPEN THE CONVERSATION ↓</span>
+          <span>SEPOLIA TESTNET</span>
         </div>
       </section>
 
-      <section className="story-band section-wrap">
+      <PollBoard />
+      <TechnologyStory />
+      <ProblemCollage />
+      <section className="story-outro">
+        <p className="story-label">YOUR VOICE. ON YOUR TERMS.</p>
+        <h2>
+          You don’t have to agree
+          <br />
+          to <em>belong here.</em>
+        </h2>
         <div>
-          <p className="eyebrow">WHY THIS STACK</p>
-          <h2>
-            Speech gets silenced.
-            <br />
-            Counts get faked.
-          </h2>
           <p>
-            Printers were licensed. Mail was opened. Ballots were stuffed. Feeds are filtered. The
-            answer is not a nicer comment section. It is a unique human, an encrypted ballot, and a
-            tally that can be checked.
+            Read the question. Check the rules.
+            <br />
+            Make up your own mind.
           </p>
+          <Link className="story-button" to="/polls#configured-poll">
+            Find your poll <ArrowUpRight size={20} />
+          </Link>
         </div>
-        <Link className="text-link" to="/journal">
-          Our argument, in writing <ArrowUpRight size={18} />
-        </Link>
+        <Asterisk className="outro-star" size={130} strokeWidth={1} aria-hidden="true" />
       </section>
     </main>
   );

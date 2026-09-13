@@ -1,3 +1,4 @@
+import { EditorialArt } from "../components/EditorialArt";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
@@ -95,18 +96,20 @@ export default function TrustRitualPage() {
   return (
     <main className="section-wrap journey-page narrow">
       <JourneySteps active={1} />
-      <p className="eyebrow">02 / ELIGIBILITY, WITHOUT A PUBLIC DOCUMENT</p>
-      <h1>Prove you belong. Keep more to yourself.</h1>
-      <p>
-        Your phone creates the proof. Our server verifies it and issues a short-lived permission for this
-        poll.
-      </p>
+      <header className="journey-cover">
+        <div className="journey-cover-copy">
+          <p className="eyebrow">02 / ELIGIBILITY, WITHOUT A PUBLIC DOCUMENT</p>
+          <h1>Prove you belong. Keep more to yourself.</h1>
+          <p>Your phone creates the proof. Our server verifies it and issues a short-lived permission for this poll.</p>
+        </div>
+        <EditorialArt scene="proof" />
+      </header>
       <div className="banner">
         {descriptor?.eligibilityLabel || "Check this poll’s requirements before verifying."}
         <span className="quiet-note">
           {" "}
-          Nationality comes from the document, not from your IP address or where you live. Age 18+.
-          People outside the selected countries can explore the site but cannot vote.
+          Nationality comes from the document, not from your IP address or where you live. Age 18+. People outside the
+          selected countries can explore the site but cannot vote.
         </span>
       </div>
 
@@ -189,15 +192,15 @@ export default function TrustRitualPage() {
 
       <FieldNote title="What still requires trust?">
         <p>
-          The eligibility issuer checks access. Document support depends on ZKPassport and the issuing
-          country. The join transaction is public, even though your choice is encrypted. This is not a
-          promise that nothing ever reaches a server.
+          The eligibility issuer checks access. Document support depends on ZKPassport and the issuing country. The join
+          transaction is public, even though your choice is encrypted. This is not a promise that nothing ever reaches a
+          server.
         </p>
       </FieldNote>
       <FieldNote title="Why a phone and a wallet?">
         <p>
-          ZKPassport checks your supported document and FaceMatch on your phone. Your wallet signs a
-          message to show you control the account receiving permission. Your wallet is not your passport.
+          ZKPassport checks your supported document and FaceMatch on your phone. Your wallet signs a message to show you
+          control the account receiving permission. Your wallet is not your passport.
         </p>
       </FieldNote>
     </main>

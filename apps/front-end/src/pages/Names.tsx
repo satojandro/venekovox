@@ -1,3 +1,4 @@
+import { EditorialArt } from "../components/EditorialArt";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { FieldNote, JourneySteps } from "../components/Experience";
@@ -84,17 +85,22 @@ export default function Names() {
   return (
     <main className="section-wrap journey-page narrow">
       <JourneySteps active={0} />
-      <p className="eyebrow">01 / A PUBLIC NAME, NOT A PERSON</p>
-      <h1>Name your account.</h1>
-      <p>
-        A name is a public label for this wallet. Anyone can link it to on-chain activity. It is not
-        proof that you are a unique person, and it does not let you vote.
-      </p>
+      <header className="journey-cover">
+        <div className="journey-cover-copy">
+          <p className="eyebrow">01 / A PUBLIC NAME, NOT A PERSON</p>
+          <h1>Name your account.</h1>
+          <p>
+            A name is a public label for this wallet. Anyone can link it to on-chain activity. It is not proof that you
+            are a unique person, and it does not let you vote.
+          </p>
+        </div>
+        <EditorialArt scene="introduction" />
+      </header>
 
       {!env.registrar ? (
         <div className="banner warn">
-          Named accounts are not configured in this environment. You can still continue to eligibility.
-          Voting does not require a name.
+          Named accounts are not configured in this environment. You can still continue to eligibility. Voting does not
+          require a name.
         </div>
       ) : (
         <div className="stack">
@@ -157,8 +163,10 @@ export default function Names() {
             <section className="panel">
               <h2>Finish {setup.name}</h2>
               <p>
-                This wallet already claimed a label. We will not register a second name. Remaining owner
-                steps: {setup.nextOp === "deployResolver" ? "deploy the resolver, then write records." : "write the address and theme records."}
+                This wallet already claimed a label. We will not register a second name. Remaining owner steps:{" "}
+                {setup.nextOp === "deployResolver"
+                  ? "deploy the resolver, then write records."
+                  : "write the address and theme records."}
               </p>
               <button
                 className="action-primary"
@@ -229,9 +237,8 @@ export default function Names() {
 
       <FieldNote title="What happens in the wallet?">
         <p>
-          Three owner steps, in order: deploy a resolver you control, register the label, then write the
-          address and theme records. A prompt is not a mined receipt. If a step is rejected, we resume
-          instead of registering twice.
+          Three owner steps, in order: deploy a resolver you control, register the label, then write the address and
+          theme records. A prompt is not a mined receipt. If a step is rejected, we resume instead of registering twice.
         </p>
       </FieldNote>
       <p className="quiet-note">A name is optional. Voting contracts do not read ENS.</p>
@@ -249,6 +256,7 @@ function humanNamingError(code: string): string {
   if (code === "NOT_CONFIGURED") return "Named accounts are not configured here.";
   if (code === "LOOKUP_FAILED") return "We could not read the naming contracts. Check the network and try again.";
   if (code === "UNAVAILABLE") return "That label is not available. Try another.";
-  if (code.includes("INVALID_LABEL")) return "Use 3–32 letters, numbers, or hyphens. Do not start or end with a hyphen.";
+  if (code.includes("INVALID_LABEL"))
+    return "Use 3–32 letters, numbers, or hyphens. Do not start or end with a hyphen.";
   return code;
 }

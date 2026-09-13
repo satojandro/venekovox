@@ -192,14 +192,14 @@
       }
     },
     "Poll": {
-      "pollStartDate": 1788999251,
-      "pollEndDate": 1789600451,
-      "coordinatorPublicKey": "macipk.9a59264310d95cfd8eb7083aebeba221b5c26e77427f12b7c0f50bc1cc35e621",
+      "pollStartDate": 1789292043,
+      "pollEndDate": 1789378443,
+      "coordinatorPublicKey": "macipk.976b81b5629b8f071b62ad507f8f46c1e3a3ff428629630dd29b7372cab33b60",
       "mode": 2,
       "policy": "SelfEligibilityPolicy",
       "relayers": "0x0000000000000000000000000000000000000000",
       "initialVoiceCreditProxy": "ConstantInitialVoiceCreditProxy",
-      "voteOptions": 6,
+      "voteOptions": 3,
       "stateTreeDepth": 10
     },
     "SelfEligibilityPolicy": {

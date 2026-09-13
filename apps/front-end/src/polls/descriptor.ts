@@ -1,4 +1,5 @@
 import {
+  ORIGINAL_SEPOLIA_MACI,
   FLAGSHIP_PRESET,
   FLAGSHIP_VOTE_OPTIONS,
   FRANCE_VOTE_OPTIONS,
@@ -133,12 +134,41 @@ export function readConfiguredDescriptor(env: EnvLike): PollDescriptor | null {
 
   if (preset && preset !== FLAGSHIP_PRESET) return null;
 
+  // Preserve main's deployed poll 3 question; a pause is not a development ban.
+  if (chainId === "11155111" && maciAddress.toLowerCase() === ORIGINAL_SEPOLIA_MACI.toLowerCase() && pollId === "3") {
+    const descriptor = flagshipDescriptor(chainId, maciAddress, pollId, round, boundAddress);
+    return {
+      ...descriptor,
+      preset: undefined,
+      eligibilityLabel: "Worldwide participation · ZKPassport verification; active policy applies",
+      question: { en: "Should development of superintelligence be paused?", es: "¿Debería pausarse el desarrollo de la superinteligencia?" },
+      description: {
+        en: "A question about pausing superintelligence development. Participation requires ZKPassport verification under the active poll policy. Ballots are encrypted; the MACI coordinator can decrypt them. Question text is operator metadata, and availability is checked against the chain.",
+        es: "Una pregunta sobre pausar el desarrollo de la superinteligencia. Se requiere verificación con ZKPassport según la política activa. Los votos se cifran; el coordinador MACI puede descifrarlos. La pregunta es metadato del operador y la disponibilidad se comprueba en la cadena."
+      },
+      options: [
+        { index: 0, label: { en: "Yes, pause it", es: "Sí, pausar" } },
+        { index: 1, label: { en: "No, keep going", es: "No, seguir adelante" } },
+        { index: 2, label: { en: "Unsure", es: "No estoy seguro" } }
+      ]
+    };
+  }
+
   if (preset === FLAGSHIP_PRESET) {
     // Never relabel the two existing polls on the original Sepolia MACI.
     if (isOriginalProtectedPoll(maciAddress, pollId)) return null;
     return flagshipDescriptor(chainId, maciAddress, pollId, round, boundAddress);
   }
 
+  if (pollId !== "0" && pollId !== "1") {
+    return {
+      ...franceDescriptor(chainId, maciAddress, pollId, round, boundAddress),
+      topic: "POLL", eligibilityLabel: "Check the configured policy",
+      question: { en: `Poll ${pollId}`, es: `Encuesta ${pollId}` },
+      description: { en: "This poll’s question metadata has not been configured.", es: "Los metadatos de esta encuesta no están configurados." },
+      options: [], expectedVoteOptions: 0
+    };
+  }
   return franceDescriptor(chainId, maciAddress, pollId, round, boundAddress);
 }
 

@@ -1,9 +1,12 @@
+import { readConfiguredDescriptor, viteDescriptorEnv } from "../polls/descriptor";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, Asterisk } from "lucide-react";
 import { EditorialArt } from "./EditorialArt";
 
 /** An editorial slate, separate from the deployment-checked ballot in the explorer. */
 export function PollBoard({ explorer = false }: { explorer?: boolean }) {
+  const configured = readConfiguredDescriptor(viteDescriptorEnv());
+  const pausePoll = configured?.pollId === "3" && configured.question.en === "Should development of superintelligence be paused?" ? configured : null;
   return (
     <section className="poll-agenda" id="poll-board" aria-labelledby="invitation-title">
       <div className="chapter-caption">
@@ -21,14 +24,13 @@ export function PollBoard({ explorer = false }: { explorer?: boolean }) {
         </div>
         <div className="flagship-copy">
           <h3>
-            Do you support a global ban on developing <em>artificial superintelligence?</em>
+            {pausePoll ? <>Should development of <em>superintelligence be paused?</em></> : <>Do you support a global ban on developing <em>artificial superintelligence?</em></>}
           </h3>
           <p>
-            AI that exceeds human abilities across almost all intellectual tasks. A development ban, rather than a
-            temporary pause.
+            {pausePoll ? "The configured poll asks about a pause in development. Read the question and active rules before participating." : "AI that exceeds human abilities across almost all intellectual tasks. A development ban, rather than a temporary pause."}
           </p>
           <ul className="answer-preview" aria-label="Answer options; make your selection on the actual ballot">
-            {["Yes", "No", "Unsure"].map((answer) => (
+            {(pausePoll ? pausePoll.options.map(option => option.label.en) : ["Yes", "No", "Unsure"]).map((answer) => (
               <li key={answer}>
                 <span aria-hidden="true">○</span>
                 {answer}

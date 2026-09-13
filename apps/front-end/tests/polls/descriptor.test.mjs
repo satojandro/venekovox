@@ -83,3 +83,23 @@ test("binds flagship metadata only to a non-protected configured poll", () => {
   assert.equal(FLAGSHIP_NATIONALITIES.includes("Czechia"), false);
   assert.equal(FLAGSHIP_NATIONALITIES.includes("United Kingdom"), false);
 });
+
+
+test("main poll 3 keeps its pause question, options and chain guards even with an older preset", () => {
+  for (const preset of [undefined, "superintelligence-v1"]) {
+    const d = readConfiguredDescriptor({ ...franceEnv, VITE_POLL_ID: "3", VITE_POLL_PRESET: preset });
+    assert.equal(d.question.en, "Should development of superintelligence be paused?");
+    assert.deepEqual(d.options.map(o => o.label.en), ["Yes, pause it", "No, keep going", "Unsure"]);
+    assert.equal(d.expectedVoteOptions, 3);
+    assert.equal(d.expectedMode, 2);
+    assert.equal(d.preset, undefined);
+    assert.doesNotMatch(d.description.en, /no one can see/);
+  }
+});
+
+test("unknown poll does not inherit France choices or claim an open window", () => {
+  const d = readConfiguredDescriptor({ ...franceEnv, VITE_POLL_ID: "99" });
+  assert.equal(d.options.length, 0);
+  assert.equal(d.expectedVoteOptions, 0);
+  assert.equal(d.question.en, "Poll 99");
+});

@@ -83,6 +83,59 @@ reversible presentation choice changes no Stage 1 gates or technical boundaries.
 [Implementation and verification](design/civic-story-2026-09-12/README.md).
 
 Status authority: [status.md](status.md). Call-by-call map: [journey-map.md](journey-map.md).
+
+---
+
+## Vision: The Polymarket of Public Sentiment
+
+VenekoVox is building the infrastructure for **verifiable civic expression** — a world where anyone can express their genuine opinion on any issue, without fear of retaliation, and the result is provably accurate.
+
+### Where We Are Now (Stage 1 — Live)
+
+A working end-to-end polling platform:
+
+- Real passport verification (ZKPassport) — no fake accounts, no bots
+- Encrypted voting (MACI) — no one can prove how you voted
+- Verified tallies (ZK-SNARKs) — the result is mathematically provable
+- ENS poll discovery — human-readable names for civic spaces
+- Indexed results (The Graph) — public, auditable data
+
+**Live demo:** "Should development of superintelligence be paused?" — open to anyone with a passport, age 18+.
+
+### Where We're Going
+
+**Stage 2: Rich Demographic Results**
+
+- Age, gender, and geographic breakdowns (opt-in, privacy-preserving)
+- Longitudinal sentiment tracking (the "Civic Pulse")
+- Cross-poll analytics and trend detection
+- Example: "62% of Australians aged 18-34 support pausing AI development"
+
+**Stage 3: Reduce Single-Operator Trust**
+
+- Distributed coordinator infrastructure (no single point of failure)
+- Participant-held credentials (you control your identity)
+- Contract-verifiable eligibility (on-chain, not just server-side)
+- Independent operator federation
+
+**Stage 4: Informed Community**
+
+- AI-grounded discourse (balanced context per poll)
+- Agent-accessible results (MCP/LLM integration)
+- Controlled creation API (anyone can create a poll)
+- Real-time civic telemetry (the Polymarket of public sentiment)
+
+### The Long-Term Outcome
+
+VenekoVox becomes the **neutral, un-fudgeable sentiment signal** for civic discourse. Not a polling company, not a social media platform — a public good that lets real people express real convictions, with mathematical guarantees that the result is accurate and the voter is safe.
+
+When leaders govern by manufactured consensus, citizens stop believing what their neighbors think. VenekoVox restores ground truth.
+
+---
+
+## Technical Roadmap
+
+Status authority: [status.md](status.md). Call-by-call map: [journey-map.md](journey-map.md).
 Dependencies below prevent parallel implementations from making incompatible
 identity, wallet or schema assumptions. Milestones are outcome gates, not claims of
 scheduled delivery.

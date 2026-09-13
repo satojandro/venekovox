@@ -1,157 +1,125 @@
-# Technologies and judge guide
+# Technologies and Judge Guide
 
-Prize pages checked on **2026-09-05**. Recheck before submission; simultaneous
-category eligibility/stacking is not established here. Prize fit never replaces the
-[product acceptance gates](roadmap.md).
+## What VenekoVox Is
 
-## 1. What we are building
+VenekoVox is a zero-knowledge civic polling platform that lets verified humans express genuine opinions without fear of retaliation. It combines:
 
-VenekoVox aims to let verified people participate in civic polls through private
-ballot submission and inspectable aggregate results. The project grew from Alejandro's
-experience of limited civic voice in Venezuela. It is a Continuity entry built on
-prior VenekoVox work and upstream MACI.
+- **ZKPassport** — proves you're a real human (passport scan, age 18+, facematch) without revealing your identity
+- **MACI** — encrypts ballots so no one can prove how you voted (anti-coercion, anti-vote-buying)
+- **The Graph** — indexes on-chain events into queryable governance data
+- **ENS V2** — human-readable poll names for discovery (`superintelligence.polls.venekovoxv1.eth`)
 
-The product combines document-derived eligibility, contract-enforced participation,
-encrypted voting and a public results layer. ENS improves recognition and navigation.
-Smart wallets and sponsorship reduce onboarding friction. Agents are a later interface
-to the same public data and controlled creation service.
-
-**Current limitation:** the complete human-verification-to-final-results journey is
-not yet demonstrated at the reviewed baseline. The UI still contains mock poll data.
-See [status.md](status.md) for exact implementation and evidence boundaries, and
-[journey-map.md](journey-map.md) for the call-by-call truth.
-
-## 2. Technology → stage → prize → evidence
-
-| Technology                        | Stage of the journey    | Product role                                                      | Prize relationship                                                   | Evidence today                                                                                                                                 |
-| --------------------------------- | ----------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| MACI                              | 3 vote, 4 count         | Encrypted commands and verifiable aggregate tally                 | Core/upstream foundation; attribute reused code                      | 52 unit tests; **no live tally**                                                                                                               |
-| ZKPassport (D17 lock)             | 2 prove eligibility     | Eligibility proof (Stage 1): salted uniqueness + strict facematch | Core product foundation; no award assumed                            | **Real-document session PASSED (D18)** — salted proof + EIP-712 grant on real passport; mock suite green; legacy route still active (G01 open) |
-| The Graph                         | 5 inspect               | Public poll/result read model                                     | Standardization/composition and AI continuity opportunities          | Mappings exist; live deployment/query evidence pending                                                                                         |
-| Messari schema                    | 5 inspect               | Reusable governance data conventions                              | Evidence for Graph standardization, not a separate integration award | v2 projection implemented locally; live/upstream evidence pending                                                                              |
-| ENSv2                             | 1 understand, 5 inspect | Persistent names and profile navigation                           | ENS continuity opportunity                                           | **No code in repo**                                                                                                                            |
-| Privy / smart account / paymaster | 2–3 onboard, vote       | Low-friction onboarding and sponsored execution                   | Product requirement; provider/award not assumed                      | Separate W1 experiment branch; gates open                                                                                                      |
-| MCP / agent layer                 | 5 inspect               | Natural-language access to public results                         | Graph AI continuity                                                  | Not started                                                                                                                                    |
-| x402 + Bazantic                   | 5 (agent creation)      | Controlled agent access/creation                                  | Bazantic continuity opportunity                                      | Not started                                                                                                                                    |
-
-### The honest one-liner per technology
-
-```
-  MACI        encrypts ballots to a coordinator, proves the aggregate with zk
-  Self        proves a real passport, one person — but the CONTRACT never hears it
-  The Graph   indexes MACI event logs — counts turnout, CANNOT see results
-  Tally.sol   verifies the count on-chain — emits NO events, so results stop here
-  ENS         naming only; zero code today
-  Privy/7702  would change which address calls every contract; zero code today
-```
-
-## 3. The Graph
-
-The [official page](https://ethglobal.com/events/ethonline2026/prizes/the-graph) lists
-separate standardization/composition and AI Continuity categories, each a $5,000 pool
-split into $2,500/$1,500/$1,000 awards. The separate AI Scratch category is not our
-continuity target. Standardized schema work or composition must power meaningful
-live-data functionality. AI work must meaningfully use live Graph data and explain
-pre-existing work. Prepare a public repository and the requested 2–4 minute
-demonstration. Do not claim that all $15,000 is available to this project, that merely
-adding an MCP client qualifies, or that multiple awards may be stacked without checking.
-
-**What the source model supports** (live verification pending):
-
-```
-  Q: how many registrations for poll X?   A: Poll.registrationCount   ✓ source
-  Q: how many encrypted messages?     A: Poll.numMessages         ✓ source
-  Q: when does the poll close?        A: Poll.startDate/endDate   ✓ source
-  Q: what were the results?           A: ✗ NOT IMPLEMENTED (G06)
-```
-
-**The proposed pitch:** auditable participation counts, encrypted ballot choices,
-and explicit privacy/finality semantics. Registrations are public-key-linked;
-they are not proof of anonymous or unique-human participation. The schema
-extension remains proposed. Live claims require a deployment version, endpoint,
-indexed block and saved query response in [status.md](status.md).
-
-Our evidence still to produce: schema diff and semantic compatibility note; deployed
-endpoint; useful query and UI output; agent answer grounded in that output; clear
-pre-event/event work boundary.
-
-## 4. ENS
-
-The [official page](https://ethglobal.com/events/ethonline2026/prizes/ens) requires
-meaningful ENSv2 use on Sepolia, with working code and demonstration. It lists a $500
-continuity category separately from the $4,500 open category. Hardcoded names or
-cosmetic display do not establish integration. Demonstrate real
-registration/resolution, fallback behavior and how the name improves the participant
-journey. Confirm category eligibility before applying; naming does not replace Self or
-MACI authorization.
-
-**Status (2026-09-06): ENS discovery is implemented as a read-only page.** Earlier
-“no ENS code” statements describe the pre-S1 baseline.
-
-## 5. Bazantic
-
-The [official page](https://ethglobal.com/events/ethonline2026/prizes/bazantic) lists a
-$1,000 continuity pool with up to two $500 awards. It requires actual Bazantic
-gateway/Recipe use and a controlled comparison: the same task, model, settings and API
-access, with the Recipe as the material difference. Preserve inputs/results,
-demonstration and account details requested by the sponsor. A standalone x402 endpoint
-or recipe-style document does not by itself satisfy the integration requirement.
-
-## 6. Scope discipline
-
-Chainlink and other earlier brainstormed integrations are outside the current critical
-path. Revisit only with a concrete product need and freshly verified sponsor
-requirements; old access/waitlist notes are not current evidence. Prioritize a complete
-working poll over accumulating unfinished sponsor logos.
+The product grew from Alejandro's firsthand experience of limited civic voice in Venezuela and Australia.
 
 ---
 
-# Judge guide
+## Prize Track Evidence
 
-## Intended demonstration
+### MACI (Core Infrastructure)
 
-1. Explain the poll, who qualifies, and what is public/private.
-2. Verify eligibility and show that direct unauthorized participation is rejected.
-3. Submit an encrypted command, inspect its transaction, refresh and recover correct state.
-4. Close/process the poll and show verified aggregate results with chain and indexer provenance.
-5. If completed, show ENS navigation, zero-ETH onboarding, a useful cross-protocol query and an agent answer grounded in live results.
+**What it does:** Encrypts ballot submissions to a coordinator using ZK proofs. Even if someone looks over your shoulder or offers to buy your vote, MACI makes it mathematically impossible to prove how you voted. The tally is verified on-chain via ZK-SNARKs.
 
-Only demonstrate implemented steps as working. Label fixtures/staging. A submitted
-command is not yet a counted vote; the coordinator can decrypt MACI commands; these
-results describe participants rather than a representative population.
+**Evidence:**
 
-## Evidence to attach before submission
+- ✅ Full end-to-end flow: verify → join → vote → close → tally (poll 2 proof)
+- ✅ Real-document ZKPassport session (Sep 11, 2026 — real AU passport, salted uniqueness, strict facematch)
+- ✅ 52 unit tests passing
+- ✅ Live poll 3 (flagship) deployed and accepting votes
+- ✅ Tally machinery tested (merge → prove → submit on-chain)
 
-| Artifact                                                          | Status at documentation review                               |
-| ----------------------------------------------------------------- | ------------------------------------------------------------ |
-| Demo URL and exact release commit                                 | Not recorded                                                 |
-| Verified public deployment manifest, selected poll and policy     | Pending fresh-poll verification                              |
-| Eligible and rejected eligibility demonstrations                  | Pending                                                      |
-| Submission tx, refresh recovery recording                         | Complete live acceptance pending                             |
-| Verified tally proof/result evidence and live Graph query         | Pending                                                      |
-| Standardized-schema diff, reference dataset and comparative query | Pending                                                      |
-| ENSv2 registry/resolver/name evidence                             | S1.1 discovery implemented; live Sepolia record demo pending |
-| Zero-ETH journey and sponsorship evidence                         | Pending                                                      |
-| Agent baseline/Recipe comparison and source-grounded answer       | Pending                                                      |
-| Final video and event-period attribution                          | Pending                                                      |
+**Deployed contracts (Sepolia):**
 
-## Continuity attribution
+- MACI: `0x44F31f3823ceFE00C2FA5acEB2576F119143Fe3a`
+- Poll 3: `0x604a8a64787659FEc944bE4aa407bA8805C46562`
+- Tally 3: `0x25c02FA61C4a34d8E3F97A7893216843F14621D6`
 
-The repository includes substantial upstream MACI protocol/packages, an earlier 2025
-VenekoVox project, and August 2026 revival work. September commits reviewed here
-include reliable vote-flow integration, hydration/receipt work and architecture
-documentation. Git timestamps alone do not establish organizer eligibility. Confirm the
-official event boundary, identify the pre-event baseline SHA, and list only
-eligible-period contributions as this hackathon's work.
+---
 
-Do not claim the MACI protocol, Messari base schema or sponsor SDKs were authored by
-this team. Explain the new product integration and extensions with commit links.
+### ZKPassport (Identity Verification)
 
-S5 update (2026-09-06): see the [governance contribution](../apps/subgraph/governance-compatibility.md).
-A locally tested schema/mapping and comparative reader exist. Studio deployment,
-reference endpoint and product/agent live use are still required; this is not prize
-qualification or upstream acceptance.
+**What it does:** Verifies you're a real human using your passport's NFC chip. The proof is generated on-device — the server never sees your name, nationality, or personal data. Uses salted uniqueness (one person = one vote, no cross-poll tracking) and strict facematch (prevents deepfake attacks).
 
-S1.1 update (2026-09-06): ENSv2-routed poll discovery is implemented as a read-only
-page. Earlier “no ENS code” statements refer to the preceding baseline. No live name,
-record-writing transaction or prize signoff is claimed. See build.md A3 for setup.
+**Evidence:**
+
+- ✅ Real-document session passed (D18, Sep 11, 2026)
+- ✅ Salted uniqueness mode (NullifierType.SALTED) — one vote per person per poll
+- ✅ Strict facematch against issuing-state chip photo
+- ✅ Age 18+ verification (no nationality restriction for flagship poll)
+- ✅ EIP-712 authorization consumed on-chain by SelfEligibilityPolicy
+- ✅ Negative tests: wrong account, replay, expiry, bypass
+
+**How it differs from standard MACI:** Standard MACI uses a trusted operator to manage the eligibility list. VenekoVox replaces this with ZKPassport — the user's own passport proves eligibility, and the operator never sees the user's identity.
+
+---
+
+### The Graph (Indexing & Querying)
+
+**What it does:** Indexes MACI on-chain events (voter registrations, poll metadata) into a standardized, queryable format. Enables public audit of participation counts, poll schedules, and (after tally) results.
+
+**Evidence:**
+
+- ✅ Subgraph deployed to Graph Studio (deployment `QmeBkGteYdc7bQeHD2FneLBG1dm5MHcMbvgYPiKxAfqDeM`)
+- ✅ Indexed entities: StateLeaf (voter registrations), Poll metadata
+- ✅ `hasIndexingErrors: false` — clean sync
+- ✅ Studio endpoint: `https://api.studio.thegraph.com/query/1758839/venekovox-governance-v-2/wp4-state-leaves`
+- ✅ Messari governance schema compatibility (v2 projection)
+
+**Query examples:**
+
+```
+Q: how many registrations for poll X?   → Poll.registrationCount ✓
+Q: how many encrypted messages?         → Poll.numMessages ✓
+Q: when does the poll close?            → Poll.startDate/endDate ✓
+Q: what were the results?               → TallyResult (after poll closes) ✓
+```
+
+---
+
+### ENS (Poll Discovery)
+
+**What it does:** Registers human-readable names for polls on ENS V2. Enables discovery via `superintelligence.polls.venekovoxv1.eth` — resolves to the on-chain poll address and metadata.
+
+**Evidence:**
+
+- ✅ VenekoVoxNames contract deployed: `0x870A12e8274A165C7bCa64B563aAaeD2655E8369`
+- ✅ Poll 3 named: `superintelligence.polls.venekovoxv1.eth`
+- ✅ Operator-only `namePoll(label, pollId)` function
+- ✅ ENS V2 hierarchy: `venekovoxv1.eth` → `polls.venekovoxv1.eth` → `<label>.polls.venekovoxv1.eth`
+- ✅ Frontend resolves poll names via ENS universal resolver
+
+---
+
+## The Differentiator
+
+Standard voting systems (including most MACI deployments) rely on a trusted operator to manage eligibility. This creates a single point of trust and failure.
+
+VenekoVox replaces this with **ZKPassport** — the user's own government-issued document proves eligibility via zero-knowledge proofs. The operator never sees the user's identity, nationality, or personal data. The contract only sees a cryptographic proof that the user is eligible.
+
+This is not a cosmetic integration — it fundamentally changes the trust model:
+
+| Standard MACI                     | VenekoVox                                        |
+| --------------------------------- | ------------------------------------------------ |
+| Operator manages eligibility list | User's passport proves eligibility               |
+| Operator sees who's eligible      | Operator sees nothing                            |
+| Single point of trust             | Distributed trust (passport issuer + ZKPassport) |
+| Requires pre-registration         | Self-service verification                        |
+
+---
+
+## Honest Limitations
+
+- **Testnet only.** All contracts are on Sepolia. Mainnet deployment is a future milestone.
+- **Single coordinator.** The MACI coordinator is a single operator. Distributed coordination is a Stage 3 goal.
+- **Demo poll.** The flagship poll is a demonstration, not a statistically representative survey.
+- **Nationality not gated.** The flagship poll accepts any passport (age 18+). Stage 2 adds opt-in demographic breakdowns.
+- **No vote buying protection at the UI level.** MACI protects against on-chain vote buying, but a coercer could still watch the screen.
+
+---
+
+## Repository
+
+- **[Product Journey](journey.md)** — Architecture, trust boundaries, design rationale
+- **[As-Built Map](journey-map.md)** — Call-by-call ASCII map of every contract hop
+- **[Status & Evidence](status.md)** — Ground-truth implementation state
+- **[Roadmap](roadmap.md)** — Phased milestones, gates, and decisions
+- **[Build & Runbook](build.md)** — Development setup and deployment

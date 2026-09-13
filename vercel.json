@@ -1,6 +1,6 @@
 {
   "framework": "vite",
-  "buildCommand": "npx pnpm@9.15.9 install --frozen-lockfile && cd apps/front-end && npx pnpm@9.15.9 build",
+  "buildCommand": "npx pnpm@9.15.9 install --frozen-lockfile && npx pnpm@9.15.9 --filter @maci-protocol/domainobjs --filter @maci-protocol/sdk run build && cd apps/front-end && npx pnpm@9.15.9 build",
   "outputDirectory": "apps/front-end/dist",
   "installCommand": "echo skip",
   "env": {

@@ -1,8 +1,8 @@
 {
   "framework": "vite",
-  "buildCommand": "pnpm install --frozen-lockfile && cd apps/front-end && pnpm build",
+  "buildCommand": "npx pnpm@9.15.9 install --frozen-lockfile && cd apps/front-end && npx pnpm@9.15.9 build",
   "outputDirectory": "apps/front-end/dist",
-  "installCommand": "npm i -g pnpm@9.15.9",
+  "installCommand": "echo skip",
   "env": {
     "NODE_VERSION": "22"
   }

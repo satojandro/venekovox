@@ -26,6 +26,7 @@ function App() {
           <Route path="/polls/:id" element={<PollDetail />} />
           <Route path="/create-poll" element={<CreatePoll />} />
           <Route path="/trust-ritual" element={<Auth />} />
+          <Route path="/eligibility" element={<Auth />} />
           <Route path="/comments" element={<Comments />} />
         </Routes>
       </Suspense>

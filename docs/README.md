@@ -10,11 +10,11 @@ VenekoVox is a zero-knowledge civic polling platform: verified humans express ge
 
 The failure mode is identical everywhere, only the coercer changes:
 
-| Context | What happens to honest sentiment |
-| --- | --- |
-| **State repression** (Venezuela) | Elections are manipulated; dissent is punished; official results and independent polls can't be trusted or even safely collected. |
-| **Social pressure** (Western democracies) | Cancel culture and peer pressure penalize honest opinions; the silent majority self-censors; a vocal minority dictates the narrative. |
-| **Epistemic breakdown** | Polling has failed across consecutive political cycles; social media is weaponized by bot farms and AI personas; leaders govern by manufactured consensus. |
+| Context                                   | What happens to honest sentiment                                                                                                                           |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **State repression** (Venezuela)          | Elections are manipulated; dissent is punished; official results and independent polls can't be trusted or even safely collected.                          |
+| **Social pressure** (Western democracies) | Cancel culture and peer pressure penalize honest opinions; the silent majority self-censors; a vocal minority dictates the narrative.                      |
+| **Epistemic breakdown**                   | Polling has failed across consecutive political cycles; social media is weaponized by bot farms and AI personas; leaders govern by manufactured consensus. |
 
 The result is the same: people hide real beliefs → public discourse rots → manufactured narratives fill the void. VenekoVox replaces manufactured consensus with **ground-truth conviction**: real people, real conviction, zero negative consequences.
 
@@ -49,7 +49,7 @@ Run it yourself: the product journey is **claim an ENS name → verify with your
 
 > Qualification: "build meaningfully on a standardized schema (for example the Messari Standardized Subgraphs)" and "Consume live data from a Graph provider."
 
-**What we did:** VenekoVox indexes MACI — an archived, private-voting protocol whose public surface was never standardized — into a subgraph aligned with the **Messari governance schema** (the standardized schema the track names explicitly). One query pattern (`Poll`, `StateLeaf`, `TallyResult` entities) answers registration counts, message counts, schedules, and post-tally results; the same query shape generalizes to any MACI-style governance deployment. Live consumption from Subgraph Studio (verified above), not mocked data. Novel angle: we extend the standardized governance schema to a **privacy-preserving protocol** — where standard schemas index *who* voted, ours indexes *that* eligibility-proven voters exist and *what the proof-verified tally says*, never the ballot. Write-up: [blog/2026-09-07-maci-messari-governance-schema.md](blog/2026-09-07-maci-messari-governance-schema.md).
+**What we did:** VenekoVox indexes MACI — an archived, private-voting protocol whose public surface was never standardized — into a subgraph aligned with the **Messari governance schema** (the standardized schema the track names explicitly). One query pattern (`Poll`, `StateLeaf`, `TallyResult` entities) answers registration counts, message counts, schedules, and post-tally results; the same query shape generalizes to any MACI-style governance deployment. Live consumption from Subgraph Studio (verified above), not mocked data. Novel angle: we extend the standardized governance schema to a **privacy-preserving protocol** — where standard schemas index _who_ voted, ours indexes _that_ eligibility-proven voters exist and _what the proof-verified tally says_, never the ballot. Write-up: [blog/2026-09-07-maci-messari-governance-schema.md](blog/2026-09-07-maci-messari-governance-schema.md).
 
 ### ENS — Best Use of ENSv2
 
@@ -59,7 +59,7 @@ Run it yourself: the product journey is **claim an ENS name → verify with your
 
 ### MACI + ZKPassport — the core technology story (not prize tracks; the reason the product works)
 
-MACI's upstream repository (`privacy-ethereum/maci`) was **archived on Aug 19, 2026**. We deployed it, integrated it with ZKPassport eligibility, and shipped a complete verify → join → vote → tally journey *after* that archive date — an active deployment of an archived protocol, extended with a modern on-device identity proof. That combination is the differentiator no off-the-shelf stack gives you, and it is why we're confident continuing to build: the pieces are public, auditable, and ours to extend.
+MACI's upstream repository (`privacy-ethereum/maci`) was **archived on Aug 19, 2026**. We deployed it, integrated it with ZKPassport eligibility, and shipped a complete verify → join → vote → tally journey _after_ that archive date — an active deployment of an archived protocol, extended with a modern on-device identity proof. That combination is the differentiator no off-the-shelf stack gives you, and it is why we're confident continuing to build: the pieces are public, auditable, and ours to extend.
 
 ---
 
@@ -75,7 +75,7 @@ Judge-focused:
 
 Builder/agent records (how it was built, handoffs, runbooks):
 
-- [archive/](archive/) — build specs, runbooks, agent handoffs, status/evidence ledgers (kept for provenance; [archive/status.md](archive/status.md) remains the implementation-truth ledger)
+- [archive/](archive/) — build specs, runbooks, agent handoffs, status/evidence ledgers (kept for provenance; [archive/status.md](archive/status.md) remains the implementation-truth ledger). Screen-by-screen map: [archive/journey-map.md](archive/journey-map.md#frontend-routes-overlay--2026-09-13).
 
 Design assets: [design/](design/) — editorial collages and mockups behind the current front-end.
 

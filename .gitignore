@@ -123,6 +123,7 @@ typings/
 .env
 .env.test
 .env.local
+.env.ens
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

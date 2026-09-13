@@ -5,6 +5,7 @@ import { JsonRpcProvider, FetchRequest } from "ethers";
 import {
   resolvePollName,
   normalizePollName,
+  isConfiguredNamedPoll,
   PollNameError,
   type NamedPoll as Result,
   type LookupCode,
@@ -15,6 +16,9 @@ const copy = {
     title: "A name. A poll. Your voice.",
     intro: "Find a poll by its ENS name on Sepolia.",
     search: "Find poll",
+    ballot: "Open this poll’s ballot",
+    notThisApp:
+      "This named poll is not the one configured in this app, so voting stays on the read-only details below.",
     back: "Poll explorer",
     loading: "Resolving name and checking the poll…",
     refresh: "Check again",
@@ -23,7 +27,7 @@ const copy = {
     details: "Poll details",
     note: "ENS names help you find polls. They do not verify a person or grant voting eligibility.",
     boundary:
-      "This page shows the resolved poll's on-chain details. Voting and question metadata are not connected here yet.",
+      "This page shows the resolved poll's on-chain details. Open the ballot only when this name is the poll configured in the app.",
     snapshot: "Checked at block",
     mutable: "The name owner can change its records. Check the poll address before participating.",
     status: {
@@ -47,6 +51,9 @@ const copy = {
     title: "Un nombre. Una encuesta. Tu voz.",
     intro: "Encuentra una encuesta por su nombre ENS en Sepolia.",
     search: "Buscar encuesta",
+    ballot: "Abrir la boleta de esta encuesta",
+    notThisApp:
+      "Este nombre no es la encuesta configurada en esta aplicación; aquí solo se muestran los datos de cadena.",
     back: "Explorar encuestas",
     loading: "Resolviendo el nombre y comprobando la encuesta…",
     refresh: "Verificar de nuevo",
@@ -55,7 +62,7 @@ const copy = {
     details: "Detalles de la encuesta",
     note: "Los nombres ENS ayudan a encontrar encuestas. No verifican a una persona ni otorgan elegibilidad para votar.",
     boundary:
-      "Esta página muestra los datos on-chain de la encuesta. La votación y el texto de la pregunta aún no están conectados aquí.",
+      "Esta página muestra los datos on-chain de la encuesta. Abre la boleta solo si este nombre es la encuesta configurada en la aplicación.",
     snapshot: "Verificado en el bloque",
     mutable: "El propietario del nombre puede cambiar sus registros. Comprueba la dirección antes de participar.",
     status: {
@@ -215,6 +222,21 @@ export default function NamedPoll() {
               {t.share}: /p/{state.result.name}
             </Link>
             <p className="text-gray-400">{t.mutable}</p>
+            {isConfiguredNamedPoll(state.result.reference, {
+              pollId: import.meta.env.VITE_POLL_ID,
+              maci: import.meta.env.VITE_MACI_ADDRESS,
+            }) ? (
+              <p>
+                <Link
+                  className="bg-lime-300 text-black px-5 py-3 rounded-lg inline-block"
+                  to={"/polls/" + state.result.reference.pollId}
+                >
+                  {t.ballot}
+                </Link>
+              </p>
+            ) : (
+              <p className="text-gray-300">{t.notThisApp}</p>
+            )}
             <p className="text-gray-300">{t.boundary}</p>
           </section>
         )}

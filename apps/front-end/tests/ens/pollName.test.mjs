@@ -15,6 +15,7 @@ const {
   parsePollRecord,
   normalizePollName,
   votingWindow,
+  isConfiguredNamedPoll,
   universalAbi,
   textAbi,
   maciAbi,
@@ -137,4 +138,10 @@ test("empty trusted deployment list blocks all resolution", async () => {
   const f = setup();
   await assert.rejects(resolvePollName("a.eth", f.provider, []), /NOT_CONFIGURED/);
   assert.equal(f.calls.length, 0);
+});
+test("ballot link is only for the configured MACI poll", () => {
+  assert.equal(isConfiguredNamedPoll(record, { pollId: "0", maci }), true);
+  assert.equal(isConfiguredNamedPoll(record, { pollId: "3", maci }), false);
+  assert.equal(isConfiguredNamedPoll(record, { pollId: "0", maci: poll }), false);
+  assert.equal(isConfiguredNamedPoll(record, {}), false);
 });

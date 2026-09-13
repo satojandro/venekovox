@@ -128,6 +128,10 @@ deployed a contract, granted a role, or sent a public-network transaction in thi
 6. Confirm roles and actual parent pointers on chain. Configure public frontend
    `VITE_ENS_REGISTRAR`, `VITE_ENS_RPC_URL` and `VITE_MACI_ADDRESS`. No signer secret goes
    into Vite. `/names` checks the actual hierarchy before making a claim.
+   Vite loads `.env`, `.env.local`, and `.env.[mode]` only — not `.env.ens`.
+   On Vercel set the same `VITE_*` values in the project environment (plus
+   `VITE_POLL_ID` and `VITE_BACKEND_URL`). Use a public Sepolia HTTPS RPC, not a
+   private API-key URL.
 7. Claim a disposable test profile; confirm registry ownership, event and Universal
    Resolver address. Reconnect in a fresh session. Exercise rejection, collision,
    account/network switch and resolver failure. Name a real poll as the operator, open

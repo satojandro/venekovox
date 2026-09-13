@@ -1,5 +1,35 @@
 # VenekoVox technical journey map
 
+## Frontend routes overlay — 2026-09-13
+
+As-built participant screens after the design merge. Visiting a route is not a
+completed check. ENS naming does not grant eligibility or a vote.
+
+```
+  /                 editorial story; teasers are not a live ballot
+  /polls            configured descriptor + on-chain schedule (or honest unconfigured)
+  /names            optional VenekoVoxNames.claimProfile (needs VITE_ENS_REGISTRAR)
+  /eligibility      alias of /trust-ritual — ZKPassport challenge → grant
+  /trust-ritual     same eligibility page (kept)
+  /polls/:id        signup / join / encrypted publish for the configured poll only
+  /discover, /p/:name  Universal Resolver poll records; ballot CTA only if pollId+MACI match
+  /journal          trust article
+  /create-poll      prototype form, does not deploy
+  /comments         sample discussion, not live
+```
+
+| Step                 | Route                             | Code                                          | Status                                                                                                              |
+| -------------------- | --------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Optional public name | `/names`                          | `Names.tsx` → `registerName` → `claimProfile` | Live registrar on Sepolia; Vite must load `VITE_ENS_REGISTRAR` + `VITE_ENS_RPC_URL` (`.env.ens` is not auto-loaded) |
+| Show name on ballot  | `/polls/:id`                      | `useAccountName` → `recoverProfile`           | Address fallback; naming never gates voting                                                                         |
+| Named poll → ballot  | `/p/:name`                        | `isConfiguredNamedPoll`                       | Link only when resolved poll matches `VITE_POLL_ID` and `VITE_MACI_ADDRESS`                                         |
+| Eligibility          | `/eligibility` or `/trust-ritual` | `Auth.tsx` → `POST /eligibility/*`            | SessionStorage grant; join still uses `sgDataArg`                                                                   |
+| Vote                 | `/polls/:id`                      | `voteFlow`                                    | Receipt restore exists; results panel stays unpublished until S4.1 is wired                                         |
+| Create / discuss     | `/create-poll`, `/comments`       | prototypes                                    | Out of M1; no backend                                                                                               |
+
+The S1.1 “named accounts” overlay below that cites `VenekoVoxProfiles.sol` and a
+PollDetail theme chip is **historical**. Current registrar is `VenekoVoxNames`.
+
 ## Design integration with current ENS — 2026-09-13
 
 Integration verification: production build passed; frontend unit 116/116, ENS UI
@@ -8,7 +38,6 @@ removed with the superseded modules. Built preview on 3014 renders the main ENS
 naming page with collage and eligibility navigation. Ballot displays the wallet
 address without the obsolete theme/profile hook. No live wallet, proof or tally
 operation was performed. Existing SDK optional-export and bundle warnings remain.
-
 
 User authorized merging the accepted design into main. Integration starts from
 main cef72d13 and merges judge-experience 67097e1b. Main's ENS registration,
@@ -782,16 +811,16 @@ unverified. A native ENSv2 demo name/record transaction must be supplied by the 
 Baseline: `81950b4215a313649ab7f5d6b0b6dedc6269a96f`; working branch
 `codex/ens-registration-v2`. `[OK]` below means locally implemented/tested, not live ENS evidence.
 
-| Marker | Call path | Boundary / evidence |
-| --- | --- | --- |
-| `[OK]` | `/names` → `Names.submit` (`apps/front-end/src/pages/Names.tsx:130`) → `registerName` (`apps/front-end/src/ens/registration.ts:172`) | Optional public-name consent; account/chain snapshot, duplicate-submit and cancellation guards |
-| `[OK]` | `readNamingConfig` (`apps/front-end/src/ens/registration.ts:82`) → Sepolia root `getSubregistry` traversal | ENS parent hierarchy must reach the configured profile/poll registries; RPC snapshot/hash checked |
-| `[OK]` | `NamingWallet.send` → `VenekoVoxNames.claimProfile` (`packages/contracts/contracts/ens/VenekoVoxNames.sol:132`) → `_register` | Actual caller becomes ENSv2 registry owner; custom resolver/address state created atomically |
-| `[OK]` | `VenekoVoxNames.namePoll` (`packages/contracts/contracts/ens/VenekoVoxNames.sol:140`) → `MACI.getPoll` → `_register` | Operator-only; deployed Poll address is used to construct the existing text-record schema |
-| `[OK]` | Receipt → matching registrar event → `recoverProfile` (`apps/front-end/src/ens/registration.ts:138`) or `resolvePollName` | No success from an outer bundle receipt alone; fresh resolution and current context required |
-| `[OK]` | Mount/reconnect → `Names` effect (`apps/front-end/src/pages/Names.tsx:110`) → `profileName(account)` → Universal Resolver `addr` | Original ENS resource/owner/expiry/resolver and forward address checked; no browser profile cache or global reverse-name write |
-| `[GAP]` | W1 Privy onboarding → supplied `NamingWallet` adapter | Interface provided; Privy account sender, sponsorship policy and mounted onboarding still separate |
-| `[GAP]` | Named discovery → real metadata/voting target | `/p/:name` remains a checked discovery page; mock `PollDetail` is not used as a destination |
+| Marker  | Call path                                                                                                                            | Boundary / evidence                                                                                                                                                                     |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `[OK]`  | `/names` → `Names.submit` (`apps/front-end/src/pages/Names.tsx:130`) → `registerName` (`apps/front-end/src/ens/registration.ts:172`) | Optional public-name consent; account/chain snapshot, duplicate-submit and cancellation guards                                                                                          |
+| `[OK]`  | `readNamingConfig` (`apps/front-end/src/ens/registration.ts:82`) → Sepolia root `getSubregistry` traversal                           | ENS parent hierarchy must reach the configured profile/poll registries; RPC snapshot/hash checked                                                                                       |
+| `[OK]`  | `NamingWallet.send` → `VenekoVoxNames.claimProfile` (`packages/contracts/contracts/ens/VenekoVoxNames.sol:132`) → `_register`        | Actual caller becomes ENSv2 registry owner; custom resolver/address state created atomically                                                                                            |
+| `[OK]`  | `VenekoVoxNames.namePoll` (`packages/contracts/contracts/ens/VenekoVoxNames.sol:140`) → `MACI.getPoll` → `_register`                 | Operator-only; deployed Poll address is used to construct the existing text-record schema                                                                                               |
+| `[OK]`  | Receipt → matching registrar event → `recoverProfile` (`apps/front-end/src/ens/registration.ts:138`) or `resolvePollName`            | No success from an outer bundle receipt alone; fresh resolution and current context required                                                                                            |
+| `[OK]`  | Mount/reconnect → `Names` effect (`apps/front-end/src/pages/Names.tsx:110`) → `profileName(account)` → Universal Resolver `addr`     | Original ENS resource/owner/expiry/resolver and forward address checked; no browser profile cache or global reverse-name write                                                          |
+| `[GAP]` | W1 Privy onboarding → supplied `NamingWallet` adapter                                                                                | Interface provided; Privy account sender, sponsorship policy and mounted onboarding still separate                                                                                      |
+| `[GAP]` | Named discovery → real metadata/voting target                                                                                        | `/p/:name` remains a checked discovery page unless the resolved pollId and MACI match the app’s configured deployment; then it links to `/polls/:id`. Other named polls stay read-only. |
 
 Source links: [page](../apps/front-end/src/pages/Names.tsx),
 [client](../apps/front-end/src/ens/registration.ts),
@@ -799,19 +828,17 @@ Source links: [page](../apps/front-end/src/pages/Names.tsx),
 See [registration handoff](ens-registration.md) for test limitations, operator setup,
 candidate ownership/expiry semantics and the absence of live deployment evidence.
 
-## S1.1 ENSv2 named accounts — 2026-09-11
+## S1.1 ENSv2 named accounts — 2026-09-11 (superseded display path)
 
-As-built on `feat/s11-ensv2-named-accounts`:
+The `feat/s11-ensv2-named-accounts` optional profile-theme modules were excluded in
+the 2026-09-13 design merge. Current as-built:
 
-- Registrar: [VenekoVoxProfiles.sol](../packages/contracts/contracts/ens/VenekoVoxProfiles.sol:121)
-- Classify / reconnect: [profile.ts](../apps/front-end/src/ens/profile.ts:20), [registration.ts](../apps/front-end/src/ens/registration.ts:176)
-- Record writes: [registration.ts](../apps/front-end/src/ens/registration.ts:296)
-- Onboarding UI: [Names.tsx](../apps/front-end/src/pages/Names.tsx)
-- Ready display only: [PollDetail.tsx](../apps/front-end/src/pages/PollDetail.tsx) wallet chip
-- Pin: [sepolia-ensv2.json](../packages/contracts/ens/sepolia-ensv2.json)
+- Registrar: [VenekoVoxNames.sol](../../packages/contracts/contracts/ens/VenekoVoxNames.sol)
+- Client: [registration.ts](../../apps/front-end/src/ens/registration.ts) (`claimProfile`, `recoverProfile`)
+- Claim UI: [Names.tsx](../../apps/front-end/src/pages/Names.tsx)
+- Ballot display: [useAccountName.ts](../../apps/front-end/src/hooks/useAccountName.ts) on PollDetail — verified name or address fallback
+- Pin: [sepolia-ensv2.json](../../packages/contracts/ens/sepolia-ensv2.json)
 
-Call path: Polls `/names` → injected wallet → `readProfileSetup` → claim or finish owner
-txs → PollDetail shows the name only when `phase === "ready"` **and** Universal Resolver
-forward resolution succeeded for the **current** account. Voting does not call ENS
-inside grant/join/vote. Parent names remain configurable. Review fixes (2026-09-12):
-no ready-from-failed-UR, in-flight until receipt, RPC `eth_chainId`.
+Call path: `/names` → injected wallet → `readNamingConfig` → `claimProfile` or recover
+→ Universal Resolver `addr` for the **current** account. Voting does not call ENS
+inside grant/join/vote. A missing name never blocks a ballot.

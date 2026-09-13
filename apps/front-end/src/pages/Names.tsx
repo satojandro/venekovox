@@ -174,14 +174,21 @@ export default function Names({ wallet: suppliedWallet }: { wallet?: NamingWalle
           <div className="journey-cover-copy">
             <p className="eyebrow">01 / A PUBLIC NAME, NOT A PERSON</p>
             <h1>Name your account.</h1>
-            <p>Choose an optional public name for your wallet. Register it in one transaction, then we check that it resolves back to you. Naming does not grant voting eligibility.</p>
+            <p>
+              Choose an optional public name for your wallet. Register it in one transaction, then we check that it
+              resolves back to you. Naming does not grant voting eligibility.
+            </p>
           </div>
           <EditorialArt scene="introduction" />
         </header>
-        <p><Link className="text-link" to="/trust-ritual">Continue to eligibility →</Link></p>
+        <p>
+          <Link className="text-link" to="/eligibility">
+            Continue to eligibility →
+          </Link>
+        </p>
         {loading && <p role="status">Checking naming configuration and your account…</p>}
         {!loading && !config && !error && (
-          <p>Naming registration is awaiting deployment configuration. Poll discovery is still available.</p>
+          <p>Naming is not configured in this deployment yet. You can still look up a poll by ENS name.</p>
         )}
         {config && (
           <>

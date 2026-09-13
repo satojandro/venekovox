@@ -57,6 +57,7 @@ export function Experience({ children }: { children: ReactNode }) {
         </Link>
         <nav aria-label="Main">
           <NavLink to="/polls">Polls</NavLink>
+          <NavLink to="/names">Your name</NavLink>
           <NavLink to="/journal">Our journal</NavLink>
           <Link to="/#how-it-works">How it works</Link>
         </nav>
@@ -70,7 +71,7 @@ export function Experience({ children }: { children: ReactNode }) {
             {light ? <Moon size={18} /> : <Sun size={18} />}
           </button>
           <Link className="nav-start" to="/names">
-            Get started <ArrowUpRight size={16} />
+            Claim your name <ArrowUpRight size={16} />
           </Link>
           <button
             className="menu-toggle"
@@ -87,10 +88,11 @@ export function Experience({ children }: { children: ReactNode }) {
       {menuOpen && (
         <div className="mobile-panel" id="mobile-nav">
           <NavLink to="/polls">Polls</NavLink>
+          <NavLink to="/names">Your name</NavLink>
           <NavLink to="/journal">Our journal</NavLink>
           <Link to="/#how-it-works">How it works</Link>
           <Link className="action-primary" to="/names">
-            Get started
+            Claim your name
           </Link>
         </div>
       )}
@@ -103,6 +105,8 @@ export function Experience({ children }: { children: ReactNode }) {
           <p>Different convictions. Common ground.</p>
         </div>
         <div>
+          <Link to="/discover">Find a named poll</Link>
+          {" · "}
           <Link to="/journal#trust">Privacy & trust</Link>
           {" · "}
           <a href="https://github.com/satojandro/venekovox">Open source</a>
@@ -116,7 +120,7 @@ export function Experience({ children }: { children: ReactNode }) {
 
 const stages = [
   { label: "Your name", path: "/names" },
-  { label: "Eligibility", path: "/trust-ritual" },
+  { label: "Eligibility", path: "/eligibility" },
   { label: "Your ballot", path: "/polls" },
 ];
 

@@ -1,5 +1,16 @@
 # Current state and evidence
 
+## Journey-to-frontend wiring — 2026-09-13
+
+Frontend routes now match the participant journey for steps that already exist
+on chain or in the eligibility API. `/names` is the claim UI for live
+`VenekoVoxNames`. The ballot shows a Universal-Resolver-checked name or the
+address. `/p/:name` links to `/polls/:id` only for the configured MACI poll.
+`/eligibility` aliases `/trust-ritual`. Create/discuss remain prototypes.
+Verified tally is still not rendered as totals.
+
+Local: code + unit tests in this change. Not claimed: a new live ENS claim or vote.
+
 ## Design integration with current ENS — 2026-09-13
 
 Integration verification: production build passed; frontend unit 116/116, ENS UI
@@ -8,7 +19,6 @@ removed with the superseded modules. Built preview on 3014 renders the main ENS
 naming page with collage and eligibility navigation. Ballot displays the wallet
 address without the obsolete theme/profile hook. No live wallet, proof or tally
 operation was performed. Existing SDK optional-export and bundle warnings remain.
-
 
 User authorized merging the accepted design into main. Integration starts from
 main cef72d13 and merges judge-experience 67097e1b. Main's ENS registration,
@@ -132,7 +142,7 @@ Every claim below is read back from the chain or an index, not from the app.
 branch (`3fd87a2e5`).
 **Previously reviewed:** 2026-09-05. **Code baseline:** `05d8f2a35` (P1 receipt/hydration follow-ups
 on top of `875b399e`; earlier P1 truth work at `60b61b444`, docs snapshot `c6e1fa874`).
-| Poll             | `0x517D42601F3c75DACD2166Af7FC9B8979b0bb709` (poll 1, France slate, 6 options, mode 2 / 1p1v)           |
+| Poll | `0x517D42601F3c75DACD2166Af7FC9B8979b0bb709` (poll 1, France slate, 6 options, mode 2 / 1p1v) |
 
 **Verified by decoding the receipts:**
 

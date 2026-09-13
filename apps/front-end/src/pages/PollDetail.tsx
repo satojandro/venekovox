@@ -5,6 +5,8 @@ import { FieldNote, JourneySteps } from "../components/Experience";
 import { copyText, sepoliaTxUrl } from "../lib/clipboard";
 import { fetchJoinedParticipants } from "../lib/inclusionProof";
 import { useMaci } from "../hooks/useMaci";
+import { useAccountName } from "../hooks/useAccountName";
+import { accountLabel } from "../ens/accountDisplay";
 import { assertBallotIndex, canSubmitBallot } from "../polls/ballot";
 import { isVoteOpen, pollStatusLabel } from "../polls/labels";
 import { useConfiguredPoll } from "../polls/useConfiguredPoll";
@@ -22,6 +24,7 @@ export default function PollDetailPage() {
   } | null>(null);
   const submitting = useRef(false);
   const maci = useMaci();
+  const namedAccount = useAccountName(maci.account);
   const configured = useConfiguredPoll();
   const descriptor =
     configured.phase === "ready" || configured.phase === "partial" || configured.phase === "loading"
@@ -185,14 +188,22 @@ export default function PollDetailPage() {
             </button>
           ) : (
             <p>
-              Wallet{" "}
-              <span className="mono">
-                {maci.account.slice(0, 6)}…{maci.account.slice(-4)}
-              </span>
+              {namedAccount ? (
+                <>
+                  {namedAccount}{" "}
+                  <span className="mono">
+                    ({maci.account.slice(0, 6)}…{maci.account.slice(-4)})
+                  </span>
+                </>
+              ) : (
+                <>
+                  Wallet <span className="mono">{accountLabel(maci.account, namedAccount)}</span>
+                </>
+              )}
               {" · "}
-              <Link to="/names">Names</Link>
+              <Link to="/names">{namedAccount ? "Your name" : "Claim a name"}</Link>
               {" · "}
-              <Link to="/trust-ritual">Eligibility</Link>
+              <Link to="/eligibility">Eligibility</Link>
             </p>
           )}
           {progress && <p className="quiet-note">{progress}</p>}

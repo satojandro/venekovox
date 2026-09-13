@@ -12,7 +12,10 @@ export const textAbi = new Interface(["function text(bytes32 node,string key) vi
 export const maciAbi = new Interface([
   "function getPoll(uint256) view returns(address poll,address messageProcessor,address tally)",
 ]);
-export const pollAbi = new Interface(["function getStartAndEndDate() view returns(uint256,uint256)", "function voteOptions() view returns(uint256)"]);
+export const pollAbi = new Interface([
+  "function getStartAndEndDate() view returns(uint256,uint256)",
+  "function voteOptions() view returns(uint256)",
+]);
 export const tallyAbi = new Interface(["function mode() view returns(uint8)"]);
 export type LookupCode =
   | "INVALID_NAME"
@@ -89,6 +92,22 @@ export function votingWindow(start: bigint, end: bigint, now: bigint): NamedPoll
   if (now < start) return "UPCOMING";
   // Poll.isOpenForVoting rejects timestamps > endDate.
   return now > end ? "CLOSED" : "OPEN";
+}
+
+/** True when a resolved ENS poll is the same MACI poll this app is configured to ballot. */
+export function isConfiguredNamedPoll(
+  reference: PollReference,
+  configured: { pollId?: string; maci?: string },
+): boolean {
+  if (!configured.pollId || !configured.maci) return false;
+  try {
+    return (
+      BigInt(reference.pollId) === BigInt(configured.pollId) &&
+      getAddress(reference.maci) === getAddress(configured.maci)
+    );
+  } catch {
+    return false;
+  }
 }
 export type ReadProvider = Pick<Provider, "getNetwork" | "getBlock" | "getCode" | "call">;
 export async function resolvePollName(

@@ -172,6 +172,11 @@ pnpm --dir apps/front-end test:ens
 pnpm --dir apps/front-end test:ens-ui
 ```
 
+Vercel (`vercel.json`) builds `apps/front-end`. Set these public `VITE_*` values in
+the Vercel project: `VITE_ENS_REGISTRAR` (`0x870A12e8274A165C7bCa64B563aAaeD2655E8369`),
+`VITE_ENS_RPC_URL` (public Sepolia HTTPS RPC), `VITE_MACI_ADDRESS`, `VITE_POLL_ID`,
+`VITE_BACKEND_URL`. Do not put private RPC keys in Vite env.
+
 ---
 
 ## Related Documentation

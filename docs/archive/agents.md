@@ -1,5 +1,27 @@
 # Agent handoff and continuity protocol
 
+## Journey-to-frontend wiring — 2026-09-13
+
+Owner: Cursor. Branch: current `main` after pull `1c8063a4`.
+
+Mapped participant routes onto existing backends and wired the missing links that
+already had contracts/APIs: ENS claim visibility + Vite/Vercel public config,
+`recoverProfile` on the ballot, discovery→ballot only when pollId+MACI match,
+`/eligibility` alias. Did not implement create-poll, comments, tally UI, Privy,
+or Self Enterprise.
+
+Evidence: frontend unit **120/120** and ENS UI **4/4** passed; `tsc --noEmit` passed.
+Browser on :3016: `/names` loaded live registrar config (wallet connect waits for an
+injected provider); `/eligibility` and `/trust-ritual` both show ZKPassport; ballot
+journey steps and discovery footer work. No live passport, claim, or vote. Operator `.env.local` was not replaced; public
+registrar + public Sepolia RPC were added where ENS vars were empty. The
+`.env.ens` RPC URL was switched to the public Sepolia endpoint (Vite still does
+not load that filename).
+
+Pickup: set Vercel `VITE_ENS_REGISTRAR`, `VITE_ENS_RPC_URL` (public RPC),
+`VITE_MACI_ADDRESS`, `VITE_POLL_ID`. Rotate any Alchemy key that lived in
+`.env.ens`. S4.1 results remain unpublished in the UI.
+
 ## Design integration with current ENS — 2026-09-13
 
 Integration verification: production build passed; frontend unit 116/116, ENS UI
@@ -8,7 +30,6 @@ removed with the superseded modules. Built preview on 3014 renders the main ENS
 naming page with collage and eligibility navigation. Ballot displays the wallet
 address without the obsolete theme/profile hook. No live wallet, proof or tally
 operation was performed. Existing SDK optional-export and bundle warnings remain.
-
 
 User authorized merging the accepted design into main. Integration starts from
 main cef72d13 and merges judge-experience 67097e1b. Main's ENS registration,

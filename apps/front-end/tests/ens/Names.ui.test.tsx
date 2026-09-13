@@ -113,11 +113,18 @@ describe("Naming UI context and submission guards", () => {
     await act(async () => finish({ name: "alice.people.example.eth", transactionHash: "0x123", account: accountA }));
     expect(host.textContent).not.toContain("alice.people.example.eth");
   });
+  it("shows the claim form when naming is configured and the account has no name", async () => {
+    const w = wallet();
+    await render(w);
+    expect(host.querySelector("#profile-label")).not.toBeNull();
+    expect(host.textContent).toContain("Claim name");
+    expect(host.querySelector('a[href="/eligibility"]')).not.toBeNull();
+  });
   it("missing deployment leaves discovery usable without prompting a wallet", async () => {
     vi.stubEnv("VITE_ENS_REGISTRAR", "");
     const w = wallet();
     await render(w);
-    expect(host.textContent).toContain("awaiting deployment configuration");
+    expect(host.textContent).toContain("not configured in this deployment");
     expect(host.querySelector('a[href="/discover"]')).not.toBeNull();
     expect(w.connect).not.toHaveBeenCalled();
     expect(registerName).not.toHaveBeenCalled();

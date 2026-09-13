@@ -918,3 +918,12 @@ mismatch is not attributed to this slice.
 
 **Not claimed:** on-chain parent link, registrar `ROLE_REGISTRAR` grant, prize
 signoff, D04 permanence, WP5 Graph composition.
+
+Concurrent main update 57e7bd06 was incorporated before publishing. It includes
+poll 3 pause-question metadata, dynamic ballot options, deploy configuration,
+workspace settings and submission docs. The integrated ballot already supports
+descriptor-driven choices; poll 3's exact question/options are retained with the
+3-option/mode checks. The homepage adapts to that configured question. It never
+relabels poll 3 as a ban, even with the older explicit preset. The deployment and
+workspace files are preserved from main. Privacy copy avoids absolute anonymity.
+Final integration: frontend unit suite 118/118 after poll 3 and unknown-poll regression checks; production build passed. ENS UI 3/3 and backend poll suite 29/29 passed earlier on unchanged ENS/backend code.

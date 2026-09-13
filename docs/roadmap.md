@@ -1,90 +1,6 @@
-# Roadmap, acceptance gates and decisions
+# Roadmap — VenekoVox product plan
 
-## Design integration with current ENS — 2026-09-13
-
-Integration verification: production build passed; frontend unit 116/116, ENS UI
-3/3 and backend poll/tree suite 29/29 passed. The old profile-theme tests were
-removed with the superseded modules. Built preview on 3014 renders the main ENS
-naming page with collage and eligibility navigation. Ballot displays the wallet
-address without the obsolete theme/profile hook. No live wallet, proof or tally
-operation was performed. Existing SDK optional-export and bundle warnings remain.
-
-
-User authorized merging the accepted design into main. Integration starts from
-main cef72d13 and merges judge-experience 67097e1b. Main's ENS registration,
-injected wallet, discovery primitives and ENS tests remain authoritative. The
-naming page wraps that implementation in the shared collage design; old optional
-resolver/theme onboarding modules and their unused contract/test scaffolding
-are excluded. Homepage and journal copy now describe atomic name/address
-registration and fixed records. Main's default Vite port remains 3000.
-
-The judge experience's descriptor-driven ballot, schedule guards and receipt
-presentation are retained. This merge does not configure a poll, change running
-services or establish a live identity/vote/tally result. Existing environment
-files and operator credentials were not copied or modified. Earlier separate
-branch and editable-profile descriptions below are historical, superseded here.
-
-## Full journey presentation and merge gate — 2026-09-13
-
-Extended accepted collage styling through naming, passport verification, ballot/
-receipt/results, ENS discovery and the legacy creation/discussion previews.
-Only markup/styles and illustration imports changed; existing handlers, account
-binding, verification, storage, receipt recovery and tally logic are preserved.
-Legacy sample pages explicitly disclose their prototype status.
-
-Build passed and frontend unit tests passed 122/122. Browser checked naming,
-eligibility (including 390px overflow/disclosures), unconfigured ballot/results,
-and discovery validation/dark theme. This is local UI evidence, not a live vote.
-Existing optional SDK export and bundle/Browserslist warnings remain.
-
-User authorized commit and push of the design branch. Merge compatibility against
-`origin/main` at `cef72d13` found existing ENS registration/wallet/naming, App routes,
-environment example, ENS tests and canonical-doc conflicts. Do not resolve these
-by blindly choosing ours/theirs. The tally closing is not a prerequisite for the
-presentation merge; reconciling concurrent ENS implementations is. Preserve the
-operator's live configuration and do not overwrite the other worktree.
-
-## Accepted collage direction — 2026-09-13
-
-Alejandro approved the new object-led resistance collages. This supersedes the
-cheerful companion imagery and tabbed homepage described below. The original hero
-is preserved. The homepage now leads with the flagship and three teaser cards,
-then separate ENSv2, ZKPassport, MACI/Ethereum and The Graph chapters, followed by
-the problem section. Eight new labeled AI illustrations replace earlier companion
-art through the shared component. [Handoff and evidence](design/civic-story-2026-09-12/README.md#accepted-collage-direction--2026-09-13).
-
-Worldwide participation is the requested product direction, superseding the prior
-restricted flagship audience as a design requirement. It remains **planned**, not
-live: neither backend eligibility nor the existing descriptor was changed. Align
-and validate the actual policy/configuration before advertising availability.
-The local explorer remains unconfigured. Frontend build passed; desktop/mobile
-layout, disclosure keyboard activation and CTA navigation checked. No live proof,
-vote, tally, deployment or publishing. Judge worktree changes remain uncommitted;
-other work, original images and video assets are preserved.
-
-## S3.2 imagery extension — 2026-09-12
-
-User approved the editorial cover and asked to extend its imagery. Astra added
-four original companion collages, a shared accessible/lazy-loaded EditorialArt
-component, and warm light/dark tokens across the poll explorer, naming,
-eligibility, ballot and journal. Homepage gains two further illustrated sections.
-Build passed with existing warnings; desktop/mobile browser review passed. Real
-unconfigured states remain. No protocol logic, deployment, live vote or publishing.
-Uncommitted judge worktree delivery; existing cover/video work preserved.
-[Details, provenance and pickup](design/civic-story-2026-09-12/README.md#imagery-extension--2026-09-12).
-
-## Presentation decision — 2026-09-12
-
-User requested an authored, quirky civic storytelling experience inspired by y-n10.
-S3.2 now has a local editorial cover candidate: authority → collective voice →
-technology exhibits → existing poll explorer. Original AI illustration is labeled;
-no invented historical attribution, poll availability or verified results. This
-reversible presentation choice changes no Stage 1 gates or technical boundaries.
-[Implementation and verification](design/civic-story-2026-09-12/README.md).
-
-Status authority: [status.md](status.md). Call-by-call map: [journey-map.md](journey-map.md).
-
----
+> This is a product we are continuing to build after ETHOnline 2026. What exists today (verified) is in [technology.md](technology.md); the build-time journals and decision ledgers live in [archive/status.md](archive/status.md).
 
 ## Vision: The Polymarket of Public Sentiment
 
@@ -135,7 +51,7 @@ When leaders govern by manufactured consensus, citizens stop believing what thei
 
 ## Technical Roadmap
 
-Status authority: [status.md](status.md). Call-by-call map: [journey-map.md](journey-map.md).
+Status authority: [status.md](archive/status.md). Call-by-call map: [journey-map.md](archive/journey-map.md).
 Dependencies below prevent parallel implementations from making incompatible
 identity, wallet or schema assumptions. Milestones are outcome gates, not claims of
 scheduled delivery.
@@ -161,7 +77,7 @@ vlayer/TLSNotary and private-database exploration remain documented follow-up op
 
 ## Task IDs
 
-Every task is `S<stage>.<n>` — the stage number from [journey-map.md](journey-map.md).
+Every task is `S<stage>.<n>` — the stage number from [journey-map.md](archive/journey-map.md).
 Legacy IDs appear in brackets for continuity with older commits.
 
 | New ID | Legacy | What it is                                     |
@@ -225,7 +141,7 @@ recovery. Do not block M1 on a discussion board or broad automated creation.
 ## M3: standardized data and agents
 
 - **S5.1:** v2 schema, mappings, compatibility note and shared-query tests implemented in the S5 patch; WP4 adds MACI `StateLeaf` (SignUp) for join proofs. Upstream acceptance not claimed.
-- **S5.2:** comparative read client implemented. **Studio/live deploy COMPLETE 2026-09-11** — deployment `QmeBkGteYdc7bQeHD2FneLBG1dm5MHcMbvgYPiKxAfqDeM`, version label `wp4-state-leaves`, endpoint `https://api.studio.thegraph.com/query/1758839/venekovox-governance-v-2/wp4-state-leaves`, synced with `hasIndexingErrors: false` and serving indexed `StateLeaf` rows that match the on-chain root (see [status.md](status.md)). Local correctness for StateLeaves is the subgraph/backend/frontend tests above.
+- **S5.2:** comparative read client implemented. **Studio/live deploy COMPLETE 2026-09-11** — deployment `QmeBkGteYdc7bQeHD2FneLBG1dm5MHcMbvgYPiKxAfqDeM`, version label `wp4-state-leaves`, endpoint `https://api.studio.thegraph.com/query/1758839/venekovox-governance-v-2/wp4-state-leaves`, synced with `hasIndexingErrors: false` and serving indexed `StateLeaf` rows that match the on-chain root (see [status.md](archive/status.md)). Local correctness for StateLeaves is the subgraph/backend/frontend tests above.
 - **S5.3:** read agent/MCP answers a real question using live Graph data with citations, finality and methodology limits. Compare useful behavior against a baseline.
 - **S5.4:** constrained creation API, payment/idempotency handling, then actual Bazantic gateway/Recipe integration and controlled comparison evidence.
 
@@ -271,7 +187,7 @@ not selected product dependencies. Direct verified Tally reads can precede Graph
 
 2026-09-07 update: Alejandro approved the bounded S2.1 Self Enterprise/ZKPassport
 comparison and proposed a VicRoads zkTLS licence-source feasibility slice. Execute the
-[trial specification](build.md#s21-provider-comparison-trial--approved-scope-2026-09-07)
+[trial specification](archive/build.md#s21-provider-comparison-trial--approved-scope-2026-09-07)
 before freezing further provider-specific eligibility assumptions. D02 remains the
 current baseline; this approval does not select a replacement or approve cross-provider
 identity equivalence. M1 gates remain unchanged. Compare total operating cost and trust,
@@ -312,7 +228,7 @@ implementation.
 | D10 | Accepted gate                                               | Mock-passport staging is clearly labeled and exercises the selected provider's actual proof flow (ZKPassport per D17); one real-document verification is required before M1 signoff. A fake UI success is not evidence.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | D11 | Candidate implemented; deployment unresolved                | Issuer-backed eligibility policy and Enterprise session/webhook adapter implemented in the P2 patch for evaluation. No deployed approval implied: issuer custody, config, recovery and live integration remain gates.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | D12 | Proposed, unresolved                                        | Define uniqueness scope, eligibility attributes, poll mode/credits/options, expiry/replay rules and account/key recovery before deployment. Civic "one person, one choice" is not automatically achieved by default QV settings.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| D13 | Proposed, unresolved                                        | Choose tally publication/indexing mechanism; current Tally contract has no dedicated result events. See [journey-map.md §6](journey-map.md) for the two options.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| D13 | Proposed, unresolved                                        | Choose tally publication/indexing mechanism; current Tally contract has no dedicated result events. See [journey-map.md §6](archive/journey-map.md) for the two options.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | D14 | Implemented candidate                                       | Add a Messari-derived partial governance projection while retaining native MACI entities. Use client composition across separate Graph endpoints. Token/delegate data and private tallies are not fabricated; upstream acceptance and live evidence remain open.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | D15 | Deferred                                                    | Discussions/resources after reliable polling; moderation and separation from ballots are required. Vote-reason harvesting, demographic microsegments and monetization of individual opinions are outside initial scope. See D16 for long-term demographic analytics direction.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | D16 | Accepted direction                                          | Privacy-preserving demographic analytics is in long-term product scope (DA0–DA3 in [demographic-analytics-spec](demographic-analytics-spec.md)). Analyses must be authenticated to defined populations (registration/joined/submitted/counted), release-protected, and versioned; raw individual attribute-choice linkage, opinion monetization and ballot attribution remain excluded. DA0 may run alongside this week's critical path; DA1+ follow M1. Supersedes any reading that demographics are permanently excluded.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
@@ -376,5 +292,5 @@ Two implemented ENS slices, one deferred lane:
 | WP5 mainnet Graph composition / poll aliases / directories       | Deferred, not scheduled                                                         |
 
 Personal names are optional public labels for wallets. They are not eligibility.
-See build.md A3 and [ensv2-opportunities-2026-09-11.md](ensv2-opportunities-2026-09-11.md)
+See build.md A3 and [ensv2-opportunities-2026-09-11.md](archive/ensv2-opportunities-2026-09-11.md)
 (background research only).

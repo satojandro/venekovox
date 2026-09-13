@@ -100,7 +100,7 @@ ballots until that design and retention/release behavior are concrete.
 
 #### Immediate trial additions and acceptance evidence
 
-- Extend the [S2.1 comparison](build.md#s21-provider-comparison-trial--approved-scope-2026-09-07)
+- Extend the [S2.1 comparison](archive/build.md#s21-provider-comparison-trial--approved-scope-2026-09-07)
   with passport-nationality matching, official sex/gender evidence, age-range proofs and reference-date
   support. Pin actual SDKs/flows; capability not established is recorded as unsupported
   or untested, never bypassed with a browser flag.

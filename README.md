@@ -55,7 +55,7 @@ MACI (Minimum Anti-Collusion Infrastructure) is the key differentiator. Unlike t
 - **Options:** Yes, pause it / No, keep going / Unsure
 - **Eligibility:** Real passport (ZKPassport), age 18+, one vote per person
 - **Network:** Ethereum Sepolia testnet
-- **Live at:** [app.uxisnear.com](https://app.uxisnear.com)
+- **Live at:** [openpoll.xyz](https://openpoll.xyz) (product domain; `app.uxisnear.com` remains the ZKPassport-validated origin)
 
 ### Deployed Contracts (Sepolia)
 
@@ -84,7 +84,7 @@ Polls are named on-chain via ENS V2:
 
 ## Prize Integrations
 
-| Prize Track    | Integration                                                         | Status                          |
+| Technology / Track | Integration                                                         | Status                          |
 | -------------- | ------------------------------------------------------------------- | ------------------------------- |
 | **MACI**       | Core voting infrastructure; encrypted ballots, ZK tally             | ✅ Live end-to-end              |
 | **ZKPassport** | Identity verification (real passport, salted uniqueness, facematch) | ✅ Real-document session passed |
@@ -177,11 +177,11 @@ pnpm test:e2e                   # End-to-end tests
 ## Documentation
 
 - **[Product Journey](docs/journey.md)** — Architecture, trust boundaries, design rationale
-- **[As-Built Map](docs/journey-map.md)** — Call-by-call ASCII map of every contract hop
-- **[Status & Evidence](docs/status.md)** — Ground-truth implementation state
+- **[As-Built Map](docs/archive/journey-map.md)** — Call-by-call ASCII map of every contract hop
+- **[Status & Evidence](docs/archive/status.md)** — Ground-truth implementation state
 - **[Roadmap](docs/roadmap.md)** — Phased milestones, gates, and decisions
 - **[Judge Guide](docs/technology.md)** — Prize track mapping and evidence
-- **[Build & Runbook](docs/build.md)** — Development setup and deployment
+- **[Build & Runbook](docs/archive/build.md)** — Development setup and deployment
 
 ---
 

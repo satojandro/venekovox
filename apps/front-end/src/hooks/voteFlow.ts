@@ -244,7 +244,6 @@ export function createVoteFlow({
         maciAddress,
         pollId,
         signer,
-        provider: readAccess.provider,
         privateKey,
         publicKey,
         stateIndex: BigInt(pollStateIndex),
@@ -252,6 +251,7 @@ export function createVoteFlow({
         newVoteWeight,
         nonce: 1n,
         salt: undefined,
+        ...(readAccess.provider ? { provider: readAccess.provider } : {}),
       });
       // Persist the receipt under the CAPTURED context before reporting success,
       // so the confirmation UI is always backed by a stored receipt. Storage

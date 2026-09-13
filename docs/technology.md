@@ -85,8 +85,10 @@ registration/resolution, fallback behavior and how the name improves the partici
 journey. Confirm category eligibility before applying; naming does not replace Self or
 MACI authorization.
 
-**Status (2026-09-06): ENS discovery is implemented as a read-only page.** Earlier
-“no ENS code” statements describe the pre-S1 baseline.
+**Status (2026-09-11): poll discovery is on main; named-account onboarding is on
+`feat/s11-ensv2-named-accounts` (not live-registered).** Earlier “no ENS code”
+statements describe the pre-S1 baseline. A live ENSv2 name/record demo still needs
+Alejandro’s parent setup.
 
 ## 5. Bazantic
 

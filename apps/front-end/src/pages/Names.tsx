@@ -1,3 +1,5 @@
+import { EditorialArt } from "../components/EditorialArt";
+import { JourneySteps } from "../components/Experience";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FetchRequest, JsonRpcProvider } from "ethers";
@@ -162,19 +164,21 @@ export default function Names({ wallet: suppliedWallet }: { wallet?: NamingWalle
   }
 
   return (
-    <main className="min-h-screen bg-black text-white px-6 py-12">
-      <div className="max-w-3xl mx-auto space-y-8">
+    <main className="legacy-editorial section-wrap journey-page narrow">
+      <JourneySteps active={0} />
+      <div className="space-y-8">
         <Link className="text-lime-300" to="/discover">
           ← Find a poll
         </Link>
-        <header>
-          <p className="text-lime-300">VENEKOVOX / SEPOLIA</p>
-          <h1 className="text-4xl font-bold mt-4">Your name in VenekoVox</h1>
+        <header className="journey-cover">
+          <div className="journey-cover-copy">
+            <p className="eyebrow">01 / A PUBLIC NAME, NOT A PERSON</p>
+            <h1>Name your account.</h1>
+            <p>Choose an optional public name for your wallet. Register it in one transaction, then we check that it resolves back to you. Naming does not grant voting eligibility.</p>
+          </div>
+          <EditorialArt scene="introduction" />
         </header>
-        <p>
-          Choose an optional public name for your account. You can participate without one; names do not grant voting
-          eligibility.
-        </p>
+        <p><Link className="text-link" to="/trust-ritual">Continue to eligibility →</Link></p>
         {loading && <p role="status">Checking naming configuration and your account…</p>}
         {!loading && !config && !error && (
           <p>Naming registration is awaiting deployment configuration. Poll discovery is still available.</p>

@@ -1,5 +1,106 @@
 # VenekoVox technical journey map
 
+## Design integration with current ENS — 2026-09-13
+
+Integration verification: production build passed; frontend unit 116/116, ENS UI
+3/3 and backend poll/tree suite 29/29 passed. The old profile-theme tests were
+removed with the superseded modules. Built preview on 3014 renders the main ENS
+naming page with collage and eligibility navigation. Ballot displays the wallet
+address without the obsolete theme/profile hook. No live wallet, proof or tally
+operation was performed. Existing SDK optional-export and bundle warnings remain.
+
+
+User authorized merging the accepted design into main. Integration starts from
+main cef72d13 and merges judge-experience 67097e1b. Main's ENS registration,
+injected wallet, discovery primitives and ENS tests remain authoritative. The
+naming page wraps that implementation in the shared collage design; old optional
+resolver/theme onboarding modules and their unused contract/test scaffolding
+are excluded. Homepage and journal copy now describe atomic name/address
+registration and fixed records. Main's default Vite port remains 3000.
+
+The judge experience's descriptor-driven ballot, schedule guards and receipt
+presentation are retained. This merge does not configure a poll, change running
+services or establish a live identity/vote/tally result. Existing environment
+files and operator credentials were not copied or modified. Earlier separate
+branch and editable-profile descriptions below are historical, superseded here.
+
+## Full journey presentation and merge gate — 2026-09-13
+
+Extended accepted collage styling through naming, passport verification, ballot/
+receipt/results, ENS discovery and the legacy creation/discussion previews.
+Only markup/styles and illustration imports changed; existing handlers, account
+binding, verification, storage, receipt recovery and tally logic are preserved.
+Legacy sample pages explicitly disclose their prototype status.
+
+Build passed and frontend unit tests passed 122/122. Browser checked naming,
+eligibility (including 390px overflow/disclosures), unconfigured ballot/results,
+and discovery validation/dark theme. This is local UI evidence, not a live vote.
+Existing optional SDK export and bundle/Browserslist warnings remain.
+
+User authorized commit and push of the design branch. Merge compatibility against
+`origin/main` at `cef72d13` found existing ENS registration/wallet/naming, App routes,
+environment example, ENS tests and canonical-doc conflicts. Do not resolve these
+by blindly choosing ours/theirs. The tally closing is not a prerequisite for the
+presentation merge; reconciling concurrent ENS implementations is. Preserve the
+operator's live configuration and do not overwrite the other worktree.
+
+## Accepted collage direction — 2026-09-13
+
+Alejandro approved the new object-led resistance collages. This supersedes the
+cheerful companion imagery and tabbed homepage described below. The original hero
+is preserved. The homepage now leads with the flagship and three teaser cards,
+then separate ENSv2, ZKPassport, MACI/Ethereum and The Graph chapters, followed by
+the problem section. Eight new labeled AI illustrations replace earlier companion
+art through the shared component. [Handoff and evidence](design/civic-story-2026-09-12/README.md#accepted-collage-direction--2026-09-13).
+
+Worldwide participation is the requested product direction, superseding the prior
+restricted flagship audience as a design requirement. It remains **planned**, not
+live: neither backend eligibility nor the existing descriptor was changed. Align
+and validate the actual policy/configuration before advertising availability.
+The local explorer remains unconfigured. Frontend build passed; desktop/mobile
+layout, disclosure keyboard activation and CTA navigation checked. No live proof,
+vote, tally, deployment or publishing. Judge worktree changes remain uncommitted;
+other work, original images and video assets are preserved.
+
+## S3.2 imagery extension — 2026-09-12
+
+User approved the editorial cover and asked to extend its imagery. Astra added
+four original companion collages, a shared accessible/lazy-loaded EditorialArt
+component, and warm light/dark tokens across the poll explorer, naming,
+eligibility, ballot and journal. Homepage gains two further illustrated sections.
+Build passed with existing warnings; desktop/mobile browser review passed. Real
+unconfigured states remain. No protocol logic, deployment, live vote or publishing.
+Uncommitted judge worktree delivery; existing cover/video work preserved.
+[Details, provenance and pickup](design/civic-story-2026-09-12/README.md#imagery-extension--2026-09-12).
+
+## Editorial entry — 2026-09-12
+
+`/` → problem/story → interactive ZKPassport / MACI / ENSv2 / The Graph explanations
+→ `/polls` (real configuration state). Shared navigation still offers `/names`.
+Trust links go to `/journal#trust`; longer vision links to `/journal`. Illustrations
+are conceptual, not eligibility or transaction state. The AI flagship is labeled a
+concept until the configured explorer establishes availability. No authorization,
+wallet, tally or schema boundary changed. [Design handoff](design/civic-story-2026-09-12/README.md).
+
+## Judge experience ballot — as-built 2026-09-12 (UI + metadata; not a new deployment)
+
+```
+  Polls.tsx / PollDetail.tsx
+    └─ readConfiguredDescriptor(vite env)
+         France default, or superintelligence-v1 if preset set
+         preset + original MACI poll 0/1 → unconfigured (never relabel)
+    └─ resolveConfiguredSchedule
+         GET /polls/configured (chain, MACI, poll, voteOptions, mode, tally)
+         else RPC readPollSchedule (pollName.ts pollAbi + tallyAbi)
+         scheduleFitsManifest: expectedVoteOptions + expectedMode + optional poll address
+    └─ PollDetail radio group uses descriptor.options[].index
+         assertBallotIndex → maci.vote(index) → voteFlow publish voteOptionIndex
+         no Yes/No remap; no default selection; receipt does not store the choice
+```
+
+Baseline SHA for this path: worktree `codex/judge-experience` on `c92153a3` plus
+uncommitted presentation. Live flagship addresses are still Hermes-owned.
+
 ## WP4 indexed join — as-built 2026-09-10 (local correctness; not Studio/live)
 
 Preferred join after signup. Private key never leaves the browser. `joinPoll` is
@@ -433,34 +534,47 @@ the recorded Poll-0 configuration is not currently votable.
 
 ---
 
-## 5. Stage 1 — ENS: nothing exists yet
+## 5. Stage 1 — ENS: poll discovery + named accounts
 
 ```
-  grep -rni "ens" apps/front-end/src apps/backend/src
-                  apps/subgraph/src packages/contracts/contracts
-      → zero matches (excluding "ensure", "Spanish", etc.)
+  Three ENS lanes (do not conflate):
 
-  ┌──────────────┐
-  │ ENS          │  [NONE] — no code, no registration, no resolution
-  └──────────────┘
+  1. Poll discovery (already on main)     apps/front-end/src/ens/pollName.ts
+  2. Named accounts (this slice)          packages/contracts/contracts/ens/VenekoVoxProfiles.sol
+                                          apps/front-end/src/pages/Names.tsx
+  3. Hermes WP5 Graph composition         deferred, not scheduled
 ```
 
-Planned role, when built:
+A name labels a **wallet**, not a unique human. Forward `addr` must match the
+connected account before the UI shows “ready.” Eligibility remains ZKPassport.
+`uxisnear.com` is the passport origin, not a named account.
 
 ```
   participating account (0x1234…)
         │
-        │  reverse resolve
+        │  1. owner deployProxy Permissioned Resolver
+        │  2. owner claimProfile → registrar register only
+        │  3. owner setAddr + setText xyz.venekovox.profile-theme
         ▼
-  alejandro.venekovox.eth          ← display name instead of 0x1234…
+  ada.<parent.eth>          ← display name instead of 0x1234…
         │
-        ├─ forward resolve must MATCH reverse resolve (else: show address)
-        ├─ no name?                → fall back to truncated address
-        └─ successful name         → NEVER grants eligibility (Self does that)
+        ├─ not ready?              → “Finish profile”; do not register again
+        ├─ no name / lookup fail?  → truncated address; vote route still works
+        └─ ready name              → NEVER grants eligibility
 ```
 
-ENS is a **naming layer on stage 1 and 5 only.** It does not touch the vote,
-the proof, or the tally.
+As-built named-account path:
+
+```
+  /names  Names.tsx
+        → injected wallet  injectedNamingWallet.ts
+        → classify none/incomplete/ready  profile.ts:20  registration.ts:176
+        → claim  VenekoVoxProfiles.sol:121
+        → records  registration.ts:writeProfileRecords
+        → PollDetail shows the name only when phase === "ready"
+```
+
+ENS is a **naming layer.** It does not touch the vote, the proof, or the tally.
 
 ---
 
@@ -684,3 +798,20 @@ Source links: [page](../apps/front-end/src/pages/Names.tsx),
 [contract](../packages/contracts/contracts/ens/VenekoVoxNames.sol).
 See [registration handoff](ens-registration.md) for test limitations, operator setup,
 candidate ownership/expiry semantics and the absence of live deployment evidence.
+
+## S1.1 ENSv2 named accounts — 2026-09-11
+
+As-built on `feat/s11-ensv2-named-accounts`:
+
+- Registrar: [VenekoVoxProfiles.sol](../packages/contracts/contracts/ens/VenekoVoxProfiles.sol:121)
+- Classify / reconnect: [profile.ts](../apps/front-end/src/ens/profile.ts:20), [registration.ts](../apps/front-end/src/ens/registration.ts:176)
+- Record writes: [registration.ts](../apps/front-end/src/ens/registration.ts:296)
+- Onboarding UI: [Names.tsx](../apps/front-end/src/pages/Names.tsx)
+- Ready display only: [PollDetail.tsx](../apps/front-end/src/pages/PollDetail.tsx) wallet chip
+- Pin: [sepolia-ensv2.json](../packages/contracts/ens/sepolia-ensv2.json)
+
+Call path: Polls `/names` → injected wallet → `readProfileSetup` → claim or finish owner
+txs → PollDetail shows the name only when `phase === "ready"` **and** Universal Resolver
+forward resolution succeeded for the **current** account. Voting does not call ENS
+inside grant/join/vote. Parent names remain configurable. Review fixes (2026-09-12):
+no ready-from-failed-UR, in-flight until receipt, RPC `eth_chainId`.

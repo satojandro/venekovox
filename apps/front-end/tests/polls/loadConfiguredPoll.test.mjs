@@ -51,6 +51,9 @@ const descriptor = {
   description: { en: "d", es: "d" },
   options: [],
   metadataSource: "operator",
+  expectedVoteOptions: 6,
+  expectedMode: 2,
+  round: "open",
 };
 
 const rpcSchedule = {
@@ -58,8 +61,11 @@ const rpcSchedule = {
   maciAddress: "0x44F31f3823ceFE00C2FA5acEB2576F119143Fe3a",
   pollId: "0",
   pollAddress: "0x29D39dD442c91dAc51a292fd04a9A7Edd16c22CB",
+  tallyAddress: "0x4444444444444444444444444444444444444444",
   startTime: "90",
   endTime: "120",
+  voteOptions: "6",
+  mode: "2",
   status: "OPEN",
   blockNumber: 1,
   blockHash: "0xrpc",
@@ -157,4 +163,16 @@ test("a stalled JSON body is aborted and falls back to RPC", { timeout: 1000 }, 
   assert.equal(signal.aborted, true);
   assert.equal(rpcCalls, 1);
   assert.equal(lookup.schedule.blockHash, "0xrpc");
+});
+
+test("rejects an RPC schedule whose option count does not match the manifest", async () => {
+  const lookup = await resolveConfiguredSchedule({
+    descriptor,
+    verifyEndpoint: "http://localhost:3100/verify",
+    rpcUrl: "http://rpc.test",
+    fetchImpl: async () => ({ ok: false, json: async () => ({}) }),
+    createProvider: () => ({}),
+    readRpcSchedule: async () => ({ ...rpcSchedule, voteOptions: "3" }),
+  });
+  assert.equal(lookup.error, "POLL_MISMATCH");
 });

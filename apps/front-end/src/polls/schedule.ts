@@ -1,13 +1,16 @@
 import { getAddress, isAddress, ZeroAddress } from "ethers";
-import { maciAbi, pollAbi, votingWindow, type NamedPoll } from "../ens/pollName";
+import { maciAbi, pollAbi, tallyAbi, votingWindow, type NamedPoll } from "../ens/pollName";
 
 export type PollSchedule = {
   chainId: string;
   maciAddress: string;
   pollId: string;
   pollAddress: string;
+  tallyAddress: string;
   startTime: string;
   endTime: string;
+  voteOptions: string;
+  mode: string;
   status: NamedPoll["status"];
   blockNumber: number;
   blockHash: string;
@@ -50,13 +53,22 @@ export async function readPollSchedule(
       await call(maciAddress, maciAbi.encodeFunctionData("getPoll", [pollId])),
     );
     const pollAddress = getAddress(contracts[0]);
+    const tallyAddress = getAddress(contracts[2]);
     if (pollAddress === ZeroAddress || (await provider.getCode(pollAddress, block.number)) === "0x") {
+      throw new ScheduleError("POLL_MISMATCH");
+    }
+    if (tallyAddress === ZeroAddress || (await provider.getCode(tallyAddress, block.number)) === "0x") {
       throw new ScheduleError("POLL_MISMATCH");
     }
     const [start, end] = pollAbi.decodeFunctionResult(
       "getStartAndEndDate",
       await call(pollAddress, pollAbi.encodeFunctionData("getStartAndEndDate")),
     );
+    const voteOptions = pollAbi.decodeFunctionResult(
+      "voteOptions",
+      await call(pollAddress, pollAbi.encodeFunctionData("voteOptions")),
+    )[0];
+    const mode = tallyAbi.decodeFunctionResult("mode", await call(tallyAddress, tallyAbi.encodeFunctionData("mode")))[0];
     if ((await provider.getBlock(block.number))?.hash !== block.hash) {
       throw new ScheduleError("LOOKUP_FAILED");
     }
@@ -65,8 +77,11 @@ export async function readPollSchedule(
       maciAddress: getAddress(maciAddress),
       pollId,
       pollAddress,
+      tallyAddress,
       startTime: start.toString(),
       endTime: end.toString(),
+      voteOptions: voteOptions.toString(),
+      mode: mode.toString(),
       status: votingWindow(start, end, BigInt(block.timestamp)),
       blockNumber: block.number,
       blockHash: block.hash,

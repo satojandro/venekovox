@@ -8,12 +8,12 @@ Read with [docs/README.md](README.md) (the story) — this file is the technolog
 
 A zero-knowledge civic polling platform: verified humans express genuine opinions without fear of retaliation. Four technologies carry it:
 
-| Technology | Role | Why it matters here |
-| --- | --- | --- |
-| **ZKPassport** | Proves you're a real human (passport NFC scan, age 18+, facematch) without revealing identity | One-person-one-vote without knowing who anyone is |
-| **MACI** | Encrypts ballots so no one — not even the operator — can prove how you voted | Anti-coercion, anti-vote-buying; re-voting neutralizes blackmail |
-| **The Graph** | Indexes on-chain events into standardized, queryable governance data | Public audit of participation and results |
-| **ENSv2** | Human-readable poll names (`superintelligence.polls.venekovoxv1.eth`) | Polls are discoverable, shareable on-chain objects |
+| Technology     | Role                                                                                          | Why it matters here                                              |
+| -------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| **ZKPassport** | Proves you're a real human (passport NFC scan, age 18+, facematch) without revealing identity | One-person-one-vote without knowing who anyone is                |
+| **MACI**       | Encrypts ballots so no one — not even the operator — can prove how you voted                  | Anti-coercion, anti-vote-buying; re-voting neutralizes blackmail |
+| **The Graph**  | Indexes on-chain events into standardized, queryable governance data                          | Public audit of participation and results                        |
+| **ENSv2**      | Human-readable poll names (`superintelligence.polls.venekovoxv1.eth`)                         | Polls are discoverable, shareable on-chain objects               |
 
 The product grew from Alejandro's firsthand experience of suppressed civic voice in Venezuela and Australia.
 
@@ -27,7 +27,7 @@ The product grew from Alejandro's firsthand experience of suppressed civic voice
 
 **What we did:** We indexed MACI — a private-voting protocol with no standard public schema — into a subgraph aligned with the **Messari governance schema**, consumed live from Subgraph Studio. One query pattern serves registrations, schedules, message counts, and (post-tally) results, and generalizes to any MACI-style deployment.
 
-**The novel fit for a privacy protocol:** standardized governance schemas are built for transparent voting — they index *who* voted. Ours indexes *that* eligibility-proven voters exist (StateLeaves, zero-knowledge registrations), poll metadata, and the **proof-verified tally** — never the ballot. We extend the standard's shape to a domain it wasn't designed for: privacy-preserving governance.
+**The novel fit for a privacy protocol:** standardized governance schemas are built for transparent voting — they index _who_ voted. Ours indexes _that_ eligibility-proven voters exist (StateLeaves, zero-knowledge registrations), poll metadata, and the **proof-verified tally** — never the ballot. We extend the standard's shape to a domain it wasn't designed for: privacy-preserving governance.
 
 **Evidence:**
 
@@ -72,11 +72,10 @@ The product grew from Alejandro's firsthand experience of suppressed civic voice
 
 **Evidence:**
 
-- ✅ Full end-to-end flow: verify → join → vote → close → tally (poll 2 proof)
+- ✅ Verify → join → vote flow exercised live; tally machinery (merge → prove → submit) audited and zkeys verified — proof-verified tally is the next milestone
 - ✅ Real-document ZKPassport session (Sep 11, 2026 — real AU passport, salted uniqueness, strict facematch)
 - ✅ 122 frontend unit tests passing (latest full run, Sep 13; prior suites 52/52 on vote/receipt paths)
 - ✅ Live Poll 3 (flagship) deployed and accepting votes — window open Sep 13→14 UTC (verified on-chain 2026-09-13)
-- ✅ Tally machinery tested (merge → prove → submit on-chain)
 
 **Deployed contracts (Sepolia):**
 
@@ -105,14 +104,14 @@ The product grew from Alejandro's firsthand experience of suppressed civic voice
 
 ## The Differentiator
 
-| Standard MACI | VenekoVox |
-| --- | --- |
-| Operator manages eligibility list | User's passport proves eligibility |
-| Operator sees who's eligible | Operator sees nothing |
-| Single point of trust | Distributed trust (passport issuer + ZKPassport) |
-| Requires pre-registration | Self-service verification |
-| Results audited ad hoc | Standardized, queryable audit via The Graph |
-| Polls known by opaque poll IDs | Polls named and discoverable via ENSv2 |
+| Standard MACI                     | VenekoVox                                        |
+| --------------------------------- | ------------------------------------------------ |
+| Operator manages eligibility list | User's passport proves eligibility               |
+| Operator sees who's eligible      | Operator sees nothing                            |
+| Single point of trust             | Distributed trust (passport issuer + ZKPassport) |
+| Requires pre-registration         | Self-service verification                        |
+| Results audited ad hoc            | Standardized, queryable audit via The Graph      |
+| Polls known by opaque poll IDs    | Polls named and discoverable via ENSv2           |
 
 ---
 
